@@ -1,4 +1,3 @@
-# Para activarlo: mover este archivo a .github/workflows/validate.yml (requiere permiso de workflows).
 # Valida el propio repositorio de AES: documento consolidado al día y scripts sin errores.
 name: validate
 
