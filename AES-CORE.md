@@ -1,4 +1,4 @@
-# Agentic Engineering Standard — AES Core 1.1.0
+# Agentic Engineering Standard — AES Core 1.1.1
 
 <!-- Archivo generado por scripts/build-core.sh a partir de standard/. No editar a mano. -->
 
@@ -790,6 +790,7 @@ Reglas:
 - Los controles fundamentales (protección de la suite de aceptación, independencia de verificación, rutas protegidas, superficie de cambio) MUST existir en L3.
 - La configuración del harness, los hooks, la CI y las instrucciones persistentes MUST estar en rutas que el programador no puede editar (L1) y cuya modificación hace fallar la CI (L3).
 - El programador SHOULD trabajar en un worktree o contenedor donde la suite holdout no existe y la suite visible está montada en solo lectura.
+- Si la CI se define en archivos del propio repositorio, una rama puede modificar su propio workflow para saltarse el guardián. Las credenciales con las que se publican ramas de programador MUST NOT tener permiso para modificar workflows (en GitHub, un token sin el permiso *Workflows*), o la plataforma MUST imponer el workflow desde fuera de la rama (por ejemplo, workflows obligatorios a nivel de organización).
 - MUST NOT presentarse L1 o L2 como suficientes para un control fundamental.
 
 `profiles/reference/` contiene una implementación de referencia de las tres capas.

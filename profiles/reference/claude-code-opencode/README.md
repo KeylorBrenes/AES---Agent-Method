@@ -46,6 +46,7 @@ El permiso `edit` de OpenCode cubre las herramientas de edición, escritura y pa
    - `qa/US-005` para la suite de aceptación y `spec/US-005` para historias y superficies. Estas ramas tocan rutas protegidas por diseño, así que no pasan por el guardián: las controla CODEOWNERS y requieren tu aprobación.
    - Si el programador abre un PR con otro nombre de rama, el guardián no se ejecuta, pero CODEOWNERS sigue bloqueando cualquier cambio a rutas protegidas. Para cerrar ese hueco, añade una regla de protección que solo permita fusionar ramas `task/*`, `qa/*` y `spec/*`.
 7. Instala `jq` donde corran los hooks.
+8. **Credenciales sin permiso de workflows.** En un evento `pull_request`, GitHub ejecuta el workflow tal como está *en la rama del PR*. Si el agente pudiera editar `.github/workflows/aes.yml` en su rama, podría borrar el paso del guardián y el check saldría verde. Por eso las ramas `task/*` se publican con un *fine-grained personal access token* que **no** tiene el permiso *Workflows*: GitHub rechaza el push si toca `.github/workflows/`. Usa un token aparte, con ese permiso, solo para tus propios cambios de CI. CODEOWNERS sigue exigiendo tu revisión como segunda barrera.
 
 ## Flujo con estas piezas
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.1] — 2026-11-02
+
+### Corregido
+- 06 §9: las credenciales que publican ramas de programador no deben poder modificar workflows; de lo contrario una rama puede editar su propio workflow y saltarse el guardián. Documentado también en la implementación de referencia.
+- Workflows de referencia actualizados a `actions/checkout@v7` y `actions/setup-node@v7`.
+
 ## [1.1.0] — 2026-11-02
 
 Refinamiento a partir de la experiencia práctica con agentes de código y de las fuentes citadas en `docs/rfc/RFC-001-aes-1.1.0.md`. Cambio MINOR: añade reglas y endurece controles existentes sin romper la estructura.
