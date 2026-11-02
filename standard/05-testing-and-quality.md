@@ -145,3 +145,5 @@ Que todas las pruebas pasen no garantiza que el programa arranque o que un eleme
 - CLI y librerías: ejecución real, con scripts temporales fuera del repositorio.
 
 Las salidas y capturas se adjuntan al informe de verificación. Un defecto encontrado así se registra como T1 y se corrige con RED/GREEN, de modo que quede una prueba automatizada permanente.
+L � n e a   d e   p r u e b a .  
+ 
