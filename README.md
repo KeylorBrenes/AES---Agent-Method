@@ -1,7 +1,7 @@
 # Agentic Engineering Standard (AES)
 
-**Versión:** 1.0.0  
-**Estado:** Estándar inicial  
+**Versión:** 1.1.0  
+**Estado:** Estándar en uso  
 **Idioma normativo:** Español  
 **Propósito:** establecer un proceso de ingeniería consistente para desarrollar y mantener software con agentes de IA, sin depender de un proveedor, modelo, harness o stack específico.
 
@@ -11,10 +11,47 @@ AES es un estándar de trabajo para proyectos de software asistidos por agentes.
 
 AES no es un generador automático de requisitos ni una metodología de cascada. La planificación es progresiva: se define con mayor detalle el trabajo próximo y se conserva una visión suficiente del producto y de su arquitectura.
 
+### Lo que AES intenta evitar
+
+- Agentes que se van por las ramas, generan código de más o implementan lo que nadie pidió.
+- Agentes que modifican, desactivan o borran pruebas para obtener un resultado verde.
+- Procesos de especificación tan pesados que convierten un bug pequeño en una cascada de documentos.
+- Tener que leer cada línea de código para confiar en el resultado.
+
+### Cómo lo hace, en una frase
+
+**Tú apruebas los contratos (criterios y pruebas de aceptación); un agente independiente escribe esas pruebas sin ver el código; el programador no puede tocarlas; la CI las ejecuta desde una copia que nadie puede alterar; un verificador independiente re-ejecuta todo y prueba la aplicación de verdad.**
+
+## El ciclo
+
+```
+0. Clasificar track (T0–T3)                          [orquestador → tú confirmas]
+1. Refinar historia: criterios + fuera de alcance     [orquestador → tú apruebas]
+2. Contrato de interfaz (si hay frontera nueva)       [arquitecto]
+3. QA: pruebas visibles + holdout
+   → ejecutar contra base → RED confirmado → rama protegida   [tú apruebas las pruebas]
+4. Tareas: superficie de cambio, comandos exactos, pruebas afectadas
+5. Programador (sesión nueva por tarea):
+   baseline → RED/GREEN/REFACTOR → commits struct:/feat: → reporte
+6. CI (L3): aceptación desde ref confiable, holdout, guardián, lint, tipos, seguridad
+7. Verificador (sesión limpia, solo lectura):
+   re-ejecución → prueba manual agéntica → PASS / FAIL / BLOCKED
+   └─ 3 FAIL en la misma tarea → circuit breaker
+8. Tú: informe + evidencias + demo (+ código en T3)  → Accepted / Rejected
+9. Retrospectiva compuesta: registro de fallos → un control nuevo por patrón
+```
+
+| Track | Para qué | Proceso mínimo |
+|---|---|---|
+| T0 | Errata, configuración no funcional | Tarea + CI |
+| T1 | Bug | Prueba de reproducción protegida (RED) + tarea |
+| T2 | Funcionalidad nueva | Ciclo completo |
+| T3 | Auth, datos, pagos, migraciones, arquitectura | Ciclo completo + ADR + holdout + revisión humana del código de riesgo |
+
 ## Principios de uso
 
 1. Leer `standard/00-governance-and-principles.md` antes de iniciar un proyecto.
-2. Declarar la versión de AES y completar un perfil en `profiles/` para cada proyecto.
+2. Declarar la versión de AES y completar un perfil para cada proyecto.
 3. Adaptar las herramientas al proyecto; no cambiar los controles fundamentales sin una excepción documentada.
 4. Usar las plantillas como punto de partida. No rellenar campos irrelevantes por formalidad.
 5. Mantener la trazabilidad: objetivo → Epic → Historia de Usuario → criterios de aceptación → tareas → pruebas → evidencia → aceptación.
@@ -22,10 +59,29 @@ AES no es un generador automático de requisitos ni una metodología de cascada.
 
 ## Estructura
 
-- `standard/`: reglas normativas de AES Core.
-- `templates/`: plantillas reutilizables para artefactos del proyecto.
-- `agent-contracts/`: responsabilidades, permisos y límites de cada rol.
-- `profiles/`: configuración específica del proyecto y su stack.
+| Ruta | Contenido |
+|---|---|
+| `standard/` | Reglas normativas de AES Core (00–09). |
+| `AES-CORE.md` | Las reglas de `standard/` consolidadas en un único documento (generado). |
+| `templates/` | Plantillas: brief, arquitectura, ADR, epic, historia, tarea, plan de aceptación, informe de verificación, perfil y registro de fallos. |
+| `agent-contracts/` | Responsabilidades, permisos y límites de cada rol: orquestador, arquitecto, QA, programador y verificador. |
+| `profiles/` | Perfiles de proyecto e implementaciones de referencia. |
+| `profiles/reference/claude-code-opencode/` | Implementación de referencia: permisos de OpenCode, hooks de Claude Code, guardián de CI, workflow y CODEOWNERS. |
+| `docs/rfc/` | Propuestas de cambio con su justificación y fuentes. |
+| `scripts/` | Utilidades del repositorio. |
+
+| Capítulo | Tema |
+|---|---|
+| 00 | Gobierno, principios, roles, estados, evidencia, revisión humana proporcional |
+| 01 | Inicio del proyecto y arquitectura |
+| 02 | Backlog, estimación y tracks T0–T3 |
+| 03 | Historias de Usuario y aceptación |
+| 04 | Diseño y ejecución de tareas, commits, circuit breaker |
+| 05 | Pruebas: contrato de interfaz, RED confirmado, holdout, guardián, prueba manual agéntica |
+| 06 | Gobierno de agentes, permisos y controles en capas L1/L2/L3 |
+| 07 | Cambios, riesgos y liberación |
+| 08 | Definition of Ready y Definition of Done |
+| 09 | Mejora continua del harness |
 
 ## Palabras normativas
 
@@ -39,14 +95,15 @@ Estas palabras describen la fuerza de la regla, no una herramienta particular.
 
 ## Inicio rápido
 
-1. Copiar AES al repositorio o referenciar una versión fija.
-2. Completar `profiles/project-profile.md` a partir de `profiles/project-profile.template.md`.
-3. Documentar visión y contexto con `templates/project-brief.md`.
-4. Describir la arquitectura conocida y registrar decisiones importantes con ADR.
-5. Crear un backlog inicial de Epics. Refinar solo las Historias de Usuario próximas.
-6. Para cada Historia de Usuario, aprobar criterios de aceptación antes de implementar.
-7. Diseñar pruebas protegidas, dividir la historia en tareas pequeñas y ejecutar el ciclo.
-8. No cerrar la historia hasta cumplir la Definition of Done y registrar la aceptación correspondiente.
+1. Copiar AES al repositorio o referenciar una versión fija (tag `vX.Y.Z`).
+2. Completar `project-profile.md` a partir de `templates/project-profile.template.md`.
+3. Implementar las capas de control. Si usas Claude Code + OpenCode + GitHub, parte de `profiles/reference/claude-code-opencode/`.
+4. Documentar visión y contexto con `templates/project-brief.md`.
+5. Describir la arquitectura conocida y registrar decisiones importantes con ADR.
+6. Crear un backlog inicial de Epics. Refinar solo las Historias de Usuario próximas.
+7. Para cada historia: aprobar criterios, definir el contrato de interfaz, aprobar las pruebas de aceptación con RED confirmado.
+8. Dividir en tareas pequeñas con superficie de cambio y ejecutar el ciclo.
+9. No cerrar la historia hasta cumplir la Definition of Done, registrar la aceptación y ejecutar la retrospectiva compuesta.
 
 ## Versionado
 
@@ -56,8 +113,24 @@ AES utiliza versionado semántico:
 - **MINOR:** nuevas reglas o capacidades compatibles.
 - **PATCH:** aclaraciones, correcciones y mejoras que no cambian el significado normativo.
 
-Cada proyecto declara la versión de AES que adopta. Una actualización no se aplica silenciosamente: se revisa y se registra en el proyecto.
+Cada proyecto declara la versión de AES que adopta. Una actualización no se aplica silenciosamente: se revisa y se registra en el proyecto. Los cambios propuestos se documentan como RFC en `docs/rfc/` antes de incorporarse.
 
-## Alcance de la versión 1.0.0
+Para regenerar `AES-CORE.md` tras editar `standard/`:
 
-AES 1.0.0 establece el ciclo de ingeniería, planificación por backlog, estimación relativa con Fibonacci, diseño de tareas pequeñas, ATDD/TDD, gobierno de agentes, permisos, verificación y aceptación. No prescribe lenguajes, frameworks, proveedores de modelos, herramientas de seguimiento ni una arquitectura de software universal.
+```bash
+./scripts/build-core.sh
+```
+
+## Alcance
+
+AES establece el ciclo de ingeniería, planificación por backlog con tracks proporcionales, estimación relativa con Fibonacci, diseño de tareas pequeñas, ATDD/TDD con pruebas protegidas y holdout, gobierno de agentes con controles en capas, verificación independiente, aceptación humana y mejora continua del harness. No prescribe lenguajes, frameworks, proveedores de modelos, herramientas de seguimiento ni una arquitectura de software universal.
+
+## Fuentes principales
+
+- Simon Willison — [Agentic Engineering Patterns](https://simonwillison.net/guides/agentic-engineering-patterns/)
+- Kent Beck — [Augmented Coding: Beyond the Vibes](https://kentbeck.com/summaries/augmented-coding-beyond-the-vibes/)
+- Alonso, Yovine y Braberman — TDAD (arXiv:2603.17973), resumido en [TDAD and the testing revolution](https://codex.danielvaughan.com/premium-pdfs/04-tdad-and-the-testing-revolution.pdf)
+- Birgitta Böckeler — [Understanding Spec-Driven-Development: Kiro, spec-kit, and Tessl](https://www.martinfowler.com/articles/exploring-gen-ai/sdd-3-tools.html)
+- Anthropic — [Equipping agents for the real world with Agent Skills](https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills)
+
+La justificación completa de la versión 1.1.0 está en [`docs/rfc/RFC-001-aes-1.1.0.md`](docs/rfc/RFC-001-aes-1.1.0.md).

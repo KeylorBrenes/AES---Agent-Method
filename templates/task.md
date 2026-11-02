@@ -1,9 +1,11 @@
 # TASK-[NNN] — [Resultado concreto]
 
-- **Historia/Enabler:** US-[NNN]
+- **Historia/Enabler/Bug:** US-[NNN]
+- **Track:** T0 / T1 / T2 / T3
 - **Estado:** Ready / In Progress / In Review / Blocked / Done
 - **Agente asignado:**
 - **Riesgo:** Low / Medium / High / Critical
+- **Ciclos FAIL acumulados:** 0 / 3 (circuit breaker al llegar a 3)
 
 ## Objetivo y resultado esperado
 [Un resultado principal, observable.]
@@ -12,30 +14,50 @@
 [Qué sí debe cambiar.]
 
 ## Fuera de alcance
-[Qué no debe cambiar.]
+[Qué no debe cambiar. Obligatorio y no vacío en T2/T3. Nombrar funcionalidades cercanas que podrían implementarse «por conveniencia».]
 
 ## Criterios relacionados
-[IDs AC-xx y contratos pertinentes.]
+[IDs AC-xx y contrato de interfaz pertinente.]
 
 ## Contexto técnico
 [Componentes, archivos conocidos, convenciones, ADRs.]
 
+## Superficie de cambio
+Publicada en la rama protegida como `specs/US-[NNN]/TASK-[NNN].scope` (un glob por línea). Cualquier archivo fuera de esta lista hace fallar la CI.
+
+```
+src/[modulo]/**
+tests/unit/[modulo]/**
+```
+
 ## Restricciones y permisos
-[Archivos/rutas permitidos, rutas protegidas, dependencias autorizadas.]
+[Rutas protegidas adicionales, dependencias autorizadas, operaciones que requieren aprobación.]
 
 ## Dependencias
 
-## Plan de validación
-| Validación | Comando/procedimiento | Resultado esperado |
-|---|---|---|
+## Comandos de validación exactos
+```
+[comando de pruebas unitarias del módulo]
+[comando de pruebas de aceptación filtrado por US-NNN]
+[lint] && [typecheck]
+```
+
+## Pruebas de regresión afectadas (test map)
+[Archivos de prueba existentes que este cambio puede romper.]
+
+## Presupuesto de diff orientativo
+[~N líneas. Superarlo exige justificar por qué no se dividió.]
 
 ## Condición de finalización
 [Qué evidencia permite pasar a revisión.]
 
 ## Reporte de ejecución
+- Baseline inicial (pruebas que ya fallaban):
 - Cambios realizados:
-- Pruebas ejecutadas y resultados:
+- Commits (`struct:` / `feat:` / `fix:` / `test:`):
+- Pruebas ejecutadas y resultados (salida capturada, no resumen):
 - Comandos y entorno:
+- Alertas del guardián de CI y su justificación:
 - Supuestos/decisiones:
 - Desviaciones/bloqueos:
 - Riesgos pendientes:

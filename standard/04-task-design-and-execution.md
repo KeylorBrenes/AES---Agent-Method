@@ -13,12 +13,19 @@ Cada tarea lista para ejecución DEBE especificar:
 - objetivo y resultado esperado;
 - alcance incluido y exclusiones relevantes;
 - dependencias y contratos que debe respetar;
-- zonas/archivos potencialmente afectados, si se conocen;
+- track (02 §8);
+- **superficie de cambio**: globs de archivos que la tarea puede modificar;
 - restricciones y permisos;
-- método de validación;
+- **comandos de validación exactos** (no descripciones como «ejecuta las pruebas relevantes»);
+- **pruebas de regresión afectadas** (test map), cuando puedan generarse o deducirse;
+- presupuesto de diff orientativo (02 §6);
 - condición de finalización.
 
-Los archivos sugeridos son orientación, no permiso para modificar cualquier parte del repositorio.
+La superficie de cambio no es una sugerencia: la CI compara el diff contra ella (05 §10). Un archivo modificado fuera de la superficie es un `FAIL` salvo aprobación registrada. La superficie se publica en la rama protegida **antes** de delegar la tarea, para que el programador no pueda ampliarla.
+
+### Por qué comandos exactos y no instrucciones de proceso
+
+El estudio TDAD (Alonso, Yovine y Braberman, arXiv:2603.17973; tesis de maestría, Universidad ORT Uruguay) midió que añadir instrucciones genéricas de TDD a la guía de un agente aumentó su tasa de regresiones de 6,08 % a 9,94 %, mientras que darle un mapa de qué pruebas afecta cada archivo la redujo a 1,82 %. El estudio se hizo con un modelo abierto (Qwen3-Coder 30B) y solo en Python, así que AES no adopta la cifra, sino el principio: **información estructural concreta en lugar de procedimientos genéricos**.
 
 ## 3. Tamaño y divisibilidad
 
@@ -41,13 +48,15 @@ El programador recibe un paquete de contexto acotado: historia aprobada, tarea, 
 
 El programador DEBE:
 
-1. inspeccionar el código relevante antes de cambiarlo;
-2. describir brevemente el enfoque cuando el cambio no sea trivial;
-3. implementar solo el alcance de la tarea;
-4. añadir o ajustar pruebas técnicas permitidas;
-5. ejecutar las validaciones pertinentes;
-6. inspeccionar su propio diff para detectar archivos o cambios ajenos;
-7. entregar un reporte con archivos modificados, pruebas ejecutadas, resultados, riesgos y decisiones/supuestos.
+1. **ejecutar primero la suite existente** y registrar el baseline (pruebas que ya fallaban antes de tocar nada), para no «arreglar» ni atribuirse fallos preexistentes;
+2. inspeccionar el código relevante antes de cambiarlo;
+3. describir brevemente el enfoque cuando el cambio no sea trivial;
+4. implementar solo el alcance de la tarea, dentro de su superficie de cambio;
+5. añadir o ajustar pruebas técnicas permitidas, siguiendo RED/GREEN/REFACTOR donde aplique (05 §3);
+6. separar commits estructurales y conductuales (§8);
+7. ejecutar los comandos de validación exactos de la tarea;
+8. inspeccionar su propio diff para detectar archivos o cambios ajenos;
+9. entregar un reporte con archivos modificados, pruebas ejecutadas, resultados, riesgos y decisiones/supuestos.
 
 El programador NO DEBE:
 
@@ -79,3 +88,24 @@ Una tarea puede pasar a revisión cuando:
 - el reporte de ejecución está completo.
 
 El cierre de una tarea no significa que la Historia de Usuario esté aceptada.
+
+## 8. Commits estructurales y conductuales
+
+Basado en *Tidy First* (Kent Beck).
+
+- Cada commit MUST ser **estructural** (reorganiza código sin cambiar comportamiento; todas las pruebas verdes antes y después) **o conductual** (cambia comportamiento). Nunca ambos.
+- Prefijos obligatorios: `struct:` para estructurales; `feat:`, `fix:` o `test:` para conductuales. El perfil puede mapearlos a Conventional Commits.
+- Un cambio estructural fuera de la superficie de la tarea es fuera de alcance, aunque mejore el código. Se propone como tarea propia.
+
+Efecto: un commit `struct:` se revisa comprobando que las pruebas siguen verdes; la atención humana y del verificador se concentra en los conductuales.
+
+## 9. Circuit breaker e higiene de contexto
+
+- Cada tarea MUST ejecutarse en una **sesión nueva**. No se reutiliza el contexto de una tarea anterior.
+- Si una misma tarea acumula **3 ciclos `FAIL`** (CI o verificador), se detiene. No hay cuarto intento automático. El orquestador clasifica la causa y decide:
+  - tarea mal especificada o demasiado grande → vuelve a refinamiento;
+  - prueba de aceptación incorrecta → control de cambios con QA (05 §6);
+  - problema de diseño → arquitecto o Spike;
+  - limitación del modelo o del harness → reasignar o escalar al responsable humano.
+- Si el agente repite el mismo enfoque fallido dos veces seguidas, el orquestador SHOULD reiniciar el contexto con un resumen escrito de lo aprendido en lugar de compactarlo: la compactación conserva los supuestos erróneos.
+- El perfil puede reducir el umbral de 3 ciclos; aumentarlo requiere excepción documentada.

@@ -10,8 +10,9 @@ Cada Historia de Usuario refinada DEBE tener:
 - contexto y reglas relevantes;
 - alcance incluido y exclusiones importantes;
 - criterios de aceptación observables y verificables;
-- prioridad y Story Points;
+- prioridad, Story Points y track (02 §8);
 - dependencias y riesgos relevantes;
+- contrato de interfaz contra el que se escribirán las pruebas de aceptación, cuando la historia introduce o modifica una frontera observable (05 §2.1);
 - estrategia de pruebas/aceptación;
 - estado y responsable de decisión.
 
@@ -47,6 +48,8 @@ No todos los escenarios aplican a todas las historias. QA debe explicar brevemen
 ## 4. Fuera de alcance
 
 Las exclusiones son obligatorias cuando existe riesgo razonable de expansión del alcance. Deben nombrar funcionalidades cercanas que el agente podría implementar «por conveniencia» pero que no están aprobadas.
+
+En T2 y T3 la sección «Fuera de alcance» MUST NOT estar vacía. Implementar funcionalidad no pedida, aunque parezca el siguiente paso razonable, es una de las señales de desvío más frecuentes en agentes; nombrar explícitamente lo excluido es la forma más barata de prevenirla.
 
 ## 5. Ambigüedad y supuestos
 

@@ -1,0 +1,12 @@
+# AES 1.1.0 — Rutas protegidas: solo el responsable humano aprueba cambios.
+# Sustituir @tu-usuario por el usuario real. Requiere protección de rama en main
+# con «Require review from Code Owners».
+/tests/acceptance/   @tu-usuario
+/specs/              @tu-usuario
+/ci/                 @tu-usuario
+/.github/            @tu-usuario
+/.claude/            @tu-usuario
+/.opencode/          @tu-usuario
+/opencode.json       @tu-usuario
+/AGENTS.md           @tu-usuario
+/CLAUDE.md           @tu-usuario

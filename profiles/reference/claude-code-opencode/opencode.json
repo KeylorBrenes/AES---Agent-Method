@@ -1,0 +1,61 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "agent": {
+    "programmer": {
+      "description": "AES programmer: implementa una tarea dentro de su superficie de cambio",
+      "mode": "primary",
+      "permission": {
+        "edit": {
+          "*": "allow",
+          "tests/acceptance/**": "deny",
+          "specs/**": "deny",
+          "ci/**": "deny",
+          ".github/**": "deny",
+          ".claude/**": "deny",
+          ".opencode/**": "deny",
+          "opencode.json": "deny",
+          "AGENTS.md": "deny",
+          "CLAUDE.md": "deny"
+        },
+        "bash": {
+          "*": "ask",
+          "npm test*": "allow",
+          "npm run lint*": "allow",
+          "npm run typecheck*": "allow",
+          "git status*": "allow",
+          "git diff*": "allow",
+          "git log*": "allow",
+          "git add*": "allow",
+          "git commit*": "allow",
+          "git push*": "deny",
+          "git checkout*": "ask",
+          "git reset*": "deny",
+          "rm *": "deny"
+        },
+        "webfetch": "deny"
+      }
+    },
+    "verifier": {
+      "description": "AES verifier: solo lectura; re-ejecuta validaciones y emite PASS/FAIL/BLOCKED",
+      "mode": "primary",
+      "permission": {
+        "edit": "deny",
+        "bash": {
+          "*": "ask",
+          "npm test*": "allow",
+          "npm run*": "allow",
+          "npx playwright*": "allow",
+          "curl *": "allow",
+          "git status*": "allow",
+          "git diff*": "allow",
+          "git log*": "allow",
+          "git show*": "allow",
+          "git commit*": "deny",
+          "git push*": "deny",
+          "rm *": "deny"
+        },
+        "webfetch": "deny"
+      }
+    }
+  }
+}

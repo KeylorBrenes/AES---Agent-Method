@@ -13,11 +13,15 @@ AES define un proceso reproducible para producir software correcto, mantenible y
 5. **Tareas pequeñas y verificables.** Una tarea debe producir un resultado concreto, tener límites claros y poder comprobarse sin tener que aceptar una gran cantidad de trabajo no relacionado.
 6. **Pruebas desde el requisito.** Los criterios de aceptación se definen antes de implementar. Las pruebas técnicas acompañan el desarrollo.
 7. **Independencia de verificación.** El agente que implementa no puede aprobar su propio trabajo. La verificación se basa en artefactos y evidencias, no en el informe del implementador.
-8. **Seguridad por permisos.** Las restricciones importantes se aplican técnicamente mediante Git, sistema operativo, contenedores, permisos, CI y protección de ramas; no solo mediante prompts.
+8. **Seguridad por permisos.** Las restricciones importantes se aplican técnicamente mediante Git, sistema operativo, contenedores, permisos, CI y protección de ramas; no solo mediante prompts. Un control solo cuenta como técnico si el agente no puede desactivarlo ni esquivarlo desde su propio entorno (ver 06 §9, modelo de capas L1/L2/L3).
 9. **Simplicidad deliberada.** Se reutiliza lo existente y se evita añadir abstracciones, dependencias, capas o funcionalidades sin necesidad demostrable.
 10. **Trazabilidad proporcional al riesgo.** Los cambios importantes deben poder rastrearse desde el requisito hasta la evidencia. No se exige burocracia para cambios triviales.
 11. **Transparencia de incertidumbre.** Los agentes deben distinguir hechos comprobados, supuestos, riesgos y aspectos no verificados.
 12. **Aprobación humana en decisiones reservadas.** Los agentes pueden recomendar; no pueden apropiarse de decisiones de producto, cambios materiales de alcance, riesgos críticos o aceptación humana.
+13. **La prueba de aceptación es la especificación ejecutable.** La prosa explica la intención; la suite de aceptación protegida la hace exigible. Cuando una especificación en prosa y una prueba de aceptación aprobada discrepan, la discrepancia es un defecto de especificación que se resuelve por control de cambios. Ningún agente decide unilateralmente cuál de las dos prevalece.
+14. **Evidencia ejecutada, no narrada.** Solo cuenta como evidencia la salida capturada por la CI o por una herramienta que ejecuta y registra el comando. El resumen escrito por un agente es contexto, no evidencia.
+15. **Proceso proporcional.** El tamaño del proceso depende del track del cambio (02 §8). Un cambio trivial no recorre el ciclo de una historia de alto riesgo, y un cambio de alto riesgo no se trata como trivial.
+16. **Mejora continua del harness.** Los fallos de los agentes se registran y se convierten en controles (09). El mismo error no debe depender de que alguien lo recuerde.
 
 ## 3. Adaptabilidad
 
@@ -77,3 +81,19 @@ No se debe usar `Done` como sinónimo de «el agente terminó de escribir códig
 ## 7. Evidencia y afirmaciones
 
 Un agente MUST NOT afirmar que una prueba pasó si no la ejecutó y no dispone del resultado. Si una prueba no se pudo ejecutar, se reporta como `NOT RUN` o `BLOCKED`, con el motivo. Los resultados deben incluir el comando o procedimiento, entorno relevante y salida resumida cuando sea posible.
+
+## 8. Revisión humana proporcional
+
+AES no pretende que el responsable humano lea cada línea de código, pero tampoco permite que nadie revise nada. La revisión humana se desplaza **del código a los contratos**: si el humano no va a leer el código, DEBE leer y aprobar las pruebas de aceptación, porque son lo único en lo que el proceso confía sin intermediarios.
+
+| Momento | Qué revisa el humano | T0 | T1 | T2 | T3 |
+|---|---|---|---|---|---|
+| Antes | Criterios de aceptación y exclusiones | — | ✓ | ✓ | ✓ |
+| Antes | Pruebas de aceptación (escenarios y aserciones clave) | — | ✓ | ✓ | ✓ |
+| Antes | Contrato de interfaz / ADR | — | — | si cambia | ✓ |
+| Después | Informe de verificación y evidencias (salidas, capturas) | — | ✓ | ✓ | ✓ |
+| Después | Alertas del guardián de CI (superficie, trampas) | si hay | si hay | si hay | ✓ |
+| Después | Código | lectura rápida del diff | opcional | solo zonas señaladas | **zonas de riesgo, obligatorio** |
+| Después | Demostración o prueba funcional propia | — | — | ✓ | ✓ |
+
+En T3 no existe una forma responsable de omitir la revisión humana del código sensible (autenticación, autorización, datos, pagos, migraciones). El perfil del proyecto puede endurecer esta tabla, nunca relajarla sin excepción documentada.

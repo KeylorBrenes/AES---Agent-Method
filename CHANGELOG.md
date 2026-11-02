@@ -1,5 +1,37 @@
 # Changelog
 
+## [1.1.0] — 2026-11-02
+
+Refinamiento a partir de la experiencia práctica con agentes de código y de las fuentes citadas en `docs/rfc/RFC-001-aes-1.1.0.md`. Cambio MINOR: añade reglas y endurece controles existentes sin romper la estructura.
+
+### Añadido
+- **Modelo de controles en capas L1/L2/L3** (06 §9): un control solo cuenta como técnico si el agente no puede esquivarlo desde su entorno; los controles fundamentales deben existir en L3.
+- **Tracks proporcionales T0–T3** (02 §8): el proceso se ajusta al tamaño y riesgo del cambio para evitar burocracia en cambios pequeños.
+- **Contrato de interfaz** antes de escribir pruebas de aceptación (05 §2.1).
+- **RED confirmado**: cada prueba de aceptación nueva debe fallar contra la base por la razón esperada antes de implementar (05 §2.2).
+- **Pruebas holdout** inaccesibles al programador; obligatorias en T3 (05 §2.3).
+- **Guardián de CI**: superficie de cambio, rutas protegidas, dependencias, pruebas borradas y marcadores de trampa (05 §10).
+- **Prueba manual agéntica** por el verificador para T2/T3 (05 §11).
+- **Commits estructurales vs. conductuales** (04 §8).
+- **Circuit breaker** tras 3 ciclos FAIL e higiene de contexto (04 §9).
+- **Revisión humana proporcional** por track (00 §8).
+- Principios 13–16: prueba como especificación ejecutable, evidencia ejecutada, proceso proporcional y mejora continua del harness.
+- Nuevo capítulo **09 — Mejora continua del harness** y plantilla `templates/agent-failure-log.md`.
+- Reglas para instrucciones persistentes (`AGENTS.md`/`CLAUDE.md`) y skills (06 §5.1, §6).
+- Implementación de referencia `profiles/reference/claude-code-opencode/` con scripts probados.
+- `scripts/build-core.sh` para generar el documento consolidado y `docs/ci/validate.yml`, workflow de validación del propio repositorio (moverlo a `.github/workflows/` para activarlo).
+
+### Cambiado
+- Tareas: campos obligatorios de track, superficie de cambio, comandos exactos, pruebas afectadas y presupuesto de diff (04 §2).
+- Programador: baseline de pruebas al inicio de cada sesión (04 §4).
+- Verificador: re-ejecuta validaciones, ejecuta holdout y vigila las señales de desvío de Kent Beck (06 §4).
+- DoR/DoD de historias y tareas actualizadas con los nuevos gates (08).
+- Contratos de los cinco agentes y plantillas de tarea, historia, plan de aceptación, informe de verificación y perfil.
+- `AES-CORE-1.0.0.md` sustituido por `AES-CORE.md`, generado desde `standard/`.
+
+### Corregido
+- El README apuntaba a `profiles/project-profile.template.md`; la plantilla está en `templates/`.
+
 ## [1.0.0] — 2026-11-01
 
 Primera versión del Agentic Engineering Standard.

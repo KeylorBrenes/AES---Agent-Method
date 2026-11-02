@@ -1,0 +1,31 @@
+# Para activarlo: mover este archivo a .github/workflows/validate.yml (requiere permiso de workflows).
+# Valida el propio repositorio de AES: documento consolidado al día y scripts sin errores.
+name: validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: AES-CORE.md al día
+        run: ./scripts/build-core.sh --check
+      - name: Sintaxis de scripts
+        run: |
+          for f in scripts/*.sh profiles/reference/*/ci/*.sh profiles/reference/*/.claude/hooks/*.sh; do
+            bash -n "$f" && echo "ok $f"
+          done
+      - name: ShellCheck
+        run: shellcheck scripts/*.sh profiles/reference/*/ci/*.sh profiles/reference/*/.claude/hooks/*.sh
+      - name: JSON válido
+        run: |
+          for f in profiles/reference/*/opencode.json profiles/reference/*/.claude/settings.json; do
+            python3 -m json.tool "$f" > /dev/null && echo "ok $f"
+          done

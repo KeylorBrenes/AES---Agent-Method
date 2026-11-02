@@ -1,0 +1,74 @@
+# AES 1.1.0 — Workflow de referencia (capa L3).
+# Puntos clave:
+#  - El guardián y la suite de aceptación se toman de la rama base (confiable),
+#    nunca de la rama del PR.
+#  - La suite holdout vive en un repositorio privado aparte, accesible solo con un
+#    secreto que el entorno del programador no tiene.
+#  - La protección de rama en main exige que este job pase y que CODEOWNERS apruebe
+#    los cambios a rutas protegidas.
+# Ajustar comandos (npm) y rutas al stack del proyecto.
+name: aes
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  guard-and-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR (historial completo para comparar con la base)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # El guardián se aplica a ramas de programador (task/*). Las ramas de QA (qa/*)
+      # y los cambios humanos a rutas protegidas se controlan con CODEOWNERS:
+      # tocan rutas protegidas por diseño y requieren tu aprobación explícita.
+      - name: Guardián AES desde la rama base
+        if: ${{ startsWith(github.head_ref, 'task/') }}
+        env:
+          BASE_REF: origin/${{ github.base_ref }}
+          # Convención: la rama del PR se llama task/US-005/TASK-014
+          # y su superficie vive en specs/US-005/TASK-014.scope en la base.
+          HEAD_BRANCH: ${{ github.head_ref }}
+          AES_ALLOW_MARKERS: ${{ contains(github.event.pull_request.labels.*.name, 'aes:markers-approved') && '1' || '0' }}
+          AES_ALLOW_DEPS: ${{ contains(github.event.pull_request.labels.*.name, 'aes:deps-approved') && '1' || '0' }}
+        run: |
+          git show "$BASE_REF:ci/aes-guard.sh" > /tmp/aes-guard.sh
+          story=$(cut -d/ -f2 <<< "$HEAD_BRANCH")
+          task=$(cut -d/ -f3 <<< "$HEAD_BRANCH")
+          if [[ -n "$story" && -n "$task" ]]; then
+            export TASK_SCOPE_FILE="specs/$story/$task.scope"
+          fi
+          bash /tmp/aes-guard.sh
+
+      - name: Restaurar suite de aceptación desde la base
+        run: |
+          rm -rf tests/acceptance
+          git checkout "origin/${{ github.base_ref }}" -- tests/acceptance
+
+      - name: Obtener suite holdout (repositorio privado)
+        if: ${{ vars.AES_HOLDOUT_REPO != '' }}
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ vars.AES_HOLDOUT_REPO }}
+          token: ${{ secrets.AES_HOLDOUT_TOKEN }}
+          path: tests/holdout
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - name: Aceptación (visible)
+        run: npm run test:acceptance
+      - name: Aceptación (holdout)
+        if: ${{ vars.AES_HOLDOUT_REPO != '' }}
+        run: npm run test:holdout
