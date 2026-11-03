@@ -31,12 +31,14 @@ El permiso `edit` de OpenCode cubre las herramientas de edición, escritura y pa
 
 1. Copia estos archivos a la raíz de tu proyecto (respetando las rutas).
 2. Sustituye `@tu-usuario` en `CODEOWNERS` y los comandos `npm` por los de tu stack.
-3. En GitHub, protege `main`:
-   - exigir pull request antes de fusionar;
-   - exigir que el check `aes / guard-and-tests` pase;
-   - exigir revisión de Code Owners;
-   - impedir push directo y force-push.
-4. Crea las etiquetas `aes:markers-approved` y `aes:deps-approved`. Solo tú las aplicas, tras revisar la justificación.
+3. En GitHub, protege `main` con **dos rulesets separados**. GitHub exige cumplir todos los rulesets que aplican, y el bypass de uno no salta el otro:
+   - **`main-ci`, sin bypass para nadie:** *Restrict deletions*, *Block force pushes*, *Require status checks to pass* (`guard-and-tests`) con *Require branches to be up to date*.
+   - **`main-aprobacion`:** *Require a pull request before merging* con 1 aprobación, *Require review from Code Owners* y *Dismiss stale approvals*. Bypass: *Repository admin* en modo **For pull requests only**, para que puedas fusionar tus propios PR (nadie puede aprobar su propio PR).
+
+   No pongas todo en un solo ruleset con bypass: el bypass salta **todas** sus reglas, incluido el check obligatorio, y permite fusionar con la CI en rojo. Así ocurrió en el sandbox de AES (FL-003).
+
+   Con *Require review from Code Owners*, los PR de los agentes deben tener un autor distinto de ti; ver el punto 8.
+4. Crea las etiquetas `aes:markers-approved` y `aes:deps-approved`. Solo tú las aplicas, tras revisar la justificación. El workflow reacciona a `labeled`/`unlabeled`, así que poner o quitar una etiqueta relanza la CI. Limitación conocida: el workflow comprueba que la etiqueta exista, no **quién** la puso. Mientras eso no se valide, revisa el historial del PR.
 5. Pruebas holdout (obligatorias en T3):
    - crea un repositorio privado aparte para ellas;
    - define la variable de repositorio `AES_HOLDOUT_REPO` (`owner/repo`) y el secreto `AES_HOLDOUT_TOKEN` (token de solo lectura a ese repo);
@@ -46,7 +48,13 @@ El permiso `edit` de OpenCode cubre las herramientas de edición, escritura y pa
    - `qa/US-005` para la suite de aceptación y `spec/US-005` para historias y superficies. Estas ramas tocan rutas protegidas por diseño, así que no pasan por el guardián: las controla CODEOWNERS y requieren tu aprobación.
    - Si el programador abre un PR con otro nombre de rama, el guardián no se ejecuta, pero CODEOWNERS sigue bloqueando cualquier cambio a rutas protegidas. Para cerrar ese hueco, añade una regla de protección que solo permita fusionar ramas `task/*`, `qa/*` y `spec/*`.
 7. Instala `jq` donde corran los hooks.
-8. **Credenciales sin permiso de workflows.** En un evento `pull_request`, GitHub ejecuta el workflow tal como está *en la rama del PR*. Si el agente pudiera editar `.github/workflows/aes.yml` en su rama, podría borrar el paso del guardián y el check saldría verde. Por eso las ramas `task/*` se publican con un *fine-grained personal access token* que **no** tiene el permiso *Workflows*: GitHub rechaza el push si toca `.github/workflows/`. Usa un token aparte, con ese permiso, solo para tus propios cambios de CI. CODEOWNERS sigue exigiendo tu revisión como segunda barrera.
+8. **Identidad de los agentes sin permiso de workflows.** En un evento `pull_request`, GitHub ejecuta el workflow tal como está *en la rama del PR*. Si el agente pudiera editar `.github/workflows/aes.yml` en su rama, podría borrar el paso del guardián y el check saldría verde. Por eso los agentes publican con una **GitHub App** propia que tiene permisos de *Contents* y *Pull requests* y **sin** permiso de *Workflows*: GitHub rechaza el push si toca `.github/workflows/`.
+   - Crea la app en *Settings → Developer settings → GitHub Apps*, instálala solo en el repo y genera la llave en ***Credentials → Key pairs → New key*** (GitHub movió esta opción; antes estaba en *Private keys* de la página General).
+   - Sus PR aparecen como `<app>[bot]`, así que puedes aprobarlos como Code Owner.
+   - Los tokens duran 1 hora y se generan al momento con la llave.
+   - Implementación probada (script del token, *credential helper* de git y `gh` con la identidad de la app): `docs/agent-identity.md` y `.claude/scripts/` en [aes-sandbox-gastos](https://github.com/KeylorBrenes/aes-sandbox-gastos).
+   - No uses una cuenta bot ni un token personal *fine-grained*: las cuentas nuevas pueden quedar suspendidas por el antiabuso de GitHub, y los tokens *fine-grained* no acceden a repos de otra cuenta personal aunque seas colaborador.
+9. **Windows.** Los hooks son bash: instala Git for Windows. Claude Code los ejecuta con Git Bash, y los scripts normalizan rutas `H:\...`. Usa un `.gitattributes` con `*.sh text eol=lf`; con CRLF los scripts fallan. El *sandbox* de la terminal de Claude Code, que impide escribir fuera del directorio de trabajo, **no está disponible en Windows nativo, solo en WSL 2**. Sin él, nada impide que un agente escriba fuera del repo; en el sandbox de AES pasó (FL-002). Para proyectos con algo sensible en el disco, trabaja en WSL 2 con el sandbox activo.
 
 ## Flujo con estas piezas
 

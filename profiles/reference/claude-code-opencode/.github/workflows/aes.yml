@@ -12,6 +12,9 @@ name: aes
 on:
   pull_request:
     branches: [main]
+    # labeled/unlabeled: poner o quitar una etiqueta de aprobación (aes:*) relanza la CI.
+    # Sin esto, la CI nunca ve la etiqueta: un re-run repite el evento original, sin ella.
+    types: [opened, synchronize, reopened, labeled, unlabeled]
 
 permissions:
   contents: read

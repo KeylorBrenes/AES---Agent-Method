@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.2] — 2026-11-02
+
+Correcciones en la implementación de referencia (`profiles/reference/claude-code-opencode/`), encontradas al ejecutar AES con agentes reales en [aes-sandbox-gastos](https://github.com/KeylorBrenes/aes-sandbox-gastos), historia EN-001. Sin cambios normativos: las reglas que salgan del experimento irán a la 1.2.0 (RFC-002).
+
+### Corregido
+- **El hook `protect-paths.sh` no protegía nada en Windows.** Comparaba rutas con `\` contra patrones con `/`, así que las escrituras a `tests/acceptance/` pasaban. Ahora normaliza rutas de Windows (`H:\`, `h:/`, `/h/`) y es insensible a mayúsculas en la unidad.
+- **Los hooks se registraban con `$CLAUDE_PROJECT_DIR`**, frágil con rutas de Windows. Ahora se invocan con `bash "$(git rev-parse --show-toplevel)/…"`.
+- **El workflow ignoraba las etiquetas de aprobación.** Faltaban los eventos `labeled`/`unlabeled`: poner `aes:deps-approved` no relanzaba la CI, y un re-run repite el evento original, sin la etiqueta.
+- **El guardián no trataba las fuentes de paquetes como dependencias.** Un `.npmrc` o un `nuget.config` que apunte a otro registro pasaba sin aprobación. Ahora cuentan como cambio de dependencias: `nuget.config`, `.npmrc`, `.yarnrc(.yml)`, `pip.conf`.
+- **Guía de protección de rama:** un solo ruleset con bypass permite fusionar con la CI en rojo, porque el bypass salta todas las reglas. Ahora se indican dos rulesets: `main-ci` sin bypass y `main-aprobacion` con bypass solo para la aprobación.
+- **Guía de identidad de los agentes:** GitHub App en lugar de un token *fine-grained* o una cuenta bot. Incluye la nueva ubicación de las llaves (*Credentials → Key pairs*).
+- **Windows:** nota sobre Git Bash, finales de línea y el *sandbox* de la terminal (solo en WSL 2).
+
 ## [1.1.1] — 2026-11-02
 
 ### Corregido

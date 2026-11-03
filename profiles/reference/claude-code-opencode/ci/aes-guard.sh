@@ -22,8 +22,8 @@ ALLOW_DEPS="${AES_ALLOW_DEPS:-0}"
 
 # Rutas que el programador nunca puede tocar. Ajustar en el perfil del proyecto.
 PROTECTED_RE='^(tests/acceptance/|specs/|ci/|\.github/|\.claude/|\.opencode/|AGENTS\.md$|CLAUDE\.md$|opencode\.json$)'
-# Manifiestos y lockfiles de dependencias. Ajustar al stack.
-DEPS_RE='(^|/)(package\.json|package-lock\.json|pnpm-lock\.yaml|yarn\.lock|requirements[^/]*\.txt|poetry\.lock|pyproject\.toml|uv\.lock|Cargo\.toml|Cargo\.lock|go\.mod|go\.sum|[^/]*\.csproj|packages\.lock\.json|Directory\.Packages\.props|composer\.(json|lock)|Gemfile(\.lock)?)$'
+# Manifiestos, lockfiles y fuentes de paquetes (cambiar la fuente es tan sensible como cambiar un paquete). Ajustar al stack.
+DEPS_RE='(^|/)(package\.json|package-lock\.json|pnpm-lock\.yaml|yarn\.lock|requirements[^/]*\.txt|poetry\.lock|pyproject\.toml|uv\.lock|Cargo\.toml|Cargo\.lock|go\.mod|go\.sum|[^/]*\.csproj|packages\.lock\.json|Directory\.Packages\.props|composer\.(json|lock)|Gemfile(\.lock)?|nuget\.config|NuGet\.Config|\.npmrc|\.yarnrc(\.yml)?|pip\.conf)$'
 # Marcadores de omisión, silenciado o errores tragados.
 MARKERS_RE='\.skip\(|\bxit\(|\bxdescribe\(|@Disabled|@Ignore|#\[ignore\]|pytest\.mark\.skip|Skip *= *"|eslint-disable|@ts-ignore|@ts-expect-error|#[[:space:]]*type:[[:space:]]*ignore|#pragma warning disable|noqa|catch *(\([^)]*\))? *\{ *\}|except[^:]*: *pass'
 
