@@ -1,4 +1,5 @@
 # Valida el propio repositorio de AES: documento consolidado al día y scripts sin errores.
+# Versión 1.2.0.
 name: validate
 
 on:
@@ -18,15 +19,27 @@ jobs:
         run: ./scripts/build-core.sh --check
       - name: Sintaxis de scripts
         run: |
-          for f in scripts/*.sh profiles/reference/*/ci/*.sh profiles/reference/*/.claude/hooks/*.sh; do
+          shopt -s nullglob
+          for f in scripts/*.sh profiles/reference/*/ci/*.sh profiles/reference/*/.claude/hooks/*.sh profiles/reference/*/.claude/scripts/*.sh; do
             bash -n "$f" || exit 1
             echo "ok $f"
           done
+          for f in profiles/reference/*/ci/*.mjs; do
+            node --check "$f" || exit 1
+            echo "ok $f"
+          done
       - name: ShellCheck
-        run: shellcheck scripts/*.sh profiles/reference/*/ci/*.sh profiles/reference/*/.claude/hooks/*.sh
-      - name: JSON válido
         run: |
-          for f in profiles/reference/*/opencode.json profiles/reference/*/.claude/settings.json; do
+          shopt -s nullglob
+          shellcheck scripts/*.sh profiles/reference/*/ci/*.sh profiles/reference/*/.claude/hooks/*.sh profiles/reference/*/.claude/scripts/*.sh
+      - name: JSON y YAML válidos
+        run: |
+          shopt -s nullglob
+          for f in profiles/reference/*/opencode.json profiles/reference/*/.claude/*.json; do
             python3 -m json.tool "$f" > /dev/null || exit 1
+            echo "ok $f"
+          done
+          for f in profiles/reference/*/.github/workflows/*.yml .github/workflows/*.yml docs/ci/*.yml; do
+            python3 -c "import sys, yaml; yaml.safe_load(open(sys.argv[1]))" "$f" || exit 1
             echo "ok $f"
           done
