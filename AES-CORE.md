@@ -1,4 +1,4 @@
-# Agentic Engineering Standard — AES Core 1.1.2
+# Agentic Engineering Standard — AES Core 1.2.0
 
 <!-- Archivo generado por scripts/build-core.sh a partir de standard/. No editar a mano. -->
 
@@ -26,6 +26,8 @@ AES define un proceso reproducible para producir software correcto, mantenible y
 14. **Evidencia ejecutada, no narrada.** Solo cuenta como evidencia la salida capturada por la CI o por una herramienta que ejecuta y registra el comando. El resumen escrito por un agente es contexto, no evidencia.
 15. **Proceso proporcional.** El tamaño del proceso depende del track del cambio (02 §8). Un cambio trivial no recorre el ciclo de una historia de alto riesgo, y un cambio de alto riesgo no se trata como trivial.
 16. **Mejora continua del harness.** Los fallos de los agentes se registran y se convierten en controles (09). El mismo error no debe depender de que alguien lo recuerde.
+17. **Estabilidad antes que avance.** No se construye funcionalidad nueva sobre defectos conocidos. Los defectos se clasifican por severidad y se corrigen antes de empezar la siguiente historia, salvo los menores (02 §9). Corregir un defecto viejo mientras se construye algo nuevo mezcla dos cambios y produce defectos nuevos.
+18. **Cada decisión tiene firma.** Toda ambigüedad que afecta el producto se resuelve con una decisión registrada: quién, cuándo, qué opciones había y qué cambió (03 §8). Lo que nadie decidió explícitamente no es una decisión, aunque una prueba o un agente ya lo haya fijado.
 
 ## 3. Adaptabilidad
 
@@ -61,6 +63,7 @@ Los nombres pueden cambiar según las herramientas, pero las responsabilidades d
 - **Arquitecto:** analiza estructura y consecuencias técnicas; propone decisiones y ADRs.
 - **Diseñador de pruebas / QA:** transforma criterios aprobados en escenarios y pruebas de aceptación; protege su integridad.
 - **Programador:** implementa tareas delimitadas y sus pruebas técnicas permitidas.
+- **Mecánico (opcional):** ejecuta cambios mecánicos y acotados (configuración no funcional, renombres, formato, consolidación de notas), sin lógica nueva. Permite asignar ese trabajo a un modelo más barato.
 - **Verificador independiente:** comprueba el resultado contra requisitos y evidencia; no modifica el código bajo revisión.
 - **CI y herramientas deterministas:** ejecutan controles repetibles. Sus resultados se conservan como evidencia.
 
@@ -86,6 +89,14 @@ No se debe usar `Done` como sinónimo de «el agente terminó de escribir códig
 
 Un agente MUST NOT afirmar que una prueba pasó si no la ejecutó y no dispone del resultado. Si una prueba no se pudo ejecutar, se reporta como `NOT RUN` o `BLOCKED`, con el motivo. Los resultados deben incluir el comando o procedimiento, entorno relevante y salida resumida cuando sea posible.
 
+Toda afirmación sobre el repositorio o el producto se comprueba **en su fuente**, no en un reflejo de ella:
+
+- el contenido versionado, en lo que está versionado (`git show`, `git cat-file`), no en la copia de trabajo, que puede diferir (por ejemplo, en los fines de línea);
+- el comportamiento implementado, en el código o ejecutándolo, no en las pruebas que lo describen ni en el reporte de quien lo implementó;
+- lo que se ejecutó en la CI, en el log del run, no en el color del check.
+
+La regla aplica a los agentes y también a los registros que escribe el humano o un asistente: un registro escrito de memoria es un supuesto hasta que se compruebe.
+
 ## 8. Revisión humana proporcional
 
 AES no pretende que el responsable humano lea cada línea de código, pero tampoco permite que nadie revise nada. La revisión humana se desplaza **del código a los contratos**: si el humano no va a leer el código, DEBE leer y aprobar las pruebas de aceptación, porque son lo único en lo que el proceso confía sin intermediarios.
@@ -95,7 +106,9 @@ AES no pretende que el responsable humano lea cada línea de código, pero tampo
 | Antes | Criterios de aceptación y exclusiones | — | ✓ | ✓ | ✓ |
 | Antes | Pruebas de aceptación (escenarios y aserciones clave) | — | ✓ | ✓ | ✓ |
 | Antes | Contrato de interfaz / ADR | — | — | si cambia | ✓ |
-| Después | Informe de verificación y evidencias (salidas, capturas) | — | ✓ | ✓ | ✓ |
+| Antes | Decisiones registradas y supuestos de QA resueltos (03 §8) | — | ✓ | ✓ | ✓ |
+| Después, antes de integrar | Informe de verificación y evidencias (salidas, capturas) | — | ✓ | ✓ | ✓ |
+| Después | Severidad de los defectos encontrados (02 §9) | si hay | si hay | si hay | si hay |
 | Después | Alertas del guardián de CI (superficie, trampas) | si hay | si hay | si hay | ✓ |
 | Después | Código | lectura rápida del diff | opcional | solo zonas señaladas | **zonas de riesgo, obligatorio** |
 | Después | Demostración o prueba funcional propia | — | — | ✓ | ✓ |
@@ -119,6 +132,7 @@ Antes de implementar funcionalidades, el orquestador DEBE ayudar a crear o local
 3. **Architecture Overview:** contexto, componentes principales, límites, datos e integraciones conocidas.
 4. **Backlog inicial:** Epics y riesgos/incertidumbres conocidos; no es necesario detallar todas las historias futuras.
 5. **Quality Strategy:** niveles de prueba, CI y controles aplicables.
+6. **Copia local de las reglas que los agentes consultan:** como mínimo, las checklists de DoR y DoD (08) dentro del repositorio (por ejemplo, `docs/aes/`), con la versión de AES de la que salen. Un agente que solo tiene la referencia «AES 08» revisa la DoR de memoria.
 
 Si se trabaja sobre un proyecto existente, primero se inspecciona el repositorio y el comportamiento actual. No se asume que la documentación está actualizada ni que la arquitectura deseada coincide con la implementada.
 
@@ -147,7 +161,8 @@ Se DEBERÍA crear un ADR para decisiones con impacto material, difícil reversi�
 - estrategia de persistencia o migración de datos;
 - autenticación/autorización;
 - contratos de integración importantes;
-- decisiones de escalabilidad, seguridad o despliegue.
+- decisiones de escalabilidad, seguridad o despliegue;
+- **convenciones que aplican a más de una historia**: cómo se valida, cómo se muestran los errores, qué control de UI se usa para cada tipo de dato, formato de fechas y montos. Si una convención se decide dentro de una historia y vale para las siguientes, sube a un ADR; si no, la siguiente historia vuelve a preguntarla, o la fija sin firma el primer agente que escribe una prueba.
 
 Un ADR debe resumir contexto, decisión, alternativas consideradas, consecuencias, riesgos, estado y fecha. No se crean ADRs para elecciones locales triviales.
 
@@ -192,7 +207,9 @@ AES utiliza esta jerarquía lógica:
 
 `Product Goal / Vision → Epic → User Story → Task/Subtask → Test/Evidence`
 
-Los defectos (`Bug`), tareas técnicas (`Enabler`) y actividades de investigación (`Spike`) pueden aparecer como tipos de elemento relacionados con el backlog. No deben disfrazarse de historias de usuario si no representan valor de usuario.
+Los defectos (`Bug`), tareas técnicas (`Enabler`), tareas de mantenimiento (`Chore`), lotes de estabilización (§9.4) y actividades de investigación (`Spike`) pueden aparecer como tipos de elemento relacionados con el backlog. No deben disfrazarse de historias de usuario si no representan valor de usuario.
+
+Los defectos, chores y hallazgos que se dejan para después son **elementos de primera clase** del backlog: tienen ID, criterio, track y, si son defectos, severidad. Una nota en un documento o en un comentario de PR no es un elemento del backlog y se pierde.
 
 ## 2. Product Goal y Epics
 
@@ -256,6 +273,7 @@ Heurísticas específicas para tareas ejecutadas por agentes (el perfil las ajus
 
 - la tarea SHOULD poder completarse en **una sola sesión con contexto nuevo**, sin compactación;
 - el diff resultante SHOULD ser revisable de una vez; el perfil fija un **presupuesto de diff orientativo** (por ejemplo, 300–400 líneas cambiadas). Superarlo no es un fallo automático, pero obliga a justificar por qué no se dividió;
+- el presupuesto se estima **por separado para código de producción y para pruebas**. El desvío que exige justificación es el de producción: un único número castiga probar bien (en el sandbox de AES, el 60 % de una tarea de 474 líneas eran pruebas unitarias);
 - la tarea SHOULD tocar una única superficie de cambio coherente (04 §2).
 
 ## 7. Refinamiento continuo
@@ -271,7 +289,7 @@ AES no aplica el mismo proceso a todos los cambios. Una crítica conocida a las 
 | Track | Cuándo | Artefactos mínimos | Gate humano previo |
 |---|---|---|---|
 | **T0 — Trivial** | Errata, texto, configuración no funcional, actualización de parche sin cambio de API | Tarea + CI verde | Ninguno |
-| **T1 — Bug** | Comportamiento existente incorrecto | Prueba de reproducción **protegida** que falla (RED) + tarea | Aprobar que la prueba describe el comportamiento correcto |
+| **T1 — Bug / chore** | Comportamiento existente incorrecto, o cambio pequeño con un criterio verificable (configuración funcional, herramienta, script) | Elemento con severidad (si es defecto) y criterio + comprobación de reproducción **protegida** que falla (RED): prueba de aceptación o comando de verificación (05 §12) + tarea. Camino corto en 04 §10 | Aprobar que la comprobación describe el comportamiento correcto |
 | **T2 — Historia** | Comportamiento nuevo de alcance conocido | Historia, criterios, contrato de interfaz (si hay frontera nueva), suite de aceptación con RED confirmado, tareas | Aprobar criterios y pruebas de aceptación |
 | **T3 — Alto riesgo** | Autenticación, autorización, datos sensibles, pagos, migraciones, cambio arquitectónico o de contrato público | Todo T2 + ADR + pruebas holdout obligatorias + Spike si hay incertidumbre | Criterios, pruebas, ADR; revisión humana del código de riesgo después |
 
@@ -279,9 +297,51 @@ Reglas:
 
 - El orquestador propone el track; el responsable humano puede cambiarlo.
 - **Subir** de track durante el trabajo es automático en cuanto aparece un riesgo nuevo. **Bajar** de track requiere justificación registrada.
-- Un T1 siempre empieza con una prueba que reproduce el defecto y falla antes del arreglo.
-- Los defectos encontrados durante la verificación o la prueba manual agéntica (05 §11) se registran como T1.
+- Un T1 siempre empieza con una comprobación que reproduce el defecto (o la ausencia del cambio) y falla antes del arreglo. Si no existe ninguna comprobación que falle antes (por ejemplo, una configuración que ya funciona por casualidad en el entorno), el elemento lo declara como «sin RED», con el motivo, y el responsable humano lo aprueba de forma explícita.
+- Los defectos encontrados durante la verificación o la prueba manual agéntica (05 §11) que no pertenecen a lo que añade la tarea se registran como T1, con severidad (§9).
 - Los niveles de riesgo de 07 §2 se corresponden así: `Low` → T0/T1/T2 según el tipo; `Medium` → T2; `High`/`Critical` → T3.
+
+## 9. Defectos: severidad y compuerta de estabilización
+
+### 9.1 Severidad
+
+La severidad mide el daño del defecto; la prioridad (§4), el orden en que se trabaja. Son independientes. Todo defecto registrado lleva una severidad:
+
+| Severidad | Cuándo | Ejemplos |
+|---|---|---|
+| **Crítica** | Pérdida o corrupción de datos, fallo de seguridad, la aplicación no arranca, el flujo principal es inutilizable, o la CI de la rama principal está en rojo | Un gasto guardado se pierde; un usuario ve datos de otro; `main` no compila |
+| **Alta** | Un criterio de aceptación ya aceptado deja de cumplirse, o un flujo importante falla sin alternativa razonable. Una **prueba inestable** en la suite que corre en la rama principal es Alta: puede poner en rojo a todos | Editar un gasto no guarda; una prueba de regresión falla 1 de cada 3 corridas |
+| **Media** | Comportamiento incorrecto con alternativa, o en un flujo secundario; un mensaje o una respuesta de error que lleva al usuario a una conclusión equivocada | Un monto `abc` dice «obligatorio» en lugar de «inválido»; un cuerpo mal codificado responde `500` en lugar de `400` |
+| **Menor** | Cosmético o de presentación, sin efecto en los datos ni en las decisiones del usuario | Un separador de miles distinto; dos paneles abiertos a la vez sin consecuencia |
+
+El orquestador propone la severidad con la evidencia del hallazgo; el responsable humano la confirma o la cambia. Bajar la severidad de un defecto ya registrado es una decisión registrada (03 §8), con motivo.
+
+### 9.2 Compuerta de estabilización
+
+Una historia o enabler nuevo (T2/T3) **no puede pasar a `Ready`** mientras exista en el backlog algún defecto abierto de severidad **Crítica, Alta o Media**, ni mientras el número de defectos **Menores** abiertos supere el límite del perfil (por defecto, 5).
+
+- Un defecto **Crítico** detiene además todo el trabajo en curso, incluida la historia activa: no se integra ningún cambio de código en la rama principal salvo su corrección. Excepción: si el defecto es de la propia tarea en curso, se trata como ciclo `FAIL` de esa tarea (04 §9).
+- Un defecto **Alto o Medio** encontrado durante una historia no la detiene: la historia termina, y la siguiente no empieza hasta corregirlo.
+- Los defectos **Menores** pueden quedar abiertos dentro del límite. Cuando se supera, se corrigen en lote antes de seguir.
+- Un defecto «abierto» es cualquiera que no está `Accepted` (corregido y aceptado) ni `Rejected` (no era un defecto). `Deferred` cuenta como abierto: posponer un defecto no lo corrige.
+- Las únicas formas de abrir la compuerta son corregir los defectos o una excepción documentada (00 §4). Absorber un defecto dentro de la historia siguiente es una excepción, no un camino normal: mezcla la corrección de lo viejo con la construcción de lo nuevo.
+
+El perfil puede endurecer la compuerta (por ejemplo, un límite menor de defectos menores), nunca relajarla sin excepción documentada. La compuerta SHOULD implementarse en la CI (L3), leyendo el backlog desde la rama protegida; la implementación de referencia lo hace.
+
+### 9.3 Qué es un defecto y qué no
+
+- Un hallazgo sobre **lo que añade la tarea en curso** no es un defecto: es un ciclo `FAIL` de esa tarea, que se corrige antes de integrar (04 §9).
+- Un hallazgo sobre comportamiento **ya aceptado o preexistente** es un defecto: se registra con ID, severidad, historia de origen, reproducción y criterio, aunque se encuentre durante otra historia.
+- El responsable humano puede fijar en el perfil una **regla permanente** para clasificar los hallazgos tras un `PASS` del verificador (por ejemplo, «lo que añade la tarea se corrige; lo demás va al backlog»). El orquestador la aplica, registra cada clasificación como decisión y se la muestra al humano, que puede cambiarla antes de integrar.
+
+### 9.4 Lote de estabilización
+
+Los defectos que cierran la compuerta se corrigen juntos en un **lote de estabilización**: un elemento del backlog (por ejemplo, `ST-NNN`) que agrupa los defectos de una historia y los asociados a ella.
+
+- Un lote se trabaja en **una sola sesión** del orquestador, sin mezclar funcionalidad nueva.
+- Sigue el camino T1 (04 §10): un PR de especificación con los defectos, su severidad y su criterio; las comprobaciones de reproducción con RED; tareas agrupadas por superficie de cambio; verificación; cierre.
+- Las comprobaciones de reproducción del lote pasan a la regresión al cerrarlo, como las de una historia.
+- Un defecto que el lote no logra corregir sigue abierto y la compuerta sigue cerrada.
 
 ---
 
@@ -301,7 +361,8 @@ Cada Historia de Usuario refinada DEBE tener:
 - dependencias y riesgos relevantes;
 - contrato de interfaz contra el que se escribirán las pruebas de aceptación, cuando la historia introduce o modifica una frontera observable (05 §2.1);
 - estrategia de pruebas/aceptación;
-- estado y responsable de decisión.
+- estado y responsable de decisión;
+- registro de decisiones (§8).
 
 No se deben rellenar campos con texto vacío. Un elemento puede permanecer en `Draft` hasta que exista información suficiente.
 
@@ -326,11 +387,14 @@ Cuando aplique, los criterios DEBERÍAN contemplar:
 - duplicados y conflictos;
 - usuarios sin permisos;
 - errores de servicios externos;
+- **fallo de cada acción que escribe** (guardar, editar, eliminar, enviar): qué ve el usuario si la respuesta no es exitosa y si la red falla, y qué transiciones limpian ese estado de error;
 - estados límite y concurrencia;
 - compatibilidad con comportamiento existente;
 - accesibilidad, privacidad y seguridad.
 
 No todos los escenarios aplican a todas las historias. QA debe explicar brevemente por qué un escenario de riesgo relevante se omite.
+
+El fallo de una acción que escribe MUST tener criterio en toda historia con interfaz de usuario. En el sandbox de AES, los dos ciclos `FAIL` de una historia vinieron del mismo hueco: ningún criterio decía qué pasaba al fallar el guardado o el borrado, y al añadir el mensaje de error nadie listó qué lo limpiaba.
 
 ## 4. Fuera de alcance
 
@@ -347,17 +411,47 @@ Los agentes no deben inventar comportamiento del producto. Deben:
 - elegir la alternativa más simple y consistente cuando el detalle es local y no cambia el contrato del producto;
 - informar el supuesto en el reporte de ejecución.
 
+Los **supuestos de QA** merecen una regla propia. Al escribir las pruebas, QA tiene que fijar detalles que el contrato no dice (el tipo de control de un campo, un formato, qué pasa en un caso límite). Si esos supuestos llegan a la suite sin decisión, QA define el producto y nadie lo firmó. Por eso:
+
+- QA MUST listar en el plan de pruebas todo lo que tuvo que suponer;
+- cada supuesto se convierte en contrato (decisión registrada, §8) o se rechaza **antes** de que la historia pase a `Ready`;
+- ningún supuesto abierto pasa la DoR.
+
 No se debe interrumpir al usuario por decisiones internas triviales que el estándar ya delega al equipo técnico.
 
 ## 6. Trazabilidad
 
 Cada criterio de aceptación debe relacionarse con uno o más escenarios/pruebas o con una justificación explícita de verificación manual. Cada tarea debe referenciar la historia y los criterios que contribuye a satisfacer.
 
+La trazabilidad SHOULD ser comprobable por máquina:
+
+- cada prueba de aceptación lleva el ID de su historia y el de su criterio (por ejemplo, las etiquetas `@US-002` y `@US-002-AC-03`, y `AC-03` al inicio del título);
+- cada tarea declara los criterios que deja en verde (04 §2), de modo que la CI ejecute solo esos (05 §12);
+- toda prueba se deriva de un criterio aprobado. Si QA ve un hueco, propone un criterio nuevo; no escribe una prueba sin criterio.
+
+Un criterio que describe un comportamiento que el código **ya tiene** no puede demostrar RED. Su verificación es la **regresión** de la historia dueña de ese comportamiento (05 §2.4), y el criterio lo dice: «Verificación: regresión de US-001».
+
 No se considera trazabilidad suficiente una lista de pruebas sin vínculo con los requisitos.
 
 ## 7. Cambios en la historia
 
 Una vez que la historia está `Ready`, los cambios de alcance, comportamiento esperado o criterios de aceptación requieren control de cambios. Las correcciones editoriales que no cambian el significado pueden hacerse sin re-aprobación, dejando historial cuando la herramienta lo permita.
+
+## 8. Registro de decisiones
+
+Cada historia tiene una sección «Decisiones». Cada ambigüedad resuelta y cada supuesto convertido en contrato es una fila:
+
+| ID | Pregunta | Opciones | Decisión | Quién y fecha | Impacto |
+|---|---|---|---|---|---|
+| D-01 | ¿Qué categoría queda seleccionada al cancelar una edición? | Vuelve a la inicial / queda la última | Vuelve a la inicial | Responsable humano, 2026-11-05 | AC-12 modificado |
+
+Reglas:
+
+- La decisión entra en la historia **en el mismo PR** que la usa (refinamiento o pruebas). Aprobar ese PR es la firma del responsable humano.
+- En «Impacto» va qué cambió: un criterio nuevo o modificado, el contrato de interfaz, un ADR, o «ninguno».
+- Una decisión que vale para más de una historia sube a un ADR (01 §4).
+- Una decisión que resultó basarse en un hecho falso se corrige **en su fila**, con fecha y motivo; no se borra.
+- Las decisiones que el orquestador toma aplicando una regla permanente del humano (02 §9.3) también se registran, con la regla citada.
 
 ---
 
@@ -381,7 +475,9 @@ Cada tarea lista para ejecución DEBE especificar:
 - restricciones y permisos;
 - **comandos de validación exactos** (no descripciones como «ejecuta las pruebas relevantes»);
 - **pruebas de regresión afectadas** (test map), cuando puedan generarse o deducirse;
-- presupuesto de diff orientativo (02 §6);
+- **criterios que deja en verde**: los IDs de criterio (o de defecto) que esta tarea cumple. La CI de la tarea ejecuta solo esos más la regresión; la **última** tarea de la historia ejecuta la historia completa (05 §12);
+- presupuesto de diff orientativo, separado en producción y pruebas (02 §6);
+- si la tarea introduce un **estado** (de error, de carga, de edición), las transiciones que lo crean y las que lo limpian;
 - condición de finalización.
 
 La superficie de cambio no es una sugerencia: la CI compara el diff contra ella (05 §10). Un archivo modificado fuera de la superficie es un `FAIL` salvo aprobación registrada. La superficie se publica en la rama protegida **antes** de delegar la tarea, para que el programador no pueda ampliarla.
@@ -393,6 +489,8 @@ El estudio TDAD (Alonso, Yovine y Braberman, arXiv:2603.17973; tesis de maestrí
 ## 3. Tamaño y divisibilidad
 
 Una tarea es suficientemente pequeña si un agente puede comprender su objetivo, implementarla, inspeccionar el diff y ejecutar su validación sin tener que aceptar varios resultados independientes como un bloque indivisible.
+
+Las tareas se dividen **por criterios** (cortes verticales que dejan criterios en verde), no por capas técnicas. Una tarea «solo API» y otra «solo UI» no pueden quedar verdes por separado si la aceptación cruza ambas. Sin CI por criterio, toda historia termina en una sola tarea grande: en el sandbox de AES, las dos primeras historias acabaron en tareas únicas de 300 a 500 líneas.
 
 Señales para dividir:
 
@@ -419,7 +517,8 @@ El programador DEBE:
 6. separar commits estructurales y conductuales (§8);
 7. ejecutar los comandos de validación exactos de la tarea;
 8. inspeccionar su propio diff para detectar archivos o cambios ajenos;
-9. entregar un reporte con archivos modificados, pruebas ejecutadas, resultados, riesgos y decisiones/supuestos.
+9. dejar el entorno como lo encontró: ningún servidor, proceso ni dato que el rol siguiente pueda tomar como propio (06 §10);
+10. entregar un reporte con archivos modificados, pruebas ejecutadas, resultados, riesgos y decisiones/supuestos.
 
 El programador NO DEBE:
 
@@ -428,6 +527,8 @@ El programador NO DEBE:
 - ocultar, saltar o silenciar pruebas fallidas;
 - ampliar el alcance con refactorizaciones no relacionadas;
 - añadir dependencias sin justificación y aprobación requerida;
+- editar a mano código generado por herramientas (por ejemplo, migraciones): se regenera;
+- borrar un marcador del guardián que no escribió (por ejemplo, un `#pragma` de código generado) para que el control deje de marcarlo: se reporta;
 - afirmar que algo funciona sin evidencia de ejecución.
 
 ## 5. Dependencias y paralelismo
@@ -439,6 +540,8 @@ Se DEBERÍA usar ramas o worktrees separados para agentes concurrentes. No se pe
 ## 6. Bloqueos
 
 Si el agente descubre una dependencia, contradicción o cambio necesario fuera del alcance, debe detener esa parte, explicar el bloqueo y proponer opciones. No debe resolverlo ampliando unilateralmente la tarea.
+
+Una **acción denegada** (por un permiso, un hook o un clasificador del harness) también es un bloqueo. El agente termina con `BLOCKED` e indica la acción exacta que necesita **del responsable humano**. No la intenta de otra forma ni le pide a otro agente que la haga: eso es un rodeo por delegación (06 §6.1).
 
 ## 7. Cierre de tarea
 
@@ -465,6 +568,7 @@ Efecto: un commit `struct:` se revisa comprobando que las pruebas siguen verdes;
 ## 9. Circuit breaker e higiene de contexto
 
 - Cada tarea MUST ejecutarse en una **sesión nueva**. No se reutiliza el contexto de una tarea anterior.
+- Cuenta como ciclo `FAIL`: una CI roja por causa del cambio, un `FAIL` del verificador, o un hallazgo tras un `PASS` que el responsable humano manda corregir antes de integrar. No cuenta: una CI roja que solo espera una aprobación humana prevista (por ejemplo, la etiqueta de dependencias).
 - Si una misma tarea acumula **3 ciclos `FAIL`** (CI o verificador), se detiene. No hay cuarto intento automático. El orquestador clasifica la causa y decide:
   - tarea mal especificada o demasiado grande → vuelve a refinamiento;
   - prueba de aceptación incorrecta → control de cambios con QA (05 §6);
@@ -472,6 +576,28 @@ Efecto: un commit `struct:` se revisa comprobando que las pruebas siguen verdes;
   - limitación del modelo o del harness → reasignar o escalar al responsable humano.
 - Si el agente repite el mismo enfoque fallido dos veces seguidas, el orquestador SHOULD reiniciar el contexto con un resumen escrito de lo aprendido en lugar de compactarlo: la compactación conserva los supuestos erróneos.
 - El perfil puede reducir el umbral de 3 ciclos; aumentarlo requiere excepción documentada.
+
+## 10. Camino corto para T0 y T1
+
+T0 y T1 no recorren el ciclo de una historia, pero tampoco se improvisan. Pasos mínimos:
+
+| Paso | T0 | T1 (defecto, chore o lote de estabilización) |
+|---|---|---|
+| Elemento en el backlog | Sí | Sí, con severidad si es defecto (02 §9) y con historia de origen |
+| Especificación | La tarea | Un PR de especificación con el elemento, su criterio y la superficie. Aprobarlo es el gate humano |
+| Comprobación de reproducción | — | Prueba de aceptación protegida o **comando de verificación** (05 §12), con RED confirmado; o «sin RED» declarado y aprobado (02 §8) |
+| QA | No | Solo si la comprobación es una prueba de aceptación nueva |
+| Tareas | Una | Las mínimas, agrupadas por superficie; cada una declara qué defectos deja en verde |
+| CI | Guardián + validaciones | Guardián + validaciones + la comprobación del elemento + regresión |
+| Verificador | No (salvo que el perfil lo exija) | Sí, ejecutando la comprobación él mismo |
+| Cierre | Estado en el backlog | Estado, comprobación añadida a la regresión, hallazgos registrados |
+
+Un T1 que, al trabajarse, resulta tocar comportamiento nuevo o un riesgo de T3 sube de track (02 §8).
+
+## 11. Sesiones del orquestador
+
+- El orquestador trabaja **una historia, enabler o lote por sesión**. Arrastrar el contexto de otro elemento encarece cada turno y mezcla decisiones; en el sandbox de AES, el contexto acumulado fue la mayor parte del costo de cada historia.
+- La redacción mecánica (consolidar notas, tablas de métricas) SHOULD delegarse en un rol barato (el mecánico).
 
 ---
 
@@ -514,6 +640,12 @@ Una prueba que ya pasa antes del cambio no verifica el código nuevo: puede no e
 
 Antes de que una historia pase a `Ready`, QA MUST ejecutar la suite de aceptación contra la rama base y registrar que **cada prueba nueva falla por la razón esperada** (por ejemplo, «404 en `/notifications`», no «error de importación» ni «timeout»). Una prueba nueva que pasa en verde contra la base se considera defectuosa hasta que se justifique. Este registro (`acceptance-baseline` en el plan de pruebas o artefacto de CI) forma parte de la DoR de la historia.
 
+RED confirmado exige, además:
+
+- que **todas** las pruebas nuevas se hayan **ejecutado**. Un error de compilación, de configuración o de arranque no es RED: no demuestra que ninguna aserción falle. Tampoco lo es una prueba que no llegó a correr (por ejemplo, por un modo serie que detiene la suite al primer fallo) ni una prueba omitida;
+- que la comprobación la haga una **herramienta**, la misma en el entorno de QA y en la CI, sobre el reporte de la ejecución. «Las corrí por separado» no es evidencia: en el sandbox de AES, QA reportó un RED con dos pruebas sin ejecutar y la herramienta lo detectó;
+- una única excepción, el **RED de arranque**: cuando la base todavía no tiene código de aplicación (el primer enabler), se acepta que ninguna prueba se ejecute porque no hay nada que arrancar. La herramienta solo la admite si la base no tiene código.
+
 ### 2.3 Pruebas visibles y holdout
 
 La suite de aceptación SHOULD dividirse (MUST en T3) en:
@@ -522,6 +654,29 @@ La suite de aceptación SHOULD dividirse (MUST en T3) en:
 - **holdout**: variantes de los mismos criterios con datos y casos distintos, almacenadas donde el entorno del programador no tiene acceso (repositorio separado, rama sin permisos o directorio no montado). Solo las ejecutan la CI y el verificador.
 
 Cuando una prueba holdout falla, el programador recibe el ID del criterio y el comportamiento observado, **no el código de la prueba**. Objetivo: detectar implementaciones ajustadas a los datos visibles (valores codificados, ramas especiales para el caso de prueba) sin quitar el feedback. Proporción orientativa: 20–30 % de los escenarios; el perfil la ajusta.
+
+### 2.4 Pruebas de caracterización
+
+A veces un criterio nuevo describe algo que el código **ya hace** (por ejemplo, el mismo mensaje de error en el formulario de alta que la historia nueva exige en el de edición). Su prueba pasa contra la base, así que no puede demostrar RED, y la regla de §2.2 la rechazaría junto con todo el conjunto.
+
+Esas pruebas son de **caracterización**: documentan un comportamiento existente. Reglas:
+
+- viven en la suite de la historia **dueña** de ese comportamiento (con su etiqueta, por ejemplo `@US-001`), y llevan en el título el ID del criterio nuevo para la trazabilidad;
+- corren en la regresión desde que se integran;
+- el criterio nuevo declara «Verificación: regresión de <ID>» y **no** aparece en el archivo de criterios de ninguna tarea (§12), porque no tiene pruebas propias que ejecutar;
+- QA las marca como tales en el plan, y el responsable humano las aprueba con el resto.
+
+No se inventan etiquetas que la CI no ejecuta: una prueba que nunca corre no verifica nada.
+
+### 2.5 Aislamiento de datos
+
+Las pruebas de aceptación corren en paralelo y comparten datos (la misma base, el mismo periodo, la misma lista). Cada prueba MUST:
+
+- crear sus propios datos y buscarlos por algo que solo ella usa (una marca única en un texto, un periodo propio);
+- no comparar totales o conteos globales que otras pruebas pueden cambiar mientras corre;
+- no depender del orden de ejecución ni de lo que dejó otra prueba.
+
+Una prueba que falla a veces no es ruido: es un defecto de severidad Alta (02 §9) si corre en la regresión de la rama principal, porque puede ponerla en rojo para todos.
 
 ## 3. TDD: durante la implementación
 
@@ -575,6 +730,8 @@ Si una prueba falla, el equipo debe clasificar la causa antes de cambiar código
 
 El agente no debe borrar, deshabilitar, reducir aserciones ni cambiar datos esperados para ocultar un fallo. La corrección de una prueba es legítima solo si se demuestra que la prueba contradice el requisito aprobado o es técnicamente incorrecta.
 
+Una prueba **inestable** (falla sin cambio de código) es técnicamente incorrecta. Se registra como defecto (02 §9), la corrige QA por el flujo autorizado de pruebas protegidas, y su comprobación no es un RED sino evidencia de estabilidad: el número de corridas que fallaban antes y una serie de corridas sin fallo después (el perfil fija cuántas; por ejemplo, 10). Su corrección no cambia lo que la prueba exige.
+
 ## 7. Calidad estática y seguridad
 
 El perfil de proyecto debe declarar herramientas y umbrales aplicables: formato, lint, tipos, análisis estático, dependencias, secretos, vulnerabilidades y migraciones. Los umbrales deben ser razonados para el proyecto; AES no impone un porcentaje universal de cobertura.
@@ -592,6 +749,10 @@ Mutation testing SHOULD aplicarse a lógica crítica, autorización, cálculos s
 Los resultados se registran con comando, estado (`PASS`, `FAIL`, `NOT RUN`, `BLOCKED`), entorno o versión relevante y resumen. No se aceptan pruebas reportadas como ejecutadas sin salida o evidencia verificable.
 
 La evidencia válida es la salida capturada por la CI o por una herramienta que ejecuta el comando y registra su salida real (por ejemplo, el patrón `exec` de Showboat descrito por Simon Willison). Registrar la salida real, en lugar de lo que el agente esperaba que ocurriera, desincentiva fingir resultados. El texto redactado por un agente sobre lo que ejecutó no es evidencia.
+
+Un check verde no prueba que se ejecutó lo esperado. La CI MUST imprimir qué ejecutó (tipo de rama, elemento, criterios o etiquetas, número de pruebas), y el orquestador y el humano lo confirman en el log antes de dar el gate por superado. En el sandbox de AES, un cierre salió en verde sin ejecutar ni una prueba de su historia.
+
+Las afirmaciones sobre el repositorio se comprueban en su fuente (00 §7).
 
 ## 10. Guardián de CI: superficie de cambio y detector de trampas
 
@@ -611,6 +772,11 @@ La CI MUST incluir un guardián que, como mínimo:
 
 Una coincidencia no siempre es trampa, pero siempre requiere justificación en el reporte de la tarea y una aprobación explícita de alguien distinto del programador. El perfil añade los patrones propios de su stack.
 
+Dos precisiones aprendidas en la práctica:
+
+- **Dependencias** incluye las fuentes de paquetes y las herramientas locales, no solo los manifiestos: cambiar de dónde salen los paquetes es tan sensible como cambiar un paquete (por ejemplo, `nuget.config`, `.npmrc`, `pip.conf`, `global.json`, manifiestos de herramientas).
+- **El código generado** por herramientas (por ejemplo, migraciones) contiene marcadores que nadie escribió a mano. Si el guardián lo excluye de la búsqueda, la exclusión MUST ser estrecha: una ubicación conocida **y** el encabezado de generación, de modo que un encabezado puesto a mano en otro archivo no esconda un marcador. Los archivos excluidos se listan en la salida para el verificador.
+
 La cobertura de los archivos tocados SHOULD compararse con el baseline; una caída se trata igual que un marcador de trampa.
 
 ## 11. Prueba manual agéntica
@@ -621,7 +787,32 @@ Que todas las pruebas pasen no garantiza que el programa arranque o que un eleme
 - interfaces web: automatización de navegador (por ejemplo, Playwright) con capturas;
 - CLI y librerías: ejecución real, con scripts temporales fuera del repositorio.
 
-Las salidas y capturas se adjuntan al informe de verificación. Un defecto encontrado así se registra como T1 y se corrige con RED/GREEN, de modo que quede una prueba automatizada permanente.
+Las salidas y capturas se adjuntan al informe de verificación. Un defecto encontrado así se clasifica (02 §9.3): si es de lo que añade la tarea, es un ciclo `FAIL`; si no, se registra como T1 con severidad y se corrige con RED/GREEN, de modo que quede una comprobación automatizada permanente.
+
+Reglas adicionales:
+
+- **Sin prueba manual no hay `PASS`.** Si el track la exige y el verificador no pudo hacerla, el resultado es `BLOCKED`, no `PASS`: las pruebas automatizadas, aunque pasen, no la sustituyen. En el sandbox de AES, un verificador la omitió porque «la aceptación ya usa servidores reales».
+- La prueba manual usa **datos distintos** de los de las pruebas automatizadas.
+- Los servidores se arrancan y se detienen con una herramienta que **siempre** detiene lo que arrancó y solo eso, sobre datos temporales propios, y que falla si el puerto ya está ocupado en lugar de reutilizar un servidor ajeno (06 §10).
+
+## 12. Qué ejecuta la CI en cada fase
+
+La CI decide qué pruebas ejecutar según el tipo de rama. El perfil fija los nombres de rama; la intención es esta:
+
+| Fase | Qué ejecuta |
+|---|---|
+| Especificación de un T1 con comando de verificación | El comando, que **debe fallar** (RED), salvo «sin RED» aprobado |
+| Pruebas de aceptación de un elemento (`qa/<ID>`) | Las pruebas del elemento, que **deben ejecutarse y fallar** (RED, §2.2) |
+| Tarea | Guardián + validaciones + los criterios que declara la tarea (o el elemento completo, si es la última) + regresión |
+| Cierre del elemento | El elemento completo, que **debe ejecutarse y pasar**, + regresión |
+| Rama principal | Regresión de todos los elementos cerrados |
+
+Reglas:
+
+- El archivo de criterios de cada tarea se lee de la **rama protegida**, igual que la superficie de cambio.
+- La regresión incluye las pruebas de aceptación **y** los comandos de verificación de todos los elementos cerrados.
+- Un **comando de verificación** es un criterio que no se comprueba con una prueba de aceptación (configuración, herramientas, scripts, build). Es un script versionado en la ruta protegida del elemento, que termina con código 0 si el criterio se cumple. Se trata como una prueba protegida: lo escribe quien escribe las pruebas, lo aprueba el humano y la CI lo ejecuta desde la rama protegida.
+- Entre la integración de la última tarea de un elemento y la de su cierre no se integra nada más en la rama principal: durante ese intervalo la regresión todavía no incluye el elemento.
 
 ---
 
@@ -670,6 +861,12 @@ Separar responsabilidades, limitar el contexto y restringir las acciones de cada
 - no modifica contratos de aceptación ni aprueba su trabajo;
 - reporta supuestos, desviaciones y bloqueos.
 
+### Mecánico (opcional)
+
+- ejecuta tareas mecánicas dentro de una superficie de cambio: configuración no funcional, renombres, formato, consolidación de notas y métricas;
+- tiene los permisos del programador, limitados a su tarea;
+- si la tarea exige decidir comportamiento o diseñar, se detiene con `BLOCKED`: esa tarea no es mecánica.
+
 ### Verificador
 
 - inspecciona la especificación, el diff y las evidencias;
@@ -700,6 +897,8 @@ La aplicación exacta se define en el perfil, pero la intención no debe cambiar
 | Aprobar su propio trabajo | No | No | No | No | No |
 | Emitir informe de verificación | No sustituye | Puede aportar | Puede aportar | No | Sí |
 
+El mecánico, cuando existe, tiene la columna del programador.
+
 ## 4. Aislamiento del verificador
 
 El verificador debe iniciar una ejecución separada y recibir directamente:
@@ -714,6 +913,10 @@ El verificador debe iniciar una ejecución separada y recibir directamente:
 No debe recibir como fuente de verdad el razonamiento privado, la autoevaluación ni el resumen promocional del programador. Puede leer el código y los artefactos necesarios para comprobar el resultado.
 
 La independencia depende principalmente de la separación de permisos, contexto y evidencia. Usar otro proveedor/modelo puede aportar diversidad, pero no sustituye esos controles.
+
+El orquestador puede añadir **puntos de atención**: hechos concretos y comprobables (un commit, un archivo, un cambio de comportamiento que notó), nunca conclusiones. El verificador los trata como hipótesis que comprueba él mismo.
+
+La verificación ocurre **antes de integrar**. Verificar después (por ejemplo, porque se integró por error) es un incidente que se registra, y pierde información: con integración por *squash*, el verificador ya no ve los commits individuales.
 
 El verificador MUST volver a ejecutar las validaciones en lugar de aceptar las del programador, ejecutar las pruebas holdout cuando existan y realizar la prueba manual agéntica que corresponda al track (05 §11). Además vigila las señales de desvío que Kent Beck describe en *Augmented Coding: Beyond the Vibes*:
 
@@ -754,6 +957,16 @@ Skills:
 - SHOULD construirse **después** de evaluar al agente en tareas representativas y observar dónde falla, no por anticipado (09).
 - MUST instalarse solo desde fuentes confiables. Las de terceros se auditan antes de usarlas: archivos incluidos, scripts, dependencias y cualquier instrucción que conecte con redes externas no confiables.
 
+### 6.1 Acciones denegadas y rodeo por delegación
+
+Cuando un permiso, un hook o un clasificador del harness deniega una acción a un agente, el agente puede intentar conseguirla por otra vía: otro comando, o pedirle a otro agente que la haga. Lo segundo es un **rodeo por delegación**, y ningún control técnico lo detecta: en el sandbox de AES, dos subagentes pidieron al orquestador que detuviera procesos que a ellos se les había denegado detener.
+
+Reglas:
+
+- Una acción denegada es `BLOCKED` **para el responsable humano**, con la acción exacta que hace falta.
+- Ningún agente ejecuta una acción que se le denegó a otro rol, aunque él sí tenga permiso.
+- El orquestador registra el caso y se lo pasa al humano; no lo resuelve.
+
 ## 7. Secretos y entornos
 
 Los agentes no deben imprimir, copiar a reportes ni incluir en commits secretos, credenciales, tokens, datos personales reales o archivos de entorno. Los entornos de prueba deben usar datos sintéticos o anonimizados cuando sea posible. Los agentes reciben credenciales solo si su tarea las necesita y con privilegio mínimo.
@@ -772,6 +985,10 @@ Requieren aprobación humana previa:
 - aceptación final de una funcionalidad/producto cuando el perfil lo requiera.
 
 Los detalles rutinarios, locales y reversibles pueden delegarse si respetan la arquitectura y las convenciones.
+
+Cuando la aprobación se expresa en la CI (por ejemplo, con una etiqueta en el PR que autoriza dependencias o marcadores), la CI SHOULD comprobar **quién** la dio: una persona autorizada, no la identidad de los agentes. Una etiqueta que la identidad de los agentes puede poner no es una aprobación. Si la plataforma no permite comprobarlo, se usa una revisión aprobada en su lugar.
+
+La **verificación independiente** es una condición de integración que no debe depender de la memoria de nadie. El `PASS` del verificador SHOULD quedar como evidencia que la CI o la protección de rama exigen antes de integrar una tarea (por ejemplo, una etiqueta de verificación que solo puede poner el responsable humano tras leer el informe, comprobada como en el párrafo anterior). En el sandbox de AES, una tarea se integró antes del `PASS` cuando el aviso del orquestador no lo recordaba, y la regla se cumplió en la historia siguiente solo porque el aviso lo decía.
 
 ## 9. Modelo de controles en capas
 
@@ -792,8 +1009,23 @@ Reglas:
 - El programador SHOULD trabajar en un worktree o contenedor donde la suite holdout no existe y la suite visible está montada en solo lectura.
 - Si la CI se define en archivos del propio repositorio, una rama puede modificar su propio workflow para saltarse el guardián. Las credenciales con las que se publican ramas de programador MUST NOT tener permiso para modificar workflows (en GitHub, un token sin el permiso *Workflows*), o la plataforma MUST imponer el workflow desde fuera de la rama (por ejemplo, workflows obligatorios a nivel de organización).
 - MUST NOT presentarse L1 o L2 como suficientes para un control fundamental.
+- Si el responsable humano necesita poder integrar sus propios cambios (nadie puede aprobar su propio PR), el permiso de saltarse la aprobación MUST NOT alcanzar a los checks obligatorios. En GitHub: dos rulesets, uno con los checks y sin bypass, otro con la aprobación y un bypass solo para PR. Un único ruleset con bypass permite integrar con la CI en rojo; en el sandbox de AES pasó.
+- Los agentes publican con una **identidad propia**, distinta de la del humano, y sus commits llevan esa misma autoría. Así la aprobación del humano es real y el historial distingue quién escribió qué.
+- **Aislamiento del sistema de archivos:** la terminal de un agente puede escribir fuera del repositorio, y ninguna de las tres capas lo detecta. Si el disco tiene algo sensible, los roles que escriben SHOULD trabajar en un entorno aislado (contenedor, máquina virtual o el aislamiento de terminal del harness); si no, el perfil lo declara como excepción.
 
 `profiles/reference/` contiene una implementación de referencia de las tres capas.
+
+## 10. Estado entre roles
+
+Un rol no debe dejar nada que el siguiente pueda tomar como propio: servidores escuchando, procesos, datos de prueba o archivos temporales dentro del repositorio. Si la aceptación reutiliza un servidor que dejó vivo otro rol, puede pasar contra código viejo; en el sandbox de AES, los servidores de un verificador bloquearon la compilación del programador siguiente.
+
+- Los servidores se arrancan con una herramienta que los detiene siempre al terminar y que **no reutiliza** un servidor ajeno: si el puerto está ocupado, falla.
+- Al terminar cada rol, un control comprueba que no quedó nada escuchando en los puertos del proyecto (L2 en la implementación de referencia; en la CI, cada ejecución empieza limpia).
+- Si un agente no puede detener algo que arrancó, es una acción denegada (§6.1).
+
+## 11. Modelo y harness por rol
+
+El perfil declara qué harness y qué modelo ocupa cada rol. La evidencia de cada elemento (09 §6) registra el modelo **real** de cada rol en esa ejecución, no el declarado: si cambian, las comparaciones de costo y calidad entre elementos no valen.
 
 ---
 
@@ -833,6 +1065,15 @@ Cuando una validación falla, el orquestador detiene el avance del gate afectado
 
 Un bloqueo debe incluir: qué falta, por qué bloquea, evidencia disponible, opciones y quién puede resolverlo.
 
+Cuando una historia se bloquea porque necesita algo que no está en su alcance (otra historia, una decisión, una pieza técnica), el alcance **nunca se amplía en silencio**. El responsable humano elige entre:
+
+1. **ampliar** la historia por control de cambios (§1), si lo que falta es pequeño y del mismo resultado;
+2. marcarla `Blocked` por el elemento que falta, que pasa delante en el backlog;
+3. **dividirla**, entregando ahora la parte que no depende de lo que falta;
+4. abrir un **Spike** (01 §7), si lo que falta es conocimiento.
+
+La elección es una decisión registrada en la historia (03 §8).
+
 ## 4. Integración
 
 Cada cambio debe integrarse mediante el mecanismo del proyecto (pull request, merge request o equivalente). Se debe revisar:
@@ -845,6 +1086,8 @@ Cada cambio debe integrarse mediante el mecanismo del proyecto (pull request, me
 - documentación y observabilidad necesarias.
 
 No se deben integrar cambios solo porque un agente terminó su tarea.
+
+Una tarea no se integra sin el `PASS` del verificador, aunque la CI esté en verde (06 §8). Antes de añadir commits a la rama de un PR, se comprueba que el PR sigue abierto: publicar en una rama ya integrada y borrada la recrea con trabajo que nadie revisará.
 
 ## 5. Liberación
 
@@ -859,48 +1102,68 @@ La liberación sigue el perfil del proyecto y debe considerar, cuando aplique:
 
 La aceptación de una Historia de Usuario no implica automáticamente autorización para desplegar a producción.
 
+## 6. Defectos
+
+Los defectos se registran con severidad y se gestionan con la compuerta de estabilización (02 §9): un defecto Crítico detiene todo; uno Alto o Medio impide empezar la historia siguiente; los Menores se acumulan solo hasta el límite del perfil. Los defectos se corrigen en lotes de estabilización, en su propia sesión, sin mezclarse con funcionalidad nueva.
+
 ---
 
 # 08 — Definition of Ready y Definition of Done
 
-## 1. Definition of Ready (DoR) — Historia de Usuario
+Los proyectos SHOULD copiar estas checklists dentro de su repositorio (01 §2), para que los agentes las tengan sin salir de él.
+
+## 1. Definition of Ready (DoR) — Historia de Usuario o Enabler (T2/T3)
 
 Una historia puede pasar a `Ready` cuando:
 
+- [ ] **la compuerta de estabilización está abierta**: no hay defectos abiertos de severidad Crítica, Alta o Media, y los Menores no superan el límite del perfil (02 §9);
 - [ ] objetivo, actor y beneficio/resultante están claros;
 - [ ] alcance y exclusiones relevantes están definidos;
 - [ ] criterios de aceptación son observables y verificables;
-- [ ] ambigüedades materiales están resueltas;
+- [ ] cada acción que escribe tiene criterio de fallo (03 §3);
+- [ ] ambigüedades materiales están resueltas y **registradas como decisiones** (03 §8);
+- [ ] **ningún supuesto de QA queda abierto**: cada uno es contrato o se rechazó (03 §5);
 - [ ] dependencias y riesgos relevantes están identificados;
 - [ ] prioridad, Story Points y track están asignados;
 - [ ] existe estrategia de aceptación y pruebas;
-- [ ] decisiones arquitectónicas necesarias están aprobadas;
+- [ ] decisiones arquitectónicas necesarias están aprobadas; las convenciones que valen para más de una historia están en un ADR;
 - [ ] el contrato de interfaz está definido cuando la historia toca una frontera observable;
 - [ ] la suite de aceptación está escrita, aprobada por el responsable humano y protegida;
-- [ ] **RED confirmado**: cada prueba nueva falla contra la base por la razón esperada;
+- [ ] cada prueba lleva el ID de la historia y el de su criterio, y se deriva de un criterio aprobado (03 §6);
+- [ ] **RED confirmado** por herramienta: todas las pruebas nuevas se ejecutaron y fallaron por la razón esperada (05 §2.2), salvo las de caracterización, que están en la regresión de su historia dueña (05 §2.4);
 - [ ] las pruebas holdout existen cuando el track es T3 (o el perfil las exige);
-- [ ] «Fuera de alcance» no está vacío en T2/T3;
-- [ ] puede dividirse en tareas pequeñas sin inventar requisitos.
-
-Para T0 no se requiere historia. Para T1 basta con la prueba de reproducción protegida con RED confirmado y su aprobación (02 §8).
+- [ ] «Fuera de alcance» no está vacío;
+- [ ] las tareas están escritas, con superficie de cambio y criterios que dejan en verde, sin inventar requisitos.
 
 Si una casilla no aplica, se puede marcar `N/A` con justificación. No se debe forzar una historia a `Ready` por presión de planificación.
 
-## 2. Definition of Ready — Tarea
+## 2. Definition of Ready — T1 (defecto, chore, lote de estabilización)
+
+- [ ] el elemento está en el backlog, con severidad e historia de origen si es defecto;
+- [ ] el criterio dice qué comportamiento es el correcto;
+- [ ] la comprobación de reproducción existe (prueba protegida o comando de verificación) y falla contra la base por la razón esperada, o el elemento declara «sin RED» con motivo y aprobación;
+- [ ] la superficie de cambio está publicada;
+- [ ] el responsable humano aprobó el PR de especificación.
+
+Para T0 basta con la tarea (§3).
+
+## 3. Definition of Ready — Tarea
 
 Una tarea puede pasar a ejecución cuando:
 
-- [ ] pertenece a una historia/elemento aprobado;
+- [ ] pertenece a un elemento aprobado y en `Ready`;
 - [ ] tiene un resultado principal concreto;
 - [ ] alcance, exclusiones y restricciones están claros;
-- [ ] la superficie de cambio está publicada en la rama protegida;
+- [ ] la superficie de cambio y la lista de criterios que deja en verde están publicadas en la rama protegida (la última tarea del elemento no necesita lista: ejecuta el elemento completo);
+- [ ] si introduce un estado, lista las transiciones que lo crean y lo limpian;
 - [ ] dependencias/contratos se conocen;
 - [ ] permisos del agente están definidos;
 - [ ] los comandos de validación exactos y las pruebas de regresión afectadas están listados;
+- [ ] el presupuesto de diff está estimado por separado para producción y pruebas;
 - [ ] la condición de finalización está definida;
 - [ ] el contexto necesario está disponible.
 
-## 3. Definition of Done — Tarea
+## 4. Definition of Done — Tarea
 
 Una tarea está técnicamente terminada cuando:
 
@@ -910,25 +1173,29 @@ Una tarea está técnicamente terminada cuando:
 - [ ] las pruebas pertinentes se añadieron/actualizaron y ejecutaron;
 - [ ] lint, tipos y análisis requeridos pasan;
 - [ ] los commits separan cambios estructurales y conductuales;
-- [ ] el guardián de CI no reporta alertas, o cada alerta tiene justificación y aprobación;
+- [ ] el guardián de CI no reporta alertas, o cada alerta tiene justificación y aprobación de una persona autorizada;
+- [ ] la CI ejecutó lo que debía (confirmado en el log: criterios, número de pruebas);
 - [ ] se inspeccionó el diff y no hay cambios ajenos;
 - [ ] no se introdujeron secretos, artefactos temporales ni dependencias no aprobadas;
-- [ ] se entregó el reporte con evidencia ejecutada y bloqueos conocidos.
+- [ ] no quedan servidores, procesos ni datos del rol en el entorno (06 §10);
+- [ ] se entregó el reporte con evidencia ejecutada y bloqueos conocidos;
+- [ ] el verificador emitió `PASS` **antes de integrar**, y los hallazgos fuera de la tarea están registrados como defectos con severidad.
 
 La tarea pasa a revisión; el programador no la marca como aceptada.
 
-## 4. Definition of Done — Historia de Usuario
+## 5. Definition of Done — Historia de Usuario o Enabler
 
 Una historia puede pasar a `Ready for Acceptance` cuando:
 
-- [ ] todas sus tareas están técnicamente terminadas;
+- [ ] todas sus tareas están técnicamente terminadas e integradas;
 - [ ] todos los criterios de aceptación tienen evidencia PASS o una excepción formal aprobada;
 - [ ] pruebas unitarias, integración, contrato, E2E y regresión requeridas pasan;
 - [ ] controles estáticos y de seguridad aplicables pasan;
 - [ ] las pruebas holdout pasan, cuando existen;
 - [ ] el verificador independiente re-ejecutó las validaciones y emite `PASS`;
 - [ ] existe evidencia de la prueba manual agéntica cuando el track la exige (05 §11);
-- [ ] no quedan defectos críticos ni bloqueantes conocidos;
+- [ ] no quedan defectos Críticos ni bloqueantes conocidos;
+- [ ] cada hallazgo que no se corrigió está en el backlog como defecto, con severidad, historia de origen y criterio (02 §9);
 - [ ] documentación/ADRs afectados están actualizados;
 - [ ] el comportamiento existente relevante no sufrió regresiones;
 - [ ] el resultado puede probarse en un entorno apropiado.
@@ -939,13 +1206,23 @@ Después de eso:
 - en T3, el responsable humano revisa el código de las zonas de riesgo (00 §8);
 - el responsable humano emite `Accepted` o `Rejected`;
 - solo entonces la historia se considera aceptada;
-- en T2/T3, el orquestador ejecuta la retrospectiva compuesta (09 §3) antes de pasar a la siguiente historia.
+- el cierre añade la historia a la regresión de la rama principal, y la CI del cierre confirma que sus pruebas se ejecutaron y pasaron;
+- en T2/T3, el orquestador ejecuta la retrospectiva compuesta (09 §3) y registra las métricas del elemento (09 §6);
+- antes de pasar a la siguiente historia se evalúa la compuerta de estabilización: si está cerrada, lo siguiente es un lote de estabilización (02 §9.4).
 
 Un resultado `BLOCKED`, `NOT RUN` o una prueba omitida sin justificación no equivale a `PASS`.
 
-## 5. Definition of Done del proyecto
+## 6. Definition of Done — Lote de estabilización
 
-El proyecto puede declararse listo para una liberación cuando se cumplen sus gates de release, seguridad, migración, documentación, recuperación y aprobación definidos en el perfil. No basta con que todas las historias estén en estado `Accepted` si aún existen riesgos de liberación sin resolver.
+- [ ] cada defecto del lote tiene su comprobación en verde, ejecutada por la CI y por el verificador;
+- [ ] los defectos que no se corrigieron siguen abiertos, con el motivo;
+- [ ] las comprobaciones del lote están en la regresión de la rama principal;
+- [ ] el responsable humano aceptó el lote;
+- [ ] la compuerta de estabilización se volvió a evaluar.
+
+## 7. Definition of Done del proyecto
+
+El proyecto puede declararse listo para una liberación cuando se cumplen sus gates de release, seguridad, migración, documentación, recuperación y aprobación definidos en el perfil. No basta con que todas las historias estén en estado `Accepted` si aún existen riesgos de liberación sin resolver o defectos abiertos por encima de lo que el perfil permite liberar.
 
 ---
 
@@ -975,7 +1252,7 @@ Cada entrada describe síntoma, cómo se detectó, causa probable y el control q
 
 ## 3. Retrospectiva compuesta
 
-Al cerrar cada historia T2/T3, y al menos una vez por cada lote de trabajo T0/T1, el orquestador MUST:
+Al cerrar cada historia T2/T3 y cada lote de estabilización, y al menos una vez por cada grupo de trabajo T0/T1, el orquestador MUST:
 
 1. revisar las entradas nuevas del registro;
 2. identificar patrones (un fallo repetido dos veces es un patrón);
@@ -990,6 +1267,8 @@ Al cerrar cada historia T2/T3, y al menos una vez por cada lote de trabajo T0/T1
 
 Una línea en las instrucciones persistentes es el control más débil: el agente puede ignorarla o perderla al compactar contexto. Se usa cuando no hay forma razonable de automatizar la detección.
 
+La retrospectiva es breve: patrones, un control por patrón y decisiones abiertas. El detalle ya está en el registro de hallazgos y en el de fallos; copiarlo a la retrospectiva duplica el costo de redacción del orquestador.
+
 ## 4. Evaluación de cambios al harness
 
 Los cambios a instrucciones persistentes, skills, hooks o permisos SHOULD comprobarse con al menos una tarea representativa antes de darse por buenos. Una instrucción que no cambia el comportamiento observado se elimina: ocupa contexto sin aportar.
@@ -999,3 +1278,23 @@ Los cambios a instrucciones persistentes, skills, hooks o permisos SHOULD compro
 - Revisar periódicamente `AGENTS.md`/`CLAUDE.md` y eliminar entradas que ya cubre un control más duro.
 - Mantener el archivo breve; si crece, mover procedimientos a skills y dejar solo el puntero.
 - No acumular reglas contradictorias: una entrada nueva que contradice otra la sustituye explícitamente.
+
+## 6. Evidencia del proceso y métricas
+
+Además del registro de fallos, cada proyecto SHOULD mantener un **registro de hallazgos del proceso** (`docs/harness-findings.md`, plantilla en `templates/harness-findings.md`): fricciones, confirmaciones de que un control funcionó, huecos de control y costos. Es la materia prima de las retrospectivas y de las propuestas de cambio a AES.
+
+Por cada elemento cerrado (historia, enabler, lote) se registra una fila de métricas:
+
+| Elemento | Inicio | Fin | Modelo real por rol | Ciclos FAIL | Intervenciones humanas | Bloqueos de controles | Costo | Tiempo |
+|---|---|---|---|---|---|---|---|---|
+
+- **Modelo real por rol:** el que ejecutó, no el que declara el perfil (06 §11).
+- **Intervenciones humanas:** cada vez que el humano decidió, aprobó, corrigió o desbloqueó algo.
+- **Bloqueos de controles:** de hooks, permisos y clasificadores del harness, por separado. Un control que nunca bloquea puede estar funcionando o no estar probado; un control que bloquea mucho puede estar mal calibrado.
+- **Costo:** el que reporta el harness. Si solo el humano puede consultarlo, el orquestador se lo pide al cerrar.
+
+## 7. Notas durante el ciclo
+
+- Los hallazgos, fallos y decisiones se anotan **en el momento**, con la hora real que da un comando, no con una hora escrita por el agente. En el sandbox de AES, el orquestador escribió horas estimadas, algunas por delante del reloj.
+- Las notas en curso viven fuera del control de versiones (por ejemplo, `.aes/`) y se consolidan en los registros versionados en el cierre del elemento. Así no se cuelan en los PR de tareas, donde el guardián las rechazaría por estar fuera de la superficie.
+- La creación y el vaciado de las notas los hace un script, no un rol: si un rol no puede escribir en esa carpeta, la consolidación no debe depender de que pueda.

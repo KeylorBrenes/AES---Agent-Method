@@ -1,5 +1,7 @@
 # Implementación de referencia — Claude Code + OpenCode
 
+> **AES 1.2.0:** esta referencia cubre los controles de 1.1. La CI con las novedades de 1.2.0 (CI por criterio, comandos de verificación, compuerta de estabilización, aprobaciones validadas, verificación antes de integrar), los scripts y la skill del orquestador están en [`../claude-code-subagents/`](../claude-code-subagents/), y su CI no depende del harness. De aquí se mantiene lo propio de OpenCode y el ejemplo de pruebas holdout. Integrar ambas espera a un experimento con OpenCode como programador (RFC-002, cambio 4).
+
 Implementación concreta de las tres capas de control de AES 1.1.0 (`standard/06` §9) para un proyecto donde:
 
 - **Claude Code** actúa como orquestador (y puede alojar a QA y al verificador como sesiones separadas);

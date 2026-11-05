@@ -22,6 +22,8 @@ AES define un proceso reproducible para producir software correcto, mantenible y
 14. **Evidencia ejecutada, no narrada.** Solo cuenta como evidencia la salida capturada por la CI o por una herramienta que ejecuta y registra el comando. El resumen escrito por un agente es contexto, no evidencia.
 15. **Proceso proporcional.** El tamaño del proceso depende del track del cambio (02 §8). Un cambio trivial no recorre el ciclo de una historia de alto riesgo, y un cambio de alto riesgo no se trata como trivial.
 16. **Mejora continua del harness.** Los fallos de los agentes se registran y se convierten en controles (09). El mismo error no debe depender de que alguien lo recuerde.
+17. **Estabilidad antes que avance.** No se construye funcionalidad nueva sobre defectos conocidos. Los defectos se clasifican por severidad y se corrigen antes de empezar la siguiente historia, salvo los menores (02 §9). Corregir un defecto viejo mientras se construye algo nuevo mezcla dos cambios y produce defectos nuevos.
+18. **Cada decisión tiene firma.** Toda ambigüedad que afecta el producto se resuelve con una decisión registrada: quién, cuándo, qué opciones había y qué cambió (03 §8). Lo que nadie decidió explícitamente no es una decisión, aunque una prueba o un agente ya lo haya fijado.
 
 ## 3. Adaptabilidad
 
@@ -57,6 +59,7 @@ Los nombres pueden cambiar según las herramientas, pero las responsabilidades d
 - **Arquitecto:** analiza estructura y consecuencias técnicas; propone decisiones y ADRs.
 - **Diseñador de pruebas / QA:** transforma criterios aprobados en escenarios y pruebas de aceptación; protege su integridad.
 - **Programador:** implementa tareas delimitadas y sus pruebas técnicas permitidas.
+- **Mecánico (opcional):** ejecuta cambios mecánicos y acotados (configuración no funcional, renombres, formato, consolidación de notas), sin lógica nueva. Permite asignar ese trabajo a un modelo más barato.
 - **Verificador independiente:** comprueba el resultado contra requisitos y evidencia; no modifica el código bajo revisión.
 - **CI y herramientas deterministas:** ejecutan controles repetibles. Sus resultados se conservan como evidencia.
 
@@ -82,6 +85,14 @@ No se debe usar `Done` como sinónimo de «el agente terminó de escribir códig
 
 Un agente MUST NOT afirmar que una prueba pasó si no la ejecutó y no dispone del resultado. Si una prueba no se pudo ejecutar, se reporta como `NOT RUN` o `BLOCKED`, con el motivo. Los resultados deben incluir el comando o procedimiento, entorno relevante y salida resumida cuando sea posible.
 
+Toda afirmación sobre el repositorio o el producto se comprueba **en su fuente**, no en un reflejo de ella:
+
+- el contenido versionado, en lo que está versionado (`git show`, `git cat-file`), no en la copia de trabajo, que puede diferir (por ejemplo, en los fines de línea);
+- el comportamiento implementado, en el código o ejecutándolo, no en las pruebas que lo describen ni en el reporte de quien lo implementó;
+- lo que se ejecutó en la CI, en el log del run, no en el color del check.
+
+La regla aplica a los agentes y también a los registros que escribe el humano o un asistente: un registro escrito de memoria es un supuesto hasta que se compruebe.
+
 ## 8. Revisión humana proporcional
 
 AES no pretende que el responsable humano lea cada línea de código, pero tampoco permite que nadie revise nada. La revisión humana se desplaza **del código a los contratos**: si el humano no va a leer el código, DEBE leer y aprobar las pruebas de aceptación, porque son lo único en lo que el proceso confía sin intermediarios.
@@ -91,7 +102,9 @@ AES no pretende que el responsable humano lea cada línea de código, pero tampo
 | Antes | Criterios de aceptación y exclusiones | — | ✓ | ✓ | ✓ |
 | Antes | Pruebas de aceptación (escenarios y aserciones clave) | — | ✓ | ✓ | ✓ |
 | Antes | Contrato de interfaz / ADR | — | — | si cambia | ✓ |
-| Después | Informe de verificación y evidencias (salidas, capturas) | — | ✓ | ✓ | ✓ |
+| Antes | Decisiones registradas y supuestos de QA resueltos (03 §8) | — | ✓ | ✓ | ✓ |
+| Después, antes de integrar | Informe de verificación y evidencias (salidas, capturas) | — | ✓ | ✓ | ✓ |
+| Después | Severidad de los defectos encontrados (02 §9) | si hay | si hay | si hay | si hay |
 | Después | Alertas del guardián de CI (superficie, trampas) | si hay | si hay | si hay | ✓ |
 | Después | Código | lectura rápida del diff | opcional | solo zonas señaladas | **zonas de riesgo, obligatorio** |
 | Después | Demostración o prueba funcional propia | — | — | ✓ | ✓ |

@@ -37,6 +37,12 @@ Una prueba que ya pasa antes del cambio no verifica el código nuevo: puede no e
 
 Antes de que una historia pase a `Ready`, QA MUST ejecutar la suite de aceptación contra la rama base y registrar que **cada prueba nueva falla por la razón esperada** (por ejemplo, «404 en `/notifications`», no «error de importación» ni «timeout»). Una prueba nueva que pasa en verde contra la base se considera defectuosa hasta que se justifique. Este registro (`acceptance-baseline` en el plan de pruebas o artefacto de CI) forma parte de la DoR de la historia.
 
+RED confirmado exige, además:
+
+- que **todas** las pruebas nuevas se hayan **ejecutado**. Un error de compilación, de configuración o de arranque no es RED: no demuestra que ninguna aserción falle. Tampoco lo es una prueba que no llegó a correr (por ejemplo, por un modo serie que detiene la suite al primer fallo) ni una prueba omitida;
+- que la comprobación la haga una **herramienta**, la misma en el entorno de QA y en la CI, sobre el reporte de la ejecución. «Las corrí por separado» no es evidencia: en el sandbox de AES, QA reportó un RED con dos pruebas sin ejecutar y la herramienta lo detectó;
+- una única excepción, el **RED de arranque**: cuando la base todavía no tiene código de aplicación (el primer enabler), se acepta que ninguna prueba se ejecute porque no hay nada que arrancar. La herramienta solo la admite si la base no tiene código.
+
 ### 2.3 Pruebas visibles y holdout
 
 La suite de aceptación SHOULD dividirse (MUST en T3) en:
@@ -45,6 +51,29 @@ La suite de aceptación SHOULD dividirse (MUST en T3) en:
 - **holdout**: variantes de los mismos criterios con datos y casos distintos, almacenadas donde el entorno del programador no tiene acceso (repositorio separado, rama sin permisos o directorio no montado). Solo las ejecutan la CI y el verificador.
 
 Cuando una prueba holdout falla, el programador recibe el ID del criterio y el comportamiento observado, **no el código de la prueba**. Objetivo: detectar implementaciones ajustadas a los datos visibles (valores codificados, ramas especiales para el caso de prueba) sin quitar el feedback. Proporción orientativa: 20–30 % de los escenarios; el perfil la ajusta.
+
+### 2.4 Pruebas de caracterización
+
+A veces un criterio nuevo describe algo que el código **ya hace** (por ejemplo, el mismo mensaje de error en el formulario de alta que la historia nueva exige en el de edición). Su prueba pasa contra la base, así que no puede demostrar RED, y la regla de §2.2 la rechazaría junto con todo el conjunto.
+
+Esas pruebas son de **caracterización**: documentan un comportamiento existente. Reglas:
+
+- viven en la suite de la historia **dueña** de ese comportamiento (con su etiqueta, por ejemplo `@US-001`), y llevan en el título el ID del criterio nuevo para la trazabilidad;
+- corren en la regresión desde que se integran;
+- el criterio nuevo declara «Verificación: regresión de <ID>» y **no** aparece en el archivo de criterios de ninguna tarea (§12), porque no tiene pruebas propias que ejecutar;
+- QA las marca como tales en el plan, y el responsable humano las aprueba con el resto.
+
+No se inventan etiquetas que la CI no ejecuta: una prueba que nunca corre no verifica nada.
+
+### 2.5 Aislamiento de datos
+
+Las pruebas de aceptación corren en paralelo y comparten datos (la misma base, el mismo periodo, la misma lista). Cada prueba MUST:
+
+- crear sus propios datos y buscarlos por algo que solo ella usa (una marca única en un texto, un periodo propio);
+- no comparar totales o conteos globales que otras pruebas pueden cambiar mientras corre;
+- no depender del orden de ejecución ni de lo que dejó otra prueba.
+
+Una prueba que falla a veces no es ruido: es un defecto de severidad Alta (02 §9) si corre en la regresión de la rama principal, porque puede ponerla en rojo para todos.
 
 ## 3. TDD: durante la implementación
 
@@ -98,6 +127,8 @@ Si una prueba falla, el equipo debe clasificar la causa antes de cambiar código
 
 El agente no debe borrar, deshabilitar, reducir aserciones ni cambiar datos esperados para ocultar un fallo. La corrección de una prueba es legítima solo si se demuestra que la prueba contradice el requisito aprobado o es técnicamente incorrecta.
 
+Una prueba **inestable** (falla sin cambio de código) es técnicamente incorrecta. Se registra como defecto (02 §9), la corrige QA por el flujo autorizado de pruebas protegidas, y su comprobación no es un RED sino evidencia de estabilidad: el número de corridas que fallaban antes y una serie de corridas sin fallo después (el perfil fija cuántas; por ejemplo, 10). Su corrección no cambia lo que la prueba exige.
+
 ## 7. Calidad estática y seguridad
 
 El perfil de proyecto debe declarar herramientas y umbrales aplicables: formato, lint, tipos, análisis estático, dependencias, secretos, vulnerabilidades y migraciones. Los umbrales deben ser razonados para el proyecto; AES no impone un porcentaje universal de cobertura.
@@ -115,6 +146,10 @@ Mutation testing SHOULD aplicarse a lógica crítica, autorización, cálculos s
 Los resultados se registran con comando, estado (`PASS`, `FAIL`, `NOT RUN`, `BLOCKED`), entorno o versión relevante y resumen. No se aceptan pruebas reportadas como ejecutadas sin salida o evidencia verificable.
 
 La evidencia válida es la salida capturada por la CI o por una herramienta que ejecuta el comando y registra su salida real (por ejemplo, el patrón `exec` de Showboat descrito por Simon Willison). Registrar la salida real, en lugar de lo que el agente esperaba que ocurriera, desincentiva fingir resultados. El texto redactado por un agente sobre lo que ejecutó no es evidencia.
+
+Un check verde no prueba que se ejecutó lo esperado. La CI MUST imprimir qué ejecutó (tipo de rama, elemento, criterios o etiquetas, número de pruebas), y el orquestador y el humano lo confirman en el log antes de dar el gate por superado. En el sandbox de AES, un cierre salió en verde sin ejecutar ni una prueba de su historia.
+
+Las afirmaciones sobre el repositorio se comprueban en su fuente (00 §7).
 
 ## 10. Guardián de CI: superficie de cambio y detector de trampas
 
@@ -134,6 +169,11 @@ La CI MUST incluir un guardián que, como mínimo:
 
 Una coincidencia no siempre es trampa, pero siempre requiere justificación en el reporte de la tarea y una aprobación explícita de alguien distinto del programador. El perfil añade los patrones propios de su stack.
 
+Dos precisiones aprendidas en la práctica:
+
+- **Dependencias** incluye las fuentes de paquetes y las herramientas locales, no solo los manifiestos: cambiar de dónde salen los paquetes es tan sensible como cambiar un paquete (por ejemplo, `nuget.config`, `.npmrc`, `pip.conf`, `global.json`, manifiestos de herramientas).
+- **El código generado** por herramientas (por ejemplo, migraciones) contiene marcadores que nadie escribió a mano. Si el guardián lo excluye de la búsqueda, la exclusión MUST ser estrecha: una ubicación conocida **y** el encabezado de generación, de modo que un encabezado puesto a mano en otro archivo no esconda un marcador. Los archivos excluidos se listan en la salida para el verificador.
+
 La cobertura de los archivos tocados SHOULD compararse con el baseline; una caída se trata igual que un marcador de trampa.
 
 ## 11. Prueba manual agéntica
@@ -144,4 +184,29 @@ Que todas las pruebas pasen no garantiza que el programa arranque o que un eleme
 - interfaces web: automatización de navegador (por ejemplo, Playwright) con capturas;
 - CLI y librerías: ejecución real, con scripts temporales fuera del repositorio.
 
-Las salidas y capturas se adjuntan al informe de verificación. Un defecto encontrado así se registra como T1 y se corrige con RED/GREEN, de modo que quede una prueba automatizada permanente.
+Las salidas y capturas se adjuntan al informe de verificación. Un defecto encontrado así se clasifica (02 §9.3): si es de lo que añade la tarea, es un ciclo `FAIL`; si no, se registra como T1 con severidad y se corrige con RED/GREEN, de modo que quede una comprobación automatizada permanente.
+
+Reglas adicionales:
+
+- **Sin prueba manual no hay `PASS`.** Si el track la exige y el verificador no pudo hacerla, el resultado es `BLOCKED`, no `PASS`: las pruebas automatizadas, aunque pasen, no la sustituyen. En el sandbox de AES, un verificador la omitió porque «la aceptación ya usa servidores reales».
+- La prueba manual usa **datos distintos** de los de las pruebas automatizadas.
+- Los servidores se arrancan y se detienen con una herramienta que **siempre** detiene lo que arrancó y solo eso, sobre datos temporales propios, y que falla si el puerto ya está ocupado en lugar de reutilizar un servidor ajeno (06 §10).
+
+## 12. Qué ejecuta la CI en cada fase
+
+La CI decide qué pruebas ejecutar según el tipo de rama. El perfil fija los nombres de rama; la intención es esta:
+
+| Fase | Qué ejecuta |
+|---|---|
+| Especificación de un T1 con comando de verificación | El comando, que **debe fallar** (RED), salvo «sin RED» aprobado |
+| Pruebas de aceptación de un elemento (`qa/<ID>`) | Las pruebas del elemento, que **deben ejecutarse y fallar** (RED, §2.2) |
+| Tarea | Guardián + validaciones + los criterios que declara la tarea (o el elemento completo, si es la última) + regresión |
+| Cierre del elemento | El elemento completo, que **debe ejecutarse y pasar**, + regresión |
+| Rama principal | Regresión de todos los elementos cerrados |
+
+Reglas:
+
+- El archivo de criterios de cada tarea se lee de la **rama protegida**, igual que la superficie de cambio.
+- La regresión incluye las pruebas de aceptación **y** los comandos de verificación de todos los elementos cerrados.
+- Un **comando de verificación** es un criterio que no se comprueba con una prueba de aceptación (configuración, herramientas, scripts, build). Es un script versionado en la ruta protegida del elemento, que termina con código 0 si el criterio se cumple. Se trata como una prueba protegida: lo escribe quien escribe las pruebas, lo aprueba el humano y la CI lo ejecuta desde la rama protegida.
+- Entre la integración de la última tarea de un elemento y la de su cierre no se integra nada más en la rama principal: durante ese intervalo la regresión todavía no incluye el elemento.

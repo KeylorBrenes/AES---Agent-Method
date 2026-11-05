@@ -1,6 +1,6 @@
-# RFC-002 — AES 1.2.0 (borrador vivo)
+# RFC-002 — AES 1.2.0
 
-**Estado:** Evidencia completa (EN-001, US-001, CH-001, US-002; 2026-11-05). Pendiente: decidir el alcance (sección «Triage») y redactar 1.2.0. Recoge la evidencia del experimento en [aes-sandbox-gastos](https://github.com/KeylorBrenes/aes-sandbox-gastos).
+**Estado:** Aceptado e incorporado en AES 1.2.0 (2026-11-05). Triage aprobado por el responsable humano, más el cambio 21, pedido por él al aprobarlo. Recoge la evidencia del experimento en [aes-sandbox-gastos](https://github.com/KeylorBrenes/aes-sandbox-gastos).
 **Base:** AES 1.1.2
 **Tipo de cambio esperado:** MINOR (reglas nuevas; ninguna incompatible con 1.1)
 
@@ -112,16 +112,47 @@ Cada uno indica dónde se probó en el sandbox y en qué capítulo de AES entrar
 ### 20. Modelo registrado en la evidencia — 09, perfil
 - Las dos sesiones Sonnet corrieron contra un perfil que declara Opus. No es un fallo (era el experimento), pero las métricas deben registrar el modelo real de cada rol para que las comparaciones valgan.
 
-## Triage propuesto para 1.2.0
+### 21. Compuerta de estabilización por severidad — 00, 02, 07, 08 (pedido del responsable humano)
+- Problema: los defectos de una historia se dejaban como deuda y se absorbían en la siguiente (US-002 absorbió BUG-001 y BUG-002 de US-001). Corregir lo viejo mientras se construye lo nuevo mezcla dos cambios: el arreglo toca código de la historia nueva y produce defectos nuevos. Al cerrar US-002 quedaron cuatro defectos más (BUG-004 a BUG-007), uno de ellos una prueba inestable que puede poner en rojo `main`.
+- Cambio: todo defecto lleva severidad (Crítica, Alta, Media, Menor). Una historia nueva no pasa a `Ready` con defectos Críticos, Altos o Medios abiertos, ni con más Menores que el límite del perfil. Un Crítico detiene todo. Los defectos se corrigen en un **lote de estabilización**, en una sola sesión, sin funcionalidad nueva. Absorber defectos en la historia siguiente pasa a ser una excepción documentada.
+- *Implementación de referencia:* `ci/defect-gate.sh`, que lee la severidad del backlog desde `main` (simulación).
+
+## Triage aprobado para 1.2.0
 
 Para que AES no crezca más que lo que resuelve (el mismo riesgo que combate):
 
 | Destino | Cambios |
 |---|---|
-| **Normativo en 1.2.0** (estándar y plantillas) | 1, 2, 3, 7, 8, 12, 13, 14, 15, 17, 18, 20 |
+| **Normativo en 1.2.0** (estándar y plantillas) | 1, 2, 3, 7, 8, 12, 13, 14, 15, 17, 18, 20, 21 |
 | **Normativo, con la implementación de referencia como ejemplo** | 6, 10, 11, 16 |
 | **Solo implementación de referencia** (scripts, hooks, workflow) | 19; `with-servers.sh` documentado como herramienta del verificador, no de Playwright |
 | **Se queda en el RFC hasta tener evidencia** | 4 (falta probar otro harness), 5 (falta probar WSL 2), 9 (n = 1; se mantiene solo «una sesión por historia») |
+
+## Dónde quedó cada cambio
+
+| Cambio | Estándar | Plantillas y contratos | Implementación de referencia (`claude-code-subagents`) |
+|---|---|---|---|
+| 1. Decisiones y supuestos | 00 p.18, 01 §4, 03 §5 y §8, 08 §1 | `user-story`, `acceptance-test-plan`, QA, orquestador, arquitecto | skill §1–2 |
+| 2. Bloqueos y deuda | 02 §1, 07 §3 | `defect` | skill §4 |
+| 3. Tareas por criterio | 03 §6, 04 §2–3, 05 §12 | `task`, `user-story` | `aes-ctx.sh`, workflow |
+| 6. Aprobaciones en la CI | 06 §8–9 | perfil | `label-approver.sh`, workflow, README |
+| 7. Rodeo por delegación | 04 §6, 06 §6.1 | todos los contratos | subagentes |
+| 8. Estado entre roles | 04 §4, 05 §11, 06 §10 | `task`, `verification-report` | `with-servers.sh`, `subagent-gate.sh`, `aes.env` |
+| 10. Huecos de la CI | 05 §9 y §12, 08 §4–5 | orquestador | workflow |
+| 11. Hora real y DoR/DoD local | 01 §2, 08, 09 §7 | perfil | `aes-note.sh` |
+| 12. Camino corto T0/T1 | 02 §8, 04 §10, 05 §12, 08 §2 | `defect`, `stabilization-batch`, mecánico | skill §5–6, `run-verify.sh` |
+| 13. Caracterización | 03 §6, 05 §2.4 | `acceptance-test-plan`, `user-story` | QA, skill §2.5 |
+| 14. Fallo de acción | 03 §3, 04 §2 | `user-story`, `task` | skill §1.2 |
+| 15. Aislamiento de datos | 05 §2.5 y §6 | `acceptance-test-plan` | QA |
+| 16. Verificación en L3 | 06 §8, 07 §4, 08 §4 | orquestador | etiqueta `aes:verified`, workflow |
+| 17. Evidencia en su fuente | 00 §7, 05 §9 | `verification-report`, verificador | verificador |
+| 18. Diff separado | 02 §6 | `task` | skill §2.6 |
+| 19. Notas por script | 09 §7 | — | `aes-note.sh clear` |
+| 20. Modelo real | 06 §11, 09 §6 | perfil, `harness-findings` | M1 |
+| 21. Compuerta de estabilización | 00 p.17, 02 §9, 07 §6, 08 | `defect`, `stabilization-batch`, perfil | `defect-gate.sh`, workflow |
+| Mecánico como rol | 00 §5, 04 §11, 06 §2 | `mechanic` | subagente `mechanic` |
+
+Se quedan en este RFC hasta tener evidencia: 4 (binding de roles para otro harness), 5 (aislamiento del sistema de archivos; en 1.2.0 solo se declara la regla y la excepción) y 9 (el modelo del orquestador; se mantiene «una sesión por elemento»).
 
 ## Cosas que **no** deben cambiar (confirmadas)
 

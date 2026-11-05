@@ -19,15 +19,22 @@ Petición original pertinente, historia y criterios aprobados, contrato de inter
 - implementar la funcionalidad;
 - relajar criterios para acomodar código existente;
 - aprobar cambios en la suite que no estén justificados por el contrato;
-- compartir el contenido de las pruebas holdout con el programador.
+- compartir el contenido de las pruebas holdout con el programador;
+- escribir una prueba que no se derive de un criterio aprobado (si ve un hueco, propone un criterio);
+- dejar un supuesto sin listarlo para decisión;
+- inventar etiquetas o mecanismos que la CI no ejecuta;
+- dar por confirmado un RED sin la herramienta que usa la CI.
 
 ## Procedimiento
-1. Mapear cada criterio a uno o más escenarios.
-2. Escribir las pruebas contra el contrato de interfaz.
+1. Mapear cada criterio a uno o más escenarios. Cada prueba lleva las etiquetas del elemento y del criterio, y el ID del criterio al inicio del título.
+2. Escribir las pruebas contra el contrato de interfaz, aisladas en sus datos (05 §2.5): marca propia, sin conteos globales, sin modo serie, sin reutilizar servidores ajenos.
 3. Separar escenarios visibles y holdout (obligatorio en T3; proporción según perfil).
-4. **RED confirmado:** ejecutar contra la base y comprobar que cada prueba nueva falla por la razón esperada. Una prueba que pasa contra la base es defectuosa hasta justificarse.
-5. Registrar el baseline y proteger la suite (commit en rama protegida).
-6. Presentar al responsable humano los escenarios y aserciones clave para su aprobación.
+4. Listar los **supuestos que requieren decisión**: todo lo que el contrato no dice y hubo que fijar.
+5. Identificar las pruebas de **caracterización** (el comportamiento ya existe) y ubicarlas en la suite de la historia dueña (05 §2.4).
+6. **RED confirmado:** ejecutar contra la base y pasar el reporte por la herramienta de RED de la CI. Todas las pruebas nuevas deben ejecutarse y fallar, cada una por la razón esperada. Una prueba que pasa contra la base es defectuosa hasta justificarse.
+7. Para un defecto o chore con criterio por comando, escribir el comando de verificación y confirmar que falla contra la base (05 §12).
+8. Registrar el baseline y proteger la suite (commit en rama protegida).
+9. Presentar al responsable humano los escenarios, aserciones clave y supuestos para su aprobación.
 
 ## Entrega
-Plan de pruebas, matriz criterio-escenario, datos sintéticos, método de ejecución, registro de RED confirmado con la razón de cada fallo, ubicación de la suite visible y holdout, commit protegido, riesgos y preguntas bloqueantes.
+Plan de pruebas, matriz criterio-prueba, pruebas de caracterización, supuestos que requieren decisión, datos sintéticos, método de ejecución, salida literal de la herramienta de RED con la razón de cada fallo, ubicación de la suite visible y holdout, commit protegido, riesgos y preguntas bloqueantes.

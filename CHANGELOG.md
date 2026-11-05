@@ -1,5 +1,37 @@
 # Changelog
 
+## [1.2.0] — 2026-11-05
+
+Primera versión con evidencia de agentes reales: cuatro elementos ejecutados en [aes-sandbox-gastos](https://github.com/KeylorBrenes/aes-sandbox-gastos) (EN-001, US-001, CH-001, US-002), con Claude Code como orquestador y subagentes por rol. Cambio MINOR: añade reglas y endurece controles sin romper la estructura. Justificación y evidencia: [`docs/rfc/RFC-002-aes-1.2.0.md`](docs/rfc/RFC-002-aes-1.2.0.md).
+
+### Añadido
+- **Compuerta de estabilización** (02 §9, principio 17): todo defecto lleva severidad (Crítica, Alta, Media, Menor). Una historia nueva no pasa a `Ready` con defectos Críticos, Altos o Medios abiertos, ni con más Menores que el límite del perfil; un Crítico detiene todo. Los defectos se corrigen en un **lote de estabilización**, en una sola sesión, sin funcionalidad nueva.
+- **Registro de decisiones** por historia (03 §8, principio 18): cada ambigüedad resuelta es una fila `D-NN` con quién, cuándo e impacto. Los **supuestos de QA** se deciden antes de `Ready` (03 §5).
+- **Camino corto T0/T1** (04 §10) y DoR propia para T1 (08 §2). **Comandos de verificación** (`.verify`) para criterios que no se prueban con aceptación (05 §12).
+- **Tareas por criterio**: cada tarea declara los criterios que deja en verde y la CI ejecuta solo esos más la regresión (04 §2, 05 §12). Qué ejecuta la CI en cada fase (05 §12).
+- **Pruebas de caracterización** (05 §2.4), **aislamiento de datos** en las pruebas (05 §2.5) y pruebas inestables como defecto de severidad Alta (05 §6).
+- **Criterio de fallo** obligatorio para cada acción que escribe (03 §3) y transiciones que limpian cada estado (04 §2).
+- **Acciones denegadas y rodeo por delegación** (06 §6.1), **estado entre roles** (06 §10), **modelo real por rol** en la evidencia (06 §11).
+- **Verificación antes de integrar**, exigida en L3; aprobaciones en la CI que validan **quién** aprobó (06 §8).
+- **Evidencia en su fuente** (00 §7) y log de la CI como prueba de qué se ejecutó (05 §9).
+- Rol opcional **Mecánico** (00 §5, 06 §2) y su contrato.
+- **Evidencia del proceso y métricas** por elemento; notas con hora real (09 §6–7).
+- Plantillas nuevas: `defect.md`, `stabilization-batch.md`, `harness-findings.md`.
+- **Implementación de referencia `claude-code-subagents`**, a partir del sandbox: subagentes, hooks por rol, skill del orquestador, scripts de identidad (GitHub App), notas y servidores, y una CI con guardián, RED con trazabilidad, CI por criterio, comandos de verificación, compuerta de estabilización, aprobaciones validadas e invalidadas tras commits nuevos, y verificación (`aes:verified`) antes de integrar.
+
+### Cambiado
+- DoR y DoD reescritas con las reglas nuevas; DoD propia para lotes de estabilización (08).
+- RED confirmado exige que **todas** las pruebas se ejecuten, comprobado por herramienta; se define el «RED de arranque» (05 §2.2).
+- Presupuesto de diff separado en producción y pruebas (02 §6).
+- Un hallazgo tras un `PASS` que el humano manda corregir cuenta como ciclo `FAIL`; una CI que solo espera una aprobación prevista no (04 §9).
+- Convenciones que valen para más de una historia suben a un ADR (01 §4); copia local de DoR/DoD en cada proyecto (01 §2).
+- Rulesets separados, identidad propia de los agentes y aislamiento del sistema de archivos, ahora en el estándar (06 §9).
+- Guardián: las fuentes de paquetes y herramientas cuentan como dependencias; exclusión estrecha del código generado (05 §10).
+- Plantillas de historia, tarea, plan de aceptación, informe de verificación y perfil actualizadas; contratos de orquestador, QA, programador, verificador y arquitecto actualizados.
+
+### Pendiente (sigue en el RFC)
+- Binding de roles para otro harness (OpenCode o un motor local), aislamiento del sistema de archivos con evidencia, y elección del modelo del orquestador con más datos.
+
 ## [1.1.2] — 2026-11-02
 
 Correcciones en la implementación de referencia (`profiles/reference/claude-code-opencode/`), encontradas al ejecutar AES con agentes reales en [aes-sandbox-gastos](https://github.com/KeylorBrenes/aes-sandbox-gastos), historia EN-001. Sin cambios normativos: las reglas que salgan del experimento irán a la 1.2.0 (RFC-002).

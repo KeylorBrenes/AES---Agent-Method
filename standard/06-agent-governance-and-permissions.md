@@ -43,6 +43,12 @@ Separar responsabilidades, limitar el contexto y restringir las acciones de cada
 - no modifica contratos de aceptación ni aprueba su trabajo;
 - reporta supuestos, desviaciones y bloqueos.
 
+### Mecánico (opcional)
+
+- ejecuta tareas mecánicas dentro de una superficie de cambio: configuración no funcional, renombres, formato, consolidación de notas y métricas;
+- tiene los permisos del programador, limitados a su tarea;
+- si la tarea exige decidir comportamiento o diseñar, se detiene con `BLOCKED`: esa tarea no es mecánica.
+
 ### Verificador
 
 - inspecciona la especificación, el diff y las evidencias;
@@ -73,6 +79,8 @@ La aplicación exacta se define en el perfil, pero la intención no debe cambiar
 | Aprobar su propio trabajo | No | No | No | No | No |
 | Emitir informe de verificación | No sustituye | Puede aportar | Puede aportar | No | Sí |
 
+El mecánico, cuando existe, tiene la columna del programador.
+
 ## 4. Aislamiento del verificador
 
 El verificador debe iniciar una ejecución separada y recibir directamente:
@@ -87,6 +95,10 @@ El verificador debe iniciar una ejecución separada y recibir directamente:
 No debe recibir como fuente de verdad el razonamiento privado, la autoevaluación ni el resumen promocional del programador. Puede leer el código y los artefactos necesarios para comprobar el resultado.
 
 La independencia depende principalmente de la separación de permisos, contexto y evidencia. Usar otro proveedor/modelo puede aportar diversidad, pero no sustituye esos controles.
+
+El orquestador puede añadir **puntos de atención**: hechos concretos y comprobables (un commit, un archivo, un cambio de comportamiento que notó), nunca conclusiones. El verificador los trata como hipótesis que comprueba él mismo.
+
+La verificación ocurre **antes de integrar**. Verificar después (por ejemplo, porque se integró por error) es un incidente que se registra, y pierde información: con integración por *squash*, el verificador ya no ve los commits individuales.
 
 El verificador MUST volver a ejecutar las validaciones en lugar de aceptar las del programador, ejecutar las pruebas holdout cuando existan y realizar la prueba manual agéntica que corresponda al track (05 §11). Además vigila las señales de desvío que Kent Beck describe en *Augmented Coding: Beyond the Vibes*:
 
@@ -127,6 +139,16 @@ Skills:
 - SHOULD construirse **después** de evaluar al agente en tareas representativas y observar dónde falla, no por anticipado (09).
 - MUST instalarse solo desde fuentes confiables. Las de terceros se auditan antes de usarlas: archivos incluidos, scripts, dependencias y cualquier instrucción que conecte con redes externas no confiables.
 
+### 6.1 Acciones denegadas y rodeo por delegación
+
+Cuando un permiso, un hook o un clasificador del harness deniega una acción a un agente, el agente puede intentar conseguirla por otra vía: otro comando, o pedirle a otro agente que la haga. Lo segundo es un **rodeo por delegación**, y ningún control técnico lo detecta: en el sandbox de AES, dos subagentes pidieron al orquestador que detuviera procesos que a ellos se les había denegado detener.
+
+Reglas:
+
+- Una acción denegada es `BLOCKED` **para el responsable humano**, con la acción exacta que hace falta.
+- Ningún agente ejecuta una acción que se le denegó a otro rol, aunque él sí tenga permiso.
+- El orquestador registra el caso y se lo pasa al humano; no lo resuelve.
+
 ## 7. Secretos y entornos
 
 Los agentes no deben imprimir, copiar a reportes ni incluir en commits secretos, credenciales, tokens, datos personales reales o archivos de entorno. Los entornos de prueba deben usar datos sintéticos o anonimizados cuando sea posible. Los agentes reciben credenciales solo si su tarea las necesita y con privilegio mínimo.
@@ -145,6 +167,10 @@ Requieren aprobación humana previa:
 - aceptación final de una funcionalidad/producto cuando el perfil lo requiera.
 
 Los detalles rutinarios, locales y reversibles pueden delegarse si respetan la arquitectura y las convenciones.
+
+Cuando la aprobación se expresa en la CI (por ejemplo, con una etiqueta en el PR que autoriza dependencias o marcadores), la CI SHOULD comprobar **quién** la dio: una persona autorizada, no la identidad de los agentes. Una etiqueta que la identidad de los agentes puede poner no es una aprobación. Si la plataforma no permite comprobarlo, se usa una revisión aprobada en su lugar.
+
+La **verificación independiente** es una condición de integración que no debe depender de la memoria de nadie. El `PASS` del verificador SHOULD quedar como evidencia que la CI o la protección de rama exigen antes de integrar una tarea (por ejemplo, una etiqueta de verificación que solo puede poner el responsable humano tras leer el informe, comprobada como en el párrafo anterior). En el sandbox de AES, una tarea se integró antes del `PASS` cuando el aviso del orquestador no lo recordaba, y la regla se cumplió en la historia siguiente solo porque el aviso lo decía.
 
 ## 9. Modelo de controles en capas
 
@@ -165,5 +191,20 @@ Reglas:
 - El programador SHOULD trabajar en un worktree o contenedor donde la suite holdout no existe y la suite visible está montada en solo lectura.
 - Si la CI se define en archivos del propio repositorio, una rama puede modificar su propio workflow para saltarse el guardián. Las credenciales con las que se publican ramas de programador MUST NOT tener permiso para modificar workflows (en GitHub, un token sin el permiso *Workflows*), o la plataforma MUST imponer el workflow desde fuera de la rama (por ejemplo, workflows obligatorios a nivel de organización).
 - MUST NOT presentarse L1 o L2 como suficientes para un control fundamental.
+- Si el responsable humano necesita poder integrar sus propios cambios (nadie puede aprobar su propio PR), el permiso de saltarse la aprobación MUST NOT alcanzar a los checks obligatorios. En GitHub: dos rulesets, uno con los checks y sin bypass, otro con la aprobación y un bypass solo para PR. Un único ruleset con bypass permite integrar con la CI en rojo; en el sandbox de AES pasó.
+- Los agentes publican con una **identidad propia**, distinta de la del humano, y sus commits llevan esa misma autoría. Así la aprobación del humano es real y el historial distingue quién escribió qué.
+- **Aislamiento del sistema de archivos:** la terminal de un agente puede escribir fuera del repositorio, y ninguna de las tres capas lo detecta. Si el disco tiene algo sensible, los roles que escriben SHOULD trabajar en un entorno aislado (contenedor, máquina virtual o el aislamiento de terminal del harness); si no, el perfil lo declara como excepción.
 
 `profiles/reference/` contiene una implementación de referencia de las tres capas.
+
+## 10. Estado entre roles
+
+Un rol no debe dejar nada que el siguiente pueda tomar como propio: servidores escuchando, procesos, datos de prueba o archivos temporales dentro del repositorio. Si la aceptación reutiliza un servidor que dejó vivo otro rol, puede pasar contra código viejo; en el sandbox de AES, los servidores de un verificador bloquearon la compilación del programador siguiente.
+
+- Los servidores se arrancan con una herramienta que los detiene siempre al terminar y que **no reutiliza** un servidor ajeno: si el puerto está ocupado, falla.
+- Al terminar cada rol, un control comprueba que no quedó nada escuchando en los puertos del proyecto (L2 en la implementación de referencia; en la CI, cada ejecución empieza limpia).
+- Si un agente no puede detener algo que arrancó, es una acción denegada (§6.1).
+
+## 11. Modelo y harness por rol
+
+El perfil declara qué harness y qué modelo ocupa cada rol. La evidencia de cada elemento (09 §6) registra el modelo **real** de cada rol en esa ejecución, no el declarado: si cambian, las comparaciones de costo y calidad entre elementos no valen.

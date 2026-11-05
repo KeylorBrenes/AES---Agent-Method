@@ -18,7 +18,9 @@ Cada tarea lista para ejecución DEBE especificar:
 - restricciones y permisos;
 - **comandos de validación exactos** (no descripciones como «ejecuta las pruebas relevantes»);
 - **pruebas de regresión afectadas** (test map), cuando puedan generarse o deducirse;
-- presupuesto de diff orientativo (02 §6);
+- **criterios que deja en verde**: los IDs de criterio (o de defecto) que esta tarea cumple. La CI de la tarea ejecuta solo esos más la regresión; la **última** tarea de la historia ejecuta la historia completa (05 §12);
+- presupuesto de diff orientativo, separado en producción y pruebas (02 §6);
+- si la tarea introduce un **estado** (de error, de carga, de edición), las transiciones que lo crean y las que lo limpian;
 - condición de finalización.
 
 La superficie de cambio no es una sugerencia: la CI compara el diff contra ella (05 §10). Un archivo modificado fuera de la superficie es un `FAIL` salvo aprobación registrada. La superficie se publica en la rama protegida **antes** de delegar la tarea, para que el programador no pueda ampliarla.
@@ -30,6 +32,8 @@ El estudio TDAD (Alonso, Yovine y Braberman, arXiv:2603.17973; tesis de maestrí
 ## 3. Tamaño y divisibilidad
 
 Una tarea es suficientemente pequeña si un agente puede comprender su objetivo, implementarla, inspeccionar el diff y ejecutar su validación sin tener que aceptar varios resultados independientes como un bloque indivisible.
+
+Las tareas se dividen **por criterios** (cortes verticales que dejan criterios en verde), no por capas técnicas. Una tarea «solo API» y otra «solo UI» no pueden quedar verdes por separado si la aceptación cruza ambas. Sin CI por criterio, toda historia termina en una sola tarea grande: en el sandbox de AES, las dos primeras historias acabaron en tareas únicas de 300 a 500 líneas.
 
 Señales para dividir:
 
@@ -56,7 +60,8 @@ El programador DEBE:
 6. separar commits estructurales y conductuales (§8);
 7. ejecutar los comandos de validación exactos de la tarea;
 8. inspeccionar su propio diff para detectar archivos o cambios ajenos;
-9. entregar un reporte con archivos modificados, pruebas ejecutadas, resultados, riesgos y decisiones/supuestos.
+9. dejar el entorno como lo encontró: ningún servidor, proceso ni dato que el rol siguiente pueda tomar como propio (06 §10);
+10. entregar un reporte con archivos modificados, pruebas ejecutadas, resultados, riesgos y decisiones/supuestos.
 
 El programador NO DEBE:
 
@@ -65,6 +70,8 @@ El programador NO DEBE:
 - ocultar, saltar o silenciar pruebas fallidas;
 - ampliar el alcance con refactorizaciones no relacionadas;
 - añadir dependencias sin justificación y aprobación requerida;
+- editar a mano código generado por herramientas (por ejemplo, migraciones): se regenera;
+- borrar un marcador del guardián que no escribió (por ejemplo, un `#pragma` de código generado) para que el control deje de marcarlo: se reporta;
 - afirmar que algo funciona sin evidencia de ejecución.
 
 ## 5. Dependencias y paralelismo
@@ -76,6 +83,8 @@ Se DEBERÍA usar ramas o worktrees separados para agentes concurrentes. No se pe
 ## 6. Bloqueos
 
 Si el agente descubre una dependencia, contradicción o cambio necesario fuera del alcance, debe detener esa parte, explicar el bloqueo y proponer opciones. No debe resolverlo ampliando unilateralmente la tarea.
+
+Una **acción denegada** (por un permiso, un hook o un clasificador del harness) también es un bloqueo. El agente termina con `BLOCKED` e indica la acción exacta que necesita **del responsable humano**. No la intenta de otra forma ni le pide a otro agente que la haga: eso es un rodeo por delegación (06 §6.1).
 
 ## 7. Cierre de tarea
 
@@ -102,6 +111,7 @@ Efecto: un commit `struct:` se revisa comprobando que las pruebas siguen verdes;
 ## 9. Circuit breaker e higiene de contexto
 
 - Cada tarea MUST ejecutarse en una **sesión nueva**. No se reutiliza el contexto de una tarea anterior.
+- Cuenta como ciclo `FAIL`: una CI roja por causa del cambio, un `FAIL` del verificador, o un hallazgo tras un `PASS` que el responsable humano manda corregir antes de integrar. No cuenta: una CI roja que solo espera una aprobación humana prevista (por ejemplo, la etiqueta de dependencias).
 - Si una misma tarea acumula **3 ciclos `FAIL`** (CI o verificador), se detiene. No hay cuarto intento automático. El orquestador clasifica la causa y decide:
   - tarea mal especificada o demasiado grande → vuelve a refinamiento;
   - prueba de aceptación incorrecta → control de cambios con QA (05 §6);
@@ -109,3 +119,25 @@ Efecto: un commit `struct:` se revisa comprobando que las pruebas siguen verdes;
   - limitación del modelo o del harness → reasignar o escalar al responsable humano.
 - Si el agente repite el mismo enfoque fallido dos veces seguidas, el orquestador SHOULD reiniciar el contexto con un resumen escrito de lo aprendido en lugar de compactarlo: la compactación conserva los supuestos erróneos.
 - El perfil puede reducir el umbral de 3 ciclos; aumentarlo requiere excepción documentada.
+
+## 10. Camino corto para T0 y T1
+
+T0 y T1 no recorren el ciclo de una historia, pero tampoco se improvisan. Pasos mínimos:
+
+| Paso | T0 | T1 (defecto, chore o lote de estabilización) |
+|---|---|---|
+| Elemento en el backlog | Sí | Sí, con severidad si es defecto (02 §9) y con historia de origen |
+| Especificación | La tarea | Un PR de especificación con el elemento, su criterio y la superficie. Aprobarlo es el gate humano |
+| Comprobación de reproducción | — | Prueba de aceptación protegida o **comando de verificación** (05 §12), con RED confirmado; o «sin RED» declarado y aprobado (02 §8) |
+| QA | No | Solo si la comprobación es una prueba de aceptación nueva |
+| Tareas | Una | Las mínimas, agrupadas por superficie; cada una declara qué defectos deja en verde |
+| CI | Guardián + validaciones | Guardián + validaciones + la comprobación del elemento + regresión |
+| Verificador | No (salvo que el perfil lo exija) | Sí, ejecutando la comprobación él mismo |
+| Cierre | Estado en el backlog | Estado, comprobación añadida a la regresión, hallazgos registrados |
+
+Un T1 que, al trabajarse, resulta tocar comportamiento nuevo o un riesgo de T3 sube de track (02 §8).
+
+## 11. Sesiones del orquestador
+
+- El orquestador trabaja **una historia, enabler o lote por sesión**. Arrastrar el contexto de otro elemento encarece cada turno y mezcla decisiones; en el sandbox de AES, el contexto acumulado fue la mayor parte del costo de cada historia.
+- La redacción mecánica (consolidar notas, tablas de métricas) SHOULD delegarse en un rol barato (el mecánico).

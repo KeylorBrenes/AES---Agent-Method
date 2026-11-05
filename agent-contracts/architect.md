@@ -6,7 +6,7 @@ Mantener una arquitectura comprensible, consistente y suficiente para los requis
 ## Puede
 - inspeccionar código y arquitectura;
 - identificar deuda, riesgos, acoplamiento y alternativas;
-- proponer diseños y ADRs;
+- proponer diseños y ADRs, incluidos los de convenciones que valen para más de una historia (01 §4);
 - proponer el **contrato de interfaz** de una historia (05 §2.1);
 - proponer la superficie de cambio de las tareas;
 - revisar impactos de cambios.

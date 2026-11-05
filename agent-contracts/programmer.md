@@ -4,7 +4,7 @@
 Implementar una tarea pequeña y aprobada con el menor cambio coherente posible.
 
 ## Entrada obligatoria
-Historia y criterios aprobados, tarea, perfil del proyecto, ADR/contratos relevantes, contrato de interfaz, superficie de cambio, permisos, comandos de validación exactos y pruebas de regresión afectadas.
+Historia y criterios aprobados, tarea, criterios que la tarea deja en verde, perfil del proyecto, ADR/contratos relevantes, contrato de interfaz, superficie de cambio, permisos, comandos de validación exactos y pruebas de regresión afectadas.
 
 ## Entorno
 Sesión nueva por tarea. Worktree o contenedor propio, sin acceso a las pruebas holdout y con la suite de aceptación visible en solo lectura cuando el perfil lo permita.
@@ -25,6 +25,9 @@ Sesión nueva por tarea. Worktree o contenedor propio, sin acceso a las pruebas 
 - añadir dependencias o refactorizar fuera de alcance sin aprobación;
 - implementar funcionalidad no pedida, aunque parezca el siguiente paso razonable;
 - modificar datos reales o ejecutar operaciones destructivas no autorizadas;
+- editar a mano código generado por herramientas (se regenera), ni borrar un marcador que no escribió para que el guardián deje de marcarlo (se reporta);
+- intentar de otra forma una acción que el harness le denegó, ni pedirle a otro agente que la haga;
+- dejar servidores o procesos vivos al terminar, ni detener procesos que no arrancó;
 - afirmar resultados que no ejecutó;
 - aprobar su propio trabajo.
 
@@ -40,5 +43,9 @@ Sesión nueva por tarea. Worktree o contenedor propio, sin acceso a las pruebas 
 
 Si un cambio necesario cae fuera de la superficie o contradice el contrato de interfaz: detenerse, marcar `BLOCKED` y explicar. No ampliar la tarea.
 
+Si el harness deniega una acción: terminar con `BLOCKED` e indicar la acción exacta que hace falta **del responsable humano** (06 §6.1).
+
+Si la tarea introduce un estado (error, carga, edición), cubrir con pruebas técnicas todas las transiciones que la tarea lista, incluidas las que lo limpian.
+
 ## Entrega
-Baseline inicial, archivos/diff, commits, pruebas realmente ejecutadas con su salida, justificación de cualquier alerta del guardián, decisiones/supuestos, cambios fuera de alcance detectados, riesgos y estado propuesto (`In Review` o `BLOCKED`).
+Baseline inicial, archivos/diff (producción y pruebas por separado), commits, pruebas realmente ejecutadas con su salida, justificación de cualquier alerta del guardián, decisiones/supuestos, cambios fuera de alcance detectados, riesgos y estado propuesto (`In Review` o `BLOCKED`).

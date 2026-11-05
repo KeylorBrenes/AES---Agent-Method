@@ -13,6 +13,7 @@ Antes de implementar funcionalidades, el orquestador DEBE ayudar a crear o local
 3. **Architecture Overview:** contexto, componentes principales, límites, datos e integraciones conocidas.
 4. **Backlog inicial:** Epics y riesgos/incertidumbres conocidos; no es necesario detallar todas las historias futuras.
 5. **Quality Strategy:** niveles de prueba, CI y controles aplicables.
+6. **Copia local de las reglas que los agentes consultan:** como mínimo, las checklists de DoR y DoD (08) dentro del repositorio (por ejemplo, `docs/aes/`), con la versión de AES de la que salen. Un agente que solo tiene la referencia «AES 08» revisa la DoR de memoria.
 
 Si se trabaja sobre un proyecto existente, primero se inspecciona el repositorio y el comportamiento actual. No se asume que la documentación está actualizada ni que la arquitectura deseada coincide con la implementada.
 
@@ -41,7 +42,8 @@ Se DEBERÍA crear un ADR para decisiones con impacto material, difícil reversi�
 - estrategia de persistencia o migración de datos;
 - autenticación/autorización;
 - contratos de integración importantes;
-- decisiones de escalabilidad, seguridad o despliegue.
+- decisiones de escalabilidad, seguridad o despliegue;
+- **convenciones que aplican a más de una historia**: cómo se valida, cómo se muestran los errores, qué control de UI se usa para cada tipo de dato, formato de fechas y montos. Si una convención se decide dentro de una historia y vale para las siguientes, sube a un ADR; si no, la siguiente historia vuelve a preguntarla, o la fija sin firma el primer agente que escribe una prueba.
 
 Un ADR debe resumir contexto, decisión, alternativas consideradas, consecuencias, riesgos, estado y fecha. No se crean ADRs para elecciones locales triviales.
 

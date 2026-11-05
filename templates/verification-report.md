@@ -8,6 +8,9 @@
 - **Track:**
 - **Resultado:** PASS / FAIL / BLOCKED
 
+## Puntos de atención recibidos
+[Hechos que el orquestador señaló. Se comprueban como hipótesis, no se aceptan como conclusiones.]
+
 ## Alcance verificado
 [Historia, tareas, criterios, contrato de interfaz y rutas revisados.]
 
@@ -33,17 +36,25 @@
 | Pruebas desactivadas, borradas o debilitadas | | |
 
 ## Prueba manual agéntica
-[Cómo se arrancó la aplicación, qué flujos se ejercitaron, capturas y salidas. Defectos encontrados se registran como T1.]
+[Cómo se arrancaron los servidores (con la herramienta que los detiene al terminar), qué flujos se ejercitaron, **con datos distintos a los de las pruebas**, capturas y salida literal. Sin prueba manual, cuando el track la exige, el resultado es BLOCKED.]
 
 ## Hallazgos
-| Severidad | Hallazgo | Reproducción/evidencia | Criterio afectado |
-|---|---|---|---|
+Cada afirmación se comprobó en su fuente (00 §7): contenido versionado con `git show`/`git cat-file`, comportamiento en el código o ejecutándolo.
+
+| ID | Origen | Severidad propuesta | Hallazgo | Reproducción/evidencia | Criterio afectado |
+|---|---|---|---|---|---|
+| F-1 | De la tarea / preexistente | Crítica / Alta / Media / Menor | | | |
+
+[«De la tarea»: sobre lo que añade la tarea → ciclo FAIL si se corrige ahora. «Preexistente»: comportamiento ya aceptado o anterior → defecto del backlog con severidad (02 §9.3).]
 
 ## Commits
 [¿Separan estructural y conductual? ¿Algún `struct:` cambia comportamiento?]
 
 ## Cambios fuera de alcance
 [Indicar ninguno o enumerarlos.]
+
+## Entorno al terminar
+[Sin servidores ni procesos del verificador escuchando (06 §10).]
 
 ## Riesgos y aspectos no verificados
 

@@ -1,9 +1,9 @@
 # TASK-[NNN] — [Resultado concreto]
 
-- **Historia/Enabler/Bug:** US-[NNN]
+- **Historia/Enabler/Bug/Lote:** US-[NNN]
 - **Track:** T0 / T1 / T2 / T3
 - **Estado:** Ready / In Progress / In Review / Blocked / Done
-- **Agente asignado:**
+- **Agente asignado:** programador / mecánico
 - **Riesgo:** Low / Medium / High / Critical
 - **Ciclos FAIL acumulados:** 0 / 3 (circuit breaker al llegar a 3)
 
@@ -16,8 +16,8 @@
 ## Fuera de alcance
 [Qué no debe cambiar. Obligatorio y no vacío en T2/T3. Nombrar funcionalidades cercanas que podrían implementarse «por conveniencia».]
 
-## Criterios relacionados
-[IDs AC-xx y contrato de interfaz pertinente.]
+## Criterios que deja en verde
+[IDs de criterio o de defecto. Se publican en la rama protegida como `specs/US-[NNN]/TASK-[NNN].criteria`, uno por línea (`AC-03`, `BUG-012`). La CI de la tarea ejecuta solo esos más la regresión. La **última** tarea del elemento no lleva este archivo: ejecuta el elemento completo. Un criterio verificado por regresión de otra historia (caracterización) no se lista.]
 
 ## Contexto técnico
 [Componentes, archivos conocidos, convenciones, ADRs.]
@@ -33,6 +33,9 @@ tests/unit/[modulo]/**
 ## Restricciones y permisos
 [Rutas protegidas adicionales, dependencias autorizadas, operaciones que requieren aprobación.]
 
+## Estados que introduce
+[Si la tarea crea un estado (error, carga, edición, confirmación): qué lo crea y qué transiciones lo limpian. Omitir si no aplica.]
+
 ## Dependencias
 
 ## Comandos de validación exactos
@@ -46,7 +49,9 @@ tests/unit/[modulo]/**
 [Archivos de prueba existentes que este cambio puede romper.]
 
 ## Presupuesto de diff orientativo
-[~N líneas. Superarlo exige justificar por qué no se dividió.]
+- Producción: ~N líneas
+- Pruebas: ~M líneas
+[El desvío que exige justificación es el de producción.]
 
 ## Condición de finalización
 [Qué evidencia permite pasar a revisión.]
@@ -61,4 +66,5 @@ tests/unit/[modulo]/**
 - Supuestos/decisiones:
 - Desviaciones/bloqueos:
 - Riesgos pendientes:
+- Entorno limpio al terminar (sin servidores ni procesos del rol):
 - Referencia del diff/commit:

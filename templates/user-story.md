@@ -1,5 +1,7 @@
 # US-[NNN] — [Título orientado al resultado]
 
+[También sirve para Enablers (EN-NNN). Para defectos, chores y lotes de estabilización usa `defect.md` y `stabilization-batch.md`.]
+
 - **Epic:** EPIC-[NNN]
 - **Track:** T2 / T3
 - **Estado:** Draft / Ready / In Progress / In Review / Blocked / Ready for Acceptance / Accepted / Rejected / Deferred
@@ -21,7 +23,10 @@ Como [actor], quiero [capacidad], para [beneficio].
 ## Criterios de aceptación
 | ID | Dado | Cuando | Entonces | Verificación / prueba |
 |---|---|---|---|---|
-| AC-01 | | | | |
+| AC-01 | | | | Aceptación `@US-[NNN]-AC-01` |
+| AC-02 | | | | Regresión de US-[MMM] (caracterización: el comportamiento ya existe, 05 §2.4) |
+
+[Cada acción que escribe (guardar, editar, eliminar, enviar) tiene un criterio de fallo: qué ve el usuario si la respuesta no es exitosa y si la red falla, y qué lo limpia (03 §3).]
 
 ## Casos negativos y límites relevantes
 
@@ -34,9 +39,17 @@ Como [actor], quiero [capacidad], para [beneficio].
 
 ## Dependencias y contratos
 
-## Decisiones / ADRs aplicables
+## ADRs aplicables
+
+## Decisiones
+[Cada ambigüedad resuelta y cada supuesto de QA convertido en contrato (03 §8). Entra en el mismo PR que la usa. Ningún supuesto queda abierto al pasar a `Ready`.]
+
+| ID | Pregunta | Opciones | Decisión | Quién y fecha | Impacto |
+|---|---|---|---|---|---|
+| D-01 | | | | | AC nuevo/modificado, contrato, ADR o «ninguno» |
 
 ## Supuestos e incertidumbres
+[Solo los que no afectan el producto (03 §5). Los que sí, van a «Decisiones».]
 
 ## Estrategia de pruebas
 - Aceptación visible:
@@ -49,8 +62,10 @@ Como [actor], quiero [capacidad], para [beneficio].
 - Seguridad/no funcionales:
 
 ## Tareas
-| ID | Resultado | Superficie | Dependencias | Estado |
-|---|---|---|---|---|
+[Divididas por criterios, no por capas. La última tarea no lleva lista de criterios: ejecuta la historia completa.]
+
+| ID | Resultado | Superficie | Criterios que deja en verde | Dependencias | Estado |
+|---|---|---|---|---|---|
 
 ## Evidencia y revisión
 - CI y guardián:
@@ -58,6 +73,7 @@ Como [actor], quiero [capacidad], para [beneficio].
 - Informe verificador:
 - Revisión humana de código (T3):
 - Aceptación humana:
+- Defectos registrados en el cierre (ID, severidad):
 
 ## Historial de cambios
 | Fecha | Cambio | Motivo | Aprobador |
