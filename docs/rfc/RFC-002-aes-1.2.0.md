@@ -92,7 +92,7 @@ Cada uno indica dónde se probó en el sandbox y en qué capítulo de AES entrar
 
 ### 15. Aislamiento de datos en las pruebas — 05, contrato de QA
 - Pruebas que comparan conteos sobre datos compartidos fallan en paralelo (BUG-005: 1 de cada 3–4 corridas). Una prueba inestable en `main` pone en rojo a todos.
-- Cambio: cada prueba crea y busca sus propios datos (marca única, periodo propio) y no compara totales globales. Una prueba inestable es un bug P1, no ruido.
+- Cambio: cada prueba crea y busca sus propios datos (marca única, periodo propio) y no compara totales globales. Una prueba inestable es un defecto de severidad Alta, no ruido.
 
 ### 16. Verificación como gate en L3 — 06 §8, 07, 08
 - «No fusiones hasta el PASS» se rompió en CH-001 y se cumplió en US-002 solo porque el aviso lo decía. Es la única condición de la DoD que hoy depende de la memoria del humano.
