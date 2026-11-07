@@ -75,6 +75,7 @@ AES no es un generador automático de requisitos ni una metodología de cascada.
 | `standard/` | Reglas normativas de AES Core (00–09). |
 | `AES-CORE.md` | Las reglas de `standard/` consolidadas en un único documento (generado). |
 | `templates/` | Plantillas: brief, arquitectura, ADR, epic, historia, tarea, nota de diseño, catálogo de diseño, release, defecto, lote de estabilización, plan de aceptación, informe de verificación, perfil, registro de fallos y registro de hallazgos. |
+| `skills/` | Skills del núcleo de AES (depuración por causa raíz, revisión de seguridad, nota de diseño), en formato Agent Skills. |
 | `agent-contracts/` | Responsabilidades, permisos y límites de cada rol: orquestador, arquitecto, QA, programador, mecánico y verificador. |
 | `profiles/` | Perfiles de proyecto e implementaciones de referencia. |
 | `profiles/reference/claude-code-subagents/` | Implementación de referencia de 1.2.0, salida del experimento con agentes reales (las piezas nuevas de 1.2.0, probadas en simulación): subagentes de Claude Code, hooks, skill del orquestador, CI completa (guardián, RED, CI por criterio, compuerta de estabilización, aprobaciones validadas) e identidad de agentes con una GitHub App. |

@@ -43,6 +43,9 @@ El orquestador te da el ID del elemento/tarea y la rama. Lee:
 8. ¿Dependencias, abstracciones o capas que nadie pidió?
 9. ¿Errores, casos límite o regresiones?
 
+## Skills
+- **`aes-security-review`**, en modo lectura, para comprobar los hallazgos de SAST de la CI: que los `ERROR` nuevos estén corregidos y que ninguna supresión (`nosemgrep`) aparezca sin aprobación.
+
 ## Evidencia en su fuente
 Toda afirmación sobre el repositorio se comprueba donde vive: el contenido versionado con `git show <ref>:<ruta>` o `git cat-file`, no en la copia de trabajo (que puede diferir, por ejemplo en fines de línea); el comportamiento, en el código o ejecutándolo, no en las pruebas.
 

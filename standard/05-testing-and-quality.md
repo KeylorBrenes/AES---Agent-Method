@@ -135,6 +135,14 @@ El perfil de proyecto debe declarar herramientas y umbrales aplicables: formato,
 
 Los cambios que afectan autenticación, autorización, datos personales, pagos, secretos, límites de confianza o migraciones requieren revisión reforzada y pruebas negativas pertinentes.
 
+El **análisis estático de seguridad** (SAST, con reglas mapeadas a OWASP y CWE) SHOULD ejecutarse en la CI de cada tarea sobre lo que la tarea cambia:
+
+- un hallazgo **nuevo** de severidad alta en el diff falla la tarea: es un hallazgo de la tarea (ciclo `FAIL`);
+- un hallazgo nuevo de severidad menor y los hallazgos **preexistentes** no bloquean la tarea: el orquestador los registra como defectos con severidad (02 §9), y la compuerta de estabilización hace el resto;
+- un falso positivo se suprime en la configuración de la herramienta, con motivo, y como cualquier marcador del guardián exige aprobación humana (05 §10).
+
+La comprobación de dependencias con vulnerabilidades conocidas sigue la política del perfil.
+
 ## 8. Cobertura y mutation testing
 
 La cobertura es una señal, no prueba de calidad. No se debe optimizar el porcentaje a costa de aserciones significativas.

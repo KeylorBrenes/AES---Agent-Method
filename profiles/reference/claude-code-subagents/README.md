@@ -22,6 +22,7 @@ Es un punto de partida, no un perfil prescriptivo. Las partes del stack (.NET + 
 | `.claude/scripts/aes-note.sh` | — | Notas del orquestador con la hora real; `clear` las vacía tras el cierre | Probado (`clear`: simulación) |
 | `.claude/scripts/gh-app-token.sh`, `git-credential-aes-app.sh`, `agent-gh.sh` | L3 | Identidad de los agentes: GitHub App sin permiso de workflows | Probado |
 | `.claude/skills/aes-cycle/SKILL.md` | — | Procedimiento del orquestador, con plantillas de delegación | Probado (caminos T1 y lote: simulación) |
+| `.claude/skills/aes-{debugging,security-review,design-note}/` | — | Skills del núcleo de AES, copiadas de `skills/` en la raíz del repo de AES (no se editan aquí) | Pendiente de uso real |
 | `.claude/aes.env` | — | Puertos y comandos de servidores del proyecto | — |
 | `ci/aes-guard.sh` | L3 | Guardián: rutas protegidas, superficie, dependencias, pruebas borradas, marcadores | Probado |
 | `ci/red-check.mjs` | L3 | RED confirmado (todas ejecutadas y fallando) y trazabilidad criterio → prueba | RED probado; trazabilidad: simulación |
@@ -29,6 +30,7 @@ Es un punto de partida, no un perfil prescriptivo. Las partes del stack (.NET + 
 | `ci/defect-gate.sh` | L3 | Compuerta de estabilización: lee la severidad de los defectos del backlog de la rama destino; fase `release` para liberar | Simulación |
 | `ci/run-verify.sh` | L3 | Comandos de verificación: RED en la especificación, verde en tareas, cierre y regresión | Simulación |
 | `ci/label-approver.sh` | L3 | Quién puso cada etiqueta de aprobación (no la identidad de los agentes) | Simulación |
+| Paso SAST del workflow | L3 | Semgrep con reglas OWASP sobre lo nuevo de cada tarea: `ERROR` falla la tarea; el resto se registra como defectos | `--baseline-commit` (solo hallazgos nuevos) y `--error` por severidad: probados con Semgrep 1.184 en local; el workflow, en simulación |
 | `ci/validate.sh` | — | Validaciones del stack (ejemplo .NET + React) | Probado |
 | `.github/workflows/aes.yml` | L3 | Un único check `aes` en `dev` y `main` con todo lo anterior, más «main contenido en dev»; scripts siempre desde la rama destino | Versión de 1.1 probada; esta, en simulación |
 | `.github/CODEOWNERS` | L3 | Tu aprobación para rutas protegidas | Probado |
@@ -59,6 +61,7 @@ Es un punto de partida, no un perfil prescriptivo. Las partes del stack (.NET + 
    - `AES_APPROVERS`: tu login (o los logins autorizados, separados por coma). La CI acepta una etiqueta solo si la última vez la puso una de estas personas, nunca un `[bot]`. Sin esta variable, solo rechaza las que puso un bot.
    - `AES_MINOR_LIMIT` (opcional, por defecto 5): defectos Menores abiertos permitidos.
    - `AES_REQUIRE_VERIFIED` (opcional, por defecto `1`): exige `aes:verified` en las tareas.
+   - `AES_SAST` (opcional, `0` lo desactiva) y `AES_SAST_CONFIG` (opcional, por defecto `p/owasp-top-ten`): el paso de SAST.
 11. **Activar el workflow:** la app no puede tocar `.github/workflows/`, así que lo subes tú en un PR propio.
 12. Instala `jq` donde corran los hooks.
 
@@ -97,6 +100,23 @@ orquestador: publica la rama; para el verificador, otro delegate → worktree li
 - Los roles se ejecutan de uno en uno. En paralelo, dos worktrees arrancarían servidores en los mismos puertos.
 - Cada worktree necesita sus dependencias (`npm ci`, `dotnet restore`): la primera ejecución de cada rol es más lenta.
 - Si quieres más archivos locales en cada worktree (por ejemplo, un `.env`), añádelos a `AES_WT_LOCAL_FILES` en `aes-wt.sh`.
+
+## Grafo de código con Graphify (opcional, en piloto)
+
+[Graphify](https://github.com/Graphify-Labs/graphify) construye un grafo del código con tree-sitter, en local y sin modelo, y puede servirle al orquestador como hecho adicional para la nota de diseño (AES 10 §5). Se usa como **herramienta** (06 §6.2), desde la terminal:
+
+```bash
+uv tool install graphifyy           # o pipx install graphifyy
+graphify update .                   # primer grafo, local y sin modelo
+graphify hook install               # lo reconstruye en segundo plano tras cada commit y checkout;
+                                    # instalado en el checkout principal, cubre también los worktrees
+```
+
+- Añade `graphify-out/` a `.gitignore`.
+- **No uses `graphify watch`:** deja un proceso vivo entre roles (06 §10). El hook de git basta.
+- Para la nota de diseño solo cuentan como hechos las relaciones que Graphify marca como extraídas del código, no las inferidas.
+- No instales su integración con el asistente (`graphify install`) sin probarla antes: añade su propio hook de lectura a Claude Code, que tiene que convivir con los de AES. Es lo que queda por comprobar en el sandbox.
+- Regístralo en el perfil como cualquier skill o herramienta de terceros.
 
 ## Flujo de una tarea con verificación en L3
 

@@ -9,6 +9,7 @@ Proyecto gestionado con **AES 1.3.0** (https://github.com/KeylorBrenes/AES---Age
 ## Roles
 - La **sesión principal** es el orquestador AES, en el modelo más capaz disponible (es el diseñador senior): para avanzar un elemento del backlog, usa la skill `aes-cycle`. Un elemento por sesión.
 - Los subagentes `qa`, `programmer`, `mechanic` y `verifier` siguen su propio contrato en `.claude/agents/`.
+- Skills del núcleo de AES en `.claude/skills/`: `aes-cycle` (orquestador), `aes-design-note` (orquestador), `aes-debugging` y `aes-security-review` (programador). Ninguna skill de flujo de terceros (planes, ejecución, cierre de ramas) se instala junto a ellas.
 - Hooks en `.claude/hooks/` restringen qué escribe cada rol. Si uno te bloquea, no lo rodees ni se lo pidas a otro agente: reporta BLOCKED para el humano.
 
 ## Estructura

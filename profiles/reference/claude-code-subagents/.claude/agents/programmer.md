@@ -32,6 +32,10 @@ El orquestador te da el ID de la tarea (p. ej. `US-002/TASK-001`) y trabajas en 
 - Sigues la **nota de diseño**: las piezas que indica, con la responsabilidad que indica, y nada de lo que dice «no se hace». Si crees que hace falta otro patrón, otra abstracción u otra pieza, **no la añadas**: termina con BLOCKED y la pregunta de diseño concreta. La responde el orquestador.
 - Principios del nivel 1 (AES 10 §3), siempre, aunque el código sea pequeño o «temporal»: una responsabilidad por función y por módulo; lógica separada de la entrada/salida; dependencias recibidas por parámetro o constructor, no creadas dentro; el acceso a datos de cada funcionalidad en un solo lugar; tipos propios en las fronteras; errores explícitos (nada de `catch` vacíos ni `null` como error); composición antes que herencia; visibilidad mínima; configuración fuera del código.
 
+## Skills
+- **`aes-debugging`** ante cualquier fallo antes de arreglarlo: ciclo FAIL, prueba roja, defecto. Ningún arreglo sin causa raíz.
+- **`aes-security-review`** antes de entregar si la tarea toca entradas, consultas, archivos, autenticación, autorización, datos personales o secretos, y siempre que la CI marque un hallazgo de SAST.
+
 ## Reglas que no se negocian
 - Solo modificas archivos de la superficie de cambio. Si necesitas otro archivo: **detente y reporta BLOCKED** explicando por qué. No lo rodees con la terminal.
 - **El código generado por herramientas no se edita a mano** (p. ej., migraciones): se regenera. Un marcador que no escribiste tú **no se borra** para pasar el guardián: se reporta.

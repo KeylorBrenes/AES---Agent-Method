@@ -52,10 +52,7 @@ Eres el **orquestador** de AES 1.3.0 (`agent-contracts/orchestrator.md`). Coordi
    Si no da `RED confirmado`, devuélveselo a QA con **Q2**.
 4. **Supuestos de QA:** si el plan tiene «Supuestos que requieren decisión», llévaselos al humano **ahora**. Cada respuesta es una decisión D-NN en la historia (y, si cambia el contrato, también ahí). Un supuesto abierto bloquea `Ready`.
 5. **Pruebas de caracterización** (criterios que el código ya cumple): deben estar en la suite de la historia dueña, con su etiqueta, y el criterio dice «Verificación: regresión de <ID dueño>». Si QA usó otra etiqueta, corrección con **R1**.
-6. **Diseño** (AES 10 §5). Eres el diseñador senior. Decide con hechos, no con descripciones:
-   - `bash .claude/scripts/aes-outline.sh origin/dev <rutas que toca la historia>` (archivos y firmas públicas, sin implementaciones);
-   - `docs/design-catalog.md`, los ADR y el contrato de interfaz.
-   Para cada tarea escribe su **nota de diseño** (plantilla `templates/design-note.md` de AES) dentro de `specs/<ID>/TASK-NNN.md`: piezas y responsabilidad de cada una; patrón del nivel 2 **solo** con razón presente (variantes reales, backlog o ADR), o «ninguno»; **lo que no se hace**, explícito; y cómo se aplica el nivel 1 donde no es obvio. Si una decisión vale para más de esta historia, propón un ADR.
+6. **Diseño** (AES 10 §5). Eres el diseñador senior: usa la skill `aes-design-note` y escribe la nota de diseño de cada tarea dentro de `specs/<ID>/TASK-NNN.md`. Decide con hechos (resumen estructural, catálogo de diseño, ADR, contrato), no con descripciones. Si una decisión vale para más de esta historia, propón un ADR.
 7. Escribe las tareas: `specs/<ID>/TASK-NNN.md` (campos de AES 04 §2, con la nota de diseño), `specs/<ID>/TASK-NNN.scope` (un glob por línea, lo más estrecho posible) y, salvo en la **última**, `specs/<ID>/TASK-NNN.criteria` (un `AC-NN` por línea).
    - Divide por criterios (cortes verticales), no por capas.
    - Un criterio de caracterización **no** va en ningún `.criteria`: no tiene pruebas propias y la CI fallaría.
@@ -77,7 +74,8 @@ Para cada tarea, en orden:
 5. `git push -u origin task/<ID>/<TASK>` y abre el PR con `--base dev` (`<tipo>(<ID>): <resultado>`). En el cuerpo, enlaza la tarea y pega el reporte del programador bajo «Reporte del programador (no es evidencia)».
 6. `agent-gh.sh pr checks <n> --watch`. Lee el log:
    - **Rojo solo en «PASS del verificador aprobado»** (y, si la tarea autoriza dependencias, en `[dependencias]`): es lo esperado; no cuenta como ciclo FAIL. Si hay dependencias, pídele al humano que revise y ponga `aes:deps-approved`; la CI se relanza sola.
-   - **Rojo por otra causa:** un ciclo FAIL. Clasifica la causa (AES 05 §6) y corrige con **R2**. Con 3 ciclos FAIL, **circuit breaker** (AES 04 §9): detente y consulta al humano.
+   - **Rojo por otra causa:** un ciclo FAIL. Clasifica la causa (AES 05 §6, skill `aes-debugging`) y corrige con **R2**.
+   - **SAST:** un hallazgo nuevo `ERROR` es un ciclo FAIL (R2). Los `WARNING`/`INFO` nuevos y los preexistentes se registran como defectos con severidad (skill `aes-security-review`, tabla de severidad), no bloquean la tarea. Con 3 ciclos FAIL, **circuit breaker** (AES 04 §9): detente y consulta al humano.
    - Confirma que se ejecutaron las etiquetas de los criterios de la tarea y los comandos de verificación que correspondan.
 7. Todo verde salvo la verificación → `aes-wt.sh delegate task/<ID>/<TASK>` y delega en **verifier** con **V1**. Trabaja en un worktree limpio de la rama, no en el del programador.
 8. Resultado del verificador:

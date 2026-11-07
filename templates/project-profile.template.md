@@ -46,6 +46,13 @@ El modelo real de cada ejecución se registra en las métricas (09 §6); si difi
 - Estados:
 - Criterios propios para clasificar tracks T0–T3 (si difieren de 02 §8):
 
+## Skills y herramientas (06 §6.2)
+| Skill / herramienta | Tipo (técnica / herramienta) | Origen y versión | Licencia | Revisada por | Roles |
+|---|---|---|---|---|---|
+| aes-debugging | Técnica | AES vX.Y.Z | | | Programador, mecánico |
+
+- Análisis estático de seguridad en la CI (05 §7): herramienta, reglas y qué severidad bloquea:
+
 ## Diseño (10)
 - Catálogo de diseño: `docs/design-catalog.md`
 - Herramienta del resumen estructural (archivos y firmas públicas):

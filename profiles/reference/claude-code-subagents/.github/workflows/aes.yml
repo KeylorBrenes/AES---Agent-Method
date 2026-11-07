@@ -6,8 +6,8 @@
 #   spec/<ID>         build/test + RED de los comandos de verificación nuevos + regresión
 #   qa/<ID>           compuerta de estabilización + build/test + RED de las pruebas de <ID> (con trazabilidad)
 #                     y de sus comandos de verificación nuevos
-#   task/<ID>/<TASK>  invalidar aprobaciones viejas + compuerta (solo Crítica) + guardián (desde main)
-#                     + build/test + criterios de la tarea (.criteria; sin él, el elemento completo)
+#   task/<ID>/<TASK>  invalidar aprobaciones viejas + compuerta (solo Crítica) + guardián (desde la base)
+#                     + build/test + SAST de lo nuevo + criterios de la tarea (.criteria; sin él, el elemento completo)
 #                     + regresión + verificación aprobada (etiqueta aes:verified)
 #   spec/<ID>-close   build/test + el elemento completo (debe ejecutarse y pasar) + regresión
 #   dev → main        release: compuerta (sin exenciones) + main contenido en dev + regresión completa
@@ -147,6 +147,22 @@ jobs:
           AES_ALLOW_MARKERS: ${{ steps.approvals.outputs.markers }}
           AES_ALLOW_DEPS: ${{ steps.approvals.outputs.deps }}
         run: bash "$AES_CI/aes-guard.sh"
+
+      # ---------- Análisis estático de seguridad (05 §7) ----------
+      - name: SAST sobre lo que cambia la tarea (Semgrep, OWASP)
+        if: ${{ steps.ctx.outputs.kind == 'task' && vars.AES_SAST != '0' }}
+        env:
+          SEMGREP_RULES: ${{ vars.AES_SAST_CONFIG || 'p/owasp-top-ten' }}
+          SEMGREP_ENABLE_VERSION_CHECK: '0'
+        run: |
+          # Solo hallazgos NUEVOS respecto de la base. ERROR falla la tarea (ciclo FAIL);
+          # WARNING/INFO se muestran para que el orquestador los registre como defectos (02 §9).
+          # Las supresiones (nosemgrep) son marcadores del guardián: exigen aprobación humana.
+          # Va antes de restaurar la suite: el árbol de trabajo debe coincidir con HEAD.
+          pipx install semgrep >/dev/null 2>&1 || pip install --user semgrep >/dev/null
+          base=$(git merge-base "$AES_BASE" HEAD)
+          semgrep scan --config "$SEMGREP_RULES" --baseline-commit "$base" --metrics=off --severity WARNING --severity INFO || true
+          semgrep scan --config "$SEMGREP_RULES" --baseline-commit "$base" --metrics=off --severity ERROR --error
 
       - name: Restaurar suite de aceptación y especificaciones desde la rama destino
         if: ${{ steps.ctx.outputs.kind == 'task' }}

@@ -745,6 +745,14 @@ El perfil de proyecto debe declarar herramientas y umbrales aplicables: formato,
 
 Los cambios que afectan autenticación, autorización, datos personales, pagos, secretos, límites de confianza o migraciones requieren revisión reforzada y pruebas negativas pertinentes.
 
+El **análisis estático de seguridad** (SAST, con reglas mapeadas a OWASP y CWE) SHOULD ejecutarse en la CI de cada tarea sobre lo que la tarea cambia:
+
+- un hallazgo **nuevo** de severidad alta en el diff falla la tarea: es un hallazgo de la tarea (ciclo `FAIL`);
+- un hallazgo nuevo de severidad menor y los hallazgos **preexistentes** no bloquean la tarea: el orquestador los registra como defectos con severidad (02 §9), y la compuerta de estabilización hace el resto;
+- un falso positivo se suprime en la configuración de la herramienta, con motivo, y como cualquier marcador del guardián exige aprobación humana (05 §10).
+
+La comprobación de dependencias con vulnerabilidades conocidas sigue la política del perfil.
+
 ## 8. Cobertura y mutation testing
 
 La cobertura es una señal, no prueba de calidad. No se debe optimizar el porcentaje a costa de aserciones significativas.
@@ -977,6 +985,26 @@ Reglas:
 - Una acción denegada es `BLOCKED` **para el responsable humano**, con la acción exacta que hace falta.
 - Ningún agente ejecuta una acción que se le denegó a otro rol, aunque él sí tenga permiso.
 - El orquestador registra el caso y se lo pasa al humano; no lo resuelve.
+
+### 6.2 Tipos de skill y núcleo de AES
+
+Las skills potencian la metodología si encajan en ella, y la paralizan si compiten con ella. AES distingue tres tipos:
+
+| Tipo | Qué es | Regla |
+|---|---|---|
+| **Técnica** | Cómo hacer bien una actividad: depurar, revisar seguridad, escribir una nota de diseño | Se asigna a los roles que hacen esa actividad. MUST NOT contradecir un gate, un contrato ni un permiso de AES |
+| **Herramienta** | Envuelve un análisis determinista (análisis estático, grafo de código) | Lo que la herramienta detecta de forma determinista SHOULD ejecutarse en la CI (L3); la skill ayuda a interpretar y corregir, no es el control |
+| **Flujo** | Orquesta el ciclo completo: planes, ejecución, revisión, cierre de ramas | MUST NOT instalarse junto a AES. Dos metodologías dando instrucciones sobre lo mismo hacen que el agente elija una distinta cada vez |
+
+Reglas para toda skill:
+
+- **Versión fija y revisada:** se copia al repositorio en una versión concreta, dentro de una ruta protegida, y la revisa el responsable humano. Nada de plugins o skills que se actualizan solos: una actualización silenciosa cambia las instrucciones de los agentes sin aprobación.
+- **Registrada en el perfil:** origen, versión o commit, licencia, quién la revisó y qué roles la usan.
+- **Hooks y scripts incluidos** se revisan como código propio, y respetan las demás reglas (por ejemplo, no dejar procesos vivos entre roles, 06 §10).
+- **Su salida no es evidencia** salvo que ejecute un comando y muestre la salida real (00 §7).
+- **Pocas por rol:** cada skill disponible ocupa contexto; un rol carga las que su trabajo necesita.
+
+AES mantiene un **núcleo de skills propias** (`skills/` en el repositorio de AES), escritas para sus gates y contratos, en el formato abierto de Agent Skills. No son obligatorias: un proyecto puede usar otras equivalentes si cumplen las reglas anteriores. Cuando una skill de terceros es buena pero de tipo flujo, o depende de otras de su paquete, se escribe una propia tomándola como referencia, con atribución y respetando su licencia.
 
 ## 7. Secretos y entornos
 
@@ -1429,6 +1457,8 @@ Aplican a todo código del proyecto, en cualquier lenguaje, también en scripts.
 | **Interfaces pequeñas** | Cuando se crea una interfaz (por una razón del nivel 2), contiene solo lo que usan sus clientes. No es una razón para crear interfaces | Una implementación con métodos vacíos o que lanzan «no implementado» |
 | **Visibilidad mínima** | Todo es privado salvo lo que otra pieza necesita usar | Miembros públicos que solo se usan dentro de su propio módulo |
 | **Configuración fuera del código** | Direcciones, rutas, credenciales y valores que cambian por entorno salen del entorno o de la configuración | Un valor de un entorno concreto escrito en el código |
+| **Validar en la frontera y convertir** («parse, don't validate») | Lo que entra (petición, archivo, argumento) se valida una vez, en la frontera, y se convierte a un tipo que ya no puede ser inválido; el interior trabaja con ese tipo | La misma validación repetida dentro del sistema; funciones internas que vuelven a comprobar si un valor es nulo, vacío o tiene el formato correcto |
+| **Comprobaciones estrictas del compilador** | El modo estricto del lenguaje está activado (por ejemplo, `strict` en TypeScript, *nullable reference types* y advertencias como errores en C#, `set -euo pipefail` en bash) | Valores que pueden ser nulos sin que el tipo lo diga; advertencias del compilador ignoradas |
 
 Lo que un linter del stack pueda detectar (complejidad y largo máximos por función, `catch` vacíos, variables globales, ShellCheck en scripts) SHOULD ir a la CI (L3): así deja de depender de que alguien lo recuerde. El perfil lista qué reglas del nivel 1 cubre su CI.
 
@@ -1445,6 +1475,8 @@ Lo que un linter del stack pueda detectar (complejidad y largo máximos por func
 | **Factory** | La creación tiene lógica real (elegir tipo, validar, ensamblar varias piezas) | Un `new` con parámetros |
 | **Mediator, CQRS, bus de comandos** | Un ADR que lo justifica por escala, auditoría o separación de modelos de lectura y escritura | Un CRUD |
 | **Genéricos y plugins** | Tres casos concretos que comparten la forma | El primer caso |
+| **Tipos propios para conceptos del dominio** (*value objects*: un monto, un correo, un periodo) | El concepto tiene reglas propias (rango, formato, redondeo) que hoy se comprueban en más de un lugar, o un error de unidades ya costó un defecto | Un valor sin reglas, que solo se transporta |
+| **Estados imposibles irrepresentables** (uniones discriminadas, máquinas de estado tipadas) | Un objeto con campos que solo tienen sentido en ciertos estados, y combinaciones inválidas que ya aparecieron | Dos o tres estados simples que un enumerado expresa bien |
 
 La tabla no es exhaustiva. Todo patrón del nivel 2 se decide con la misma pregunta: **¿qué razón presente lo justifica, y qué costaría añadirlo más adelante si se respeta el nivel 1?** Si la respuesta a la segunda es «poco», se espera.
 
@@ -1459,7 +1491,7 @@ El **orquestador** decide el nivel 2 y actúa como diseñador senior del equipo.
 **Con qué decide:** con hechos, no con el relato de otro agente (00 §7):
 - la historia, sus criterios y el contrato de interfaz;
 - los ADR y el **catálogo de diseño** del proyecto (§6);
-- un **resumen estructural** generado por una herramienta: los archivos y las firmas públicas, sin el código de las implementaciones;
+- un **resumen estructural** generado por una herramienta: los archivos y las firmas públicas, sin el código de las implementaciones; o, si el proyecto lo usa, un grafo de código generado por análisis sintáctico, del que solo cuentan como hechos las relaciones extraídas del código, no las inferidas;
 - la pregunta del programador, si la hay.
 
 **Qué produce** (plantilla `templates/design-note.md`):

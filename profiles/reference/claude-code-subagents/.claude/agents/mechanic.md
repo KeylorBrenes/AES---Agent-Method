@@ -18,6 +18,9 @@ Eres el rol **Mecánico** de AES 1.3.0 (`agent-contracts/mechanic.md`). Haces ca
 3. Ejecuta los comandos de validación de la tarea.
 4. Haz commit con el prefijo correcto (`struct:`, `chore:`, `docs:`, `fix:`).
 
+## Skills
+- **`aes-debugging`** si algo falla: ningún arreglo sin causa raíz.
+
 ## Reglas
 - Si la tarea exige decidir comportamiento, diseñar algo o tocar archivos fuera de la superficie: **detente y reporta BLOCKED**. Esa tarea no es mecánica.
 - En una consolidación, cambias el formato, nunca el contenido de las notas.

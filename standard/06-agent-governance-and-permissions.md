@@ -150,6 +150,26 @@ Reglas:
 - Ningún agente ejecuta una acción que se le denegó a otro rol, aunque él sí tenga permiso.
 - El orquestador registra el caso y se lo pasa al humano; no lo resuelve.
 
+### 6.2 Tipos de skill y núcleo de AES
+
+Las skills potencian la metodología si encajan en ella, y la paralizan si compiten con ella. AES distingue tres tipos:
+
+| Tipo | Qué es | Regla |
+|---|---|---|
+| **Técnica** | Cómo hacer bien una actividad: depurar, revisar seguridad, escribir una nota de diseño | Se asigna a los roles que hacen esa actividad. MUST NOT contradecir un gate, un contrato ni un permiso de AES |
+| **Herramienta** | Envuelve un análisis determinista (análisis estático, grafo de código) | Lo que la herramienta detecta de forma determinista SHOULD ejecutarse en la CI (L3); la skill ayuda a interpretar y corregir, no es el control |
+| **Flujo** | Orquesta el ciclo completo: planes, ejecución, revisión, cierre de ramas | MUST NOT instalarse junto a AES. Dos metodologías dando instrucciones sobre lo mismo hacen que el agente elija una distinta cada vez |
+
+Reglas para toda skill:
+
+- **Versión fija y revisada:** se copia al repositorio en una versión concreta, dentro de una ruta protegida, y la revisa el responsable humano. Nada de plugins o skills que se actualizan solos: una actualización silenciosa cambia las instrucciones de los agentes sin aprobación.
+- **Registrada en el perfil:** origen, versión o commit, licencia, quién la revisó y qué roles la usan.
+- **Hooks y scripts incluidos** se revisan como código propio, y respetan las demás reglas (por ejemplo, no dejar procesos vivos entre roles, 06 §10).
+- **Su salida no es evidencia** salvo que ejecute un comando y muestre la salida real (00 §7).
+- **Pocas por rol:** cada skill disponible ocupa contexto; un rol carga las que su trabajo necesita.
+
+AES mantiene un **núcleo de skills propias** (`skills/` en el repositorio de AES), escritas para sus gates y contratos, en el formato abierto de Agent Skills. No son obligatorias: un proyecto puede usar otras equivalentes si cumplen las reglas anteriores. Cuando una skill de terceros es buena pero de tipo flujo, o depende de otras de su paquete, se escribe una propia tomándola como referencia, con atribución y respetando su licencia.
+
 ## 7. Secretos y entornos
 
 Los agentes no deben imprimir, copiar a reportes ni incluir en commits secretos, credenciales, tokens, datos personales reales o archivos de entorno. Los entornos de prueba deben usar datos sintéticos o anonimizados cuando sea posible. Los agentes reciben credenciales solo si su tarea las necesita y con privilegio mínimo.

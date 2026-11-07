@@ -50,6 +50,22 @@
 
 **Consecuencia para RFC-002, cambio 9:** queda decidido que el orquestador corre en el modelo más capaz disponible, aunque el A/B de US-002 mostró que Sonnet respetaba los gates: el motivo nuevo es el diseño, que el A/B no evaluó.
 
+## 4. Skills: núcleo propio y reglas de integración — 05 §7, 06 §6.2, 10
+
+**Problema.** Hay skills de terceros muy útiles (depuración sistemática, SAST, grafos de código), pero algunas son metodologías completas que competirían con AES, otras dependen de su paquete, y cualquiera puede cambiar sola si se instala como plugin que se actualiza.
+
+**Decisiones del responsable humano (2026-11-06):** las skills no son obligatorias, pero AES tiene un núcleo fuerte que potencia la metodología sin paralizarla. Las buenas ideas de terceros se reescriben como skills propias de AES, con atribución. Lo determinista va a la CI. Lo demás de la propuesta, aprobado.
+
+**Cambio.**
+- Tres tipos: **técnica** (se asigna a roles), **herramienta** (lo determinista va a la CI; la skill interpreta) y **flujo** (no se instala junto a AES).
+- Reglas: versión fija, revisión humana, registro en el perfil, hooks y scripts revisados como código propio, salida no es evidencia sin comando real, pocas por rol.
+- Núcleo en `skills/`: `aes-debugging` (de `systematic-debugging` de obra/superpowers, adaptada a RED, superficie y circuit breaker), `aes-security-review` (Semgrep con OWASP, clasificación de hallazgos y tabla de severidad) y `aes-design-note` (cómo escribe el orquestador la nota de diseño).
+- SAST en la CI: un hallazgo nuevo `ERROR` falla la tarea; los demás se registran como defectos. La regla de qué severidad bloquea la tomé por defecto (el responsable aprobó «lo demás» sin elegir); cambiarla es una variable de la CI.
+- Type-driven design dentro del capítulo 10 en lugar de una skill.
+- Graphify como herramienta opcional: hook de git (se reconstruye en segundo plano tras cada commit y checkout; instalado en el checkout principal, cubre los worktrees), sin `watch` (dejaría un proceso vivo), y sin su integración con el asistente hasta probarla en el sandbox.
+
+**Descartado:** las skills de flujo de Superpowers (`brainstorming`, `writing-plans`, `executing-plans`, `subagent-driven-development`, `using-git-worktrees`, `finishing-a-development-branch`, `using-superpowers`): duplican el ciclo de AES.
+
 ## Migración de un proyecto en 1.2.0
 
 1. `git push origin main:dev` y hacer `dev` la rama por defecto.
@@ -57,3 +73,4 @@
 3. Copiar el workflow, `ci/` y `.claude/` de la referencia 1.3.0; añadir `.claude/worktrees/` a `.gitignore`.
 4. Los elementos ya cerrados quedan como `Released` (ya están en `main`).
 5. Crear `docs/design-catalog.md` con los patrones que el proyecto ya usa y lo que ya se decidió no usar (por ejemplo, «sin repositorio sobre EF Core»).
+6. Copiar las skills de `skills/` a `.claude/skills/` y registrarlas en el perfil; desinstalar cualquier plugin de flujo de terceros.
