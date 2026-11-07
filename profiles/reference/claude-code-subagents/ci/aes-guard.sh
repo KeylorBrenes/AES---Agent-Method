@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# AES 1.2.0 — Guardián de CI (capa L3, ver standard/05 §10 y 06 §9)
+# AES 1.3.0 — Guardián de CI (capa L3, ver standard/05 §10 y 06 §9)
 #
 # Debe ejecutarse con la copia de este script obtenida de la rama protegida,
 # nunca con la de la rama del agente. Ver .github/workflows/aes.yml.
 #
 # Variables:
-#   BASE_REF            ref confiable (por defecto origin/main)
+#   BASE_REF            ref confiable (por defecto origin/dev; en un hotfix, origin/main)
 #   TASK_SCOPE_FILE     ruta, dentro de BASE_REF, del .scope de la tarea
 #                       (p. ej. specs/US-005/TASK-014.scope). Un glob por línea.
 #   AES_ALLOW_MARKERS   "1" solo si un responsable distinto del programador
@@ -15,7 +15,7 @@
 # Códigos de salida: 0 = OK, 1 = violación.
 set -euo pipefail
 
-BASE="${BASE_REF:-origin/main}"
+BASE="${BASE_REF:-origin/dev}"
 SCOPE_PATH="${TASK_SCOPE_FILE:-}"
 ALLOW_MARKERS="${AES_ALLOW_MARKERS:-0}"
 ALLOW_DEPS="${AES_ALLOW_DEPS:-0}"

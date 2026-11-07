@@ -19,6 +19,12 @@ case "$AES_ROLE" in qa|programmer|mechanic|verifier) ;; *) exit 0 ;; esac
 cwd=$(aes_get '.cwd'); [[ -z "$cwd" ]] && cwd=$PWD
 root=$(aes_repo_root "$cwd")
 [[ -z "$root" ]] && exit 0
+# Si el subagente trabajó en un worktree (AES 1.3.0), las comprobaciones se hacen ahí.
+main=$(dirname "$(git -C "$root" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)")
+if [[ -s "$main/.aes/active-worktree" ]]; then
+  wt=$(tr -d '\r\n' < "$main/.aes/active-worktree")
+  [[ -d "$wt" ]] && root="$wt"
+fi
 cd "$root" || exit 0
 
 failures=()
@@ -60,14 +66,14 @@ if [[ "$AES_ROLE" == "qa" || "$AES_ROLE" == "verifier" ]]; then
   rm -f "$log"; exit 0
 fi
 
-# 1. Guardián AES local (mismas reglas que la CI) contra origin/main.
+# 1. Guardián AES local (mismas reglas que la CI) contra la rama base (origin/dev, u origin/main en un hotfix).
 #    Las dependencias no se juzgan aquí: su aprobación es humana y vive en la CI
 #    (etiqueta aes:deps-approved). Rutas protegidas, superficie, pruebas borradas y
 #    marcadores sí bloquean.
 branch=$(aes_branch "$root")
 scope=$(aes_scope_file "$branch")
 if [[ -n "$scope" ]]; then
-  if ! AES_ALLOW_DEPS=1 BASE_REF=origin/main TASK_SCOPE_FILE="$scope" bash ci/aes-guard.sh >>"$log" 2>&1; then
+  if ! AES_ALLOW_DEPS=1 BASE_REF="$(bash .claude/scripts/aes-base.sh)" TASK_SCOPE_FILE="$scope" bash ci/aes-guard.sh >>"$log" 2>&1; then
     failures+=("guardián AES")
   fi
 fi

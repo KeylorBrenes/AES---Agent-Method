@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.0] — sin publicar (rama `release/1.3.0`)
+
+Se acumulan aquí los cambios que propone el responsable humano antes de retomar el sandbox. Justificación: [`docs/rfc/RFC-003-aes-1.3.0.md`](docs/rfc/RFC-003-aes-1.3.0.md).
+
+### Añadido
+- **Ramas `main` y `dev` obligatorias** en todo proyecto (07 §7, principio 19): `main` es lo liberado, `dev` lo integrado y la base de todo el trabajo. Sin variante «solo `main`» ni *feature flags*.
+- **Release** `dev → main` como gate humano propio (07 §8): compuerta de estabilización, `main` contenido en `dev`, regresión completa, merge commit, sin periodo mínimo de uso. Estado nuevo `Released` (00 §6). Plantilla `release.md`.
+- **Hotfix y back-merge** (07 §9): un defecto de algo liberado, de cualquier severidad, puede corregirse desde `main` si el responsable humano lo decide; después de cada integración en `main`, back-merge a `dev` con merge commit.
+- **Checkout propio por rol** (06 §10): el orquestador se queda en `dev` y cada rol trabaja en su propio checkout de la rama de trabajo.
+- DoD de hotfix y de release (08 §7–8).
+- Implementación de referencia: `aes-wt.sh` y hooks `WorktreeCreate`/`WorktreeRemove` para que cada subagente trabaje en un worktree de la rama real; `aes-base.sh`; CI en `dev` y `main` con comprobación de rutas, «main contenido en dev», release y back-merge; compuerta en fase `release`; skill con release, hotfix y back-merge.
+
 ## [1.2.0] — 2026-11-05
 
 Primera versión con evidencia de agentes reales: cuatro elementos ejecutados en [aes-sandbox-gastos](https://github.com/KeylorBrenes/aes-sandbox-gastos) (EN-001, US-001, CH-001, US-002), con Claude Code como orquestador y subagentes por rol. Cambio MINOR: añade reglas y endurece controles sin romper la estructura. Justificación y evidencia: [`docs/rfc/RFC-002-aes-1.2.0.md`](docs/rfc/RFC-002-aes-1.2.0.md).

@@ -24,6 +24,7 @@ AES define un proceso reproducible para producir software correcto, mantenible y
 16. **Mejora continua del harness.** Los fallos de los agentes se registran y se convierten en controles (09). El mismo error no debe depender de que alguien lo recuerde.
 17. **Estabilidad antes que avance.** No se construye funcionalidad nueva sobre defectos conocidos. Los defectos se clasifican por severidad y se corrigen antes de empezar la siguiente historia, salvo los menores (02 §9). Corregir un defecto viejo mientras se construye algo nuevo mezcla dos cambios y produce defectos nuevos.
 18. **Cada decisión tiene firma.** Toda ambigüedad que afecta el producto se resuelve con una decisión registrada: quién, cuándo, qué opciones había y qué cambió (03 §8). Lo que nadie decidió explícitamente no es una decisión, aunque una prueba o un agente ya lo haya fijado.
+19. **Lo estable está separado de lo que se construye.** La rama principal solo contiene lo liberado; todo lo demás se integra antes en una rama de desarrollo (07 §7). Un arreglo de algo liberado sale de lo liberado, no de lo que está en construcción.
 
 ## 3. Adaptabilidad
 
@@ -75,7 +76,8 @@ Los proyectos DEBERÍAN usar, como mínimo, estados equivalentes a:
 - `In Review`: esperando revisión o verificación.
 - `Blocked`: depende de una decisión, recurso o corrección.
 - `Ready for Acceptance`: gates técnicos superados; falta aceptación humana cuando aplique.
-- `Accepted`: aceptado por la autoridad correspondiente.
+- `Accepted`: aceptado por la autoridad correspondiente e integrado en la rama de desarrollo (07 §7).
+- `Released`: integrado en la rama principal mediante un release (07 §8) o un hotfix (07 §9).
 - `Rejected`: no aceptado; requiere corrección o replanteamiento.
 - `Deferred`: se pospone con motivo.
 

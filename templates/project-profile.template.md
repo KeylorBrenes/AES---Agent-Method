@@ -2,7 +2,9 @@
 
 - **AES version:** 1.2.0
 - **Product owner / aprobador humano:** [rol/persona]
-- **Repositorio / ramas:** [URL o convención]
+- **Repositorio:** [URL]
+- **Ramas (07 §7):** `main` (liberado) y `dev` (integrado), ambas protegidas; ramas de trabajo cortas desde `dev`, hotfixes desde `main`
+- **Release:** quién aprueba, cómo se marca la versión (p. ej. tag `vX.Y.Z`), dónde se publican las notas (`docs/releases/`)
 - **Copia local de DoR/DoD:** [p. ej. `docs/aes/08-definition-of-ready-and-done.md`, de AES 1.2.0]
 
 ## Roles: harness y modelo

@@ -194,7 +194,7 @@ Reglas adicionales:
 
 ## 12. Qué ejecuta la CI en cada fase
 
-La CI decide qué pruebas ejecutar según el tipo de rama. El perfil fija los nombres de rama; la intención es esta:
+La CI decide qué pruebas ejecutar según el tipo de rama y la rama destino (`dev` o `main`, 07 §7). El perfil fija los nombres de rama; la intención es esta:
 
 | Fase | Qué ejecuta |
 |---|---|
@@ -202,11 +202,14 @@ La CI decide qué pruebas ejecutar según el tipo de rama. El perfil fija los no
 | Pruebas de aceptación de un elemento (`qa/<ID>`) | Las pruebas del elemento, que **deben ejecutarse y fallar** (RED, §2.2) |
 | Tarea | Guardián + validaciones + los criterios que declara la tarea (o el elemento completo, si es la última) + regresión |
 | Cierre del elemento | El elemento completo, que **debe ejecutarse y pasar**, + regresión |
-| Rama principal | Regresión de todos los elementos cerrados |
+| `dev` y `main` | Regresión de todos los elementos cerrados en esa rama |
+| Release (`dev` → `main`) | Regresión completa + compuerta de estabilización + `main` contenido en `dev` (07 §8) |
+| Back-merge (`main` → `dev`) | Regresión completa de `dev` |
 
 Reglas:
 
 - El archivo de criterios de cada tarea se lee de la **rama protegida**, igual que la superficie de cambio.
 - La regresión incluye las pruebas de aceptación **y** los comandos de verificación de todos los elementos cerrados.
 - Un **comando de verificación** es un criterio que no se comprueba con una prueba de aceptación (configuración, herramientas, scripts, build). Es un script versionado en la ruta protegida del elemento, que termina con código 0 si el criterio se cumple. Se trata como una prueba protegida: lo escribe quien escribe las pruebas, lo aprueba el humano y la CI lo ejecuta desde la rama protegida.
-- Entre la integración de la última tarea de un elemento y la de su cierre no se integra nada más en la rama principal: durante ese intervalo la regresión todavía no incluye el elemento.
+- Entre la integración de la última tarea de un elemento y la de su cierre no se integra nada más en esa rama (`dev`, o `main` en un hotfix): durante ese intervalo la regresión todavía no incluye el elemento.
+- La lista de elementos en regresión es un archivo versionado. Viaja con los releases y los back-merges, así que la regresión de `main` cubre lo liberado y la de `dev`, todo lo integrado.

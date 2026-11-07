@@ -42,6 +42,7 @@ Para T0 basta con la tarea (§3).
 Una tarea puede pasar a ejecución cuando:
 
 - [ ] pertenece a un elemento aprobado y en `Ready`;
+- [ ] su rama nace de `dev` (o de `main`, si es un hotfix: 07 §9);
 - [ ] tiene un resultado principal concreto;
 - [ ] alcance, exclusiones y restricciones están claros;
 - [ ] la superficie de cambio y la lista de criterios que deja en verde están publicadas en la rama protegida (la última tarea del elemento no necesita lista: ejecuta el elemento completo);
@@ -92,7 +93,7 @@ Una historia puede pasar a `Ready for Acceptance` cuando:
 
 Después de eso:
 
-- funcionalidades visibles o relevantes para el usuario pasan por aceptación humana según el perfil;
+- funcionalidades visibles o relevantes para el usuario pasan por aceptación humana según el perfil; aceptada, la historia queda en `dev` hasta el release (07 §8);
 - en T3, el responsable humano revisa el código de las zonas de riesgo (00 §8);
 - el responsable humano emite `Accepted` o `Rejected`;
 - solo entonces la historia se considera aceptada;
@@ -110,6 +111,23 @@ Un resultado `BLOCKED`, `NOT RUN` o una prueba omitida sin justificación no equ
 - [ ] el responsable humano aceptó el lote;
 - [ ] la compuerta de estabilización se volvió a evaluar.
 
-## 7. Definition of Done del proyecto
+## 7. Definition of Done — Hotfix
+
+- [ ] cumple la DoD de un T1, con todas sus ramas nacidas de `main` e integradas en `main`;
+- [ ] la ruta por hotfix es una decisión registrada en el defecto;
+- [ ] el back-merge de `main` a `dev` está integrado, con merge commit y la regresión de `dev` en verde;
+- [ ] el defecto está en `Released`.
+
+## 8. Definition of Done — Release
+
+- [ ] las notas del release están escritas (elementos, defectos conocidos, vuelta atrás);
+- [ ] la compuerta de estabilización está abierta sobre `dev`;
+- [ ] `main` está contenido en `dev`, comprobado por la CI;
+- [ ] la regresión completa pasa en el PR de release;
+- [ ] el responsable humano aprobó e integró el PR con merge commit;
+- [ ] los elementos incluidos están en `Released` y la versión está marcada;
+- [ ] el back-merge de `main` a `dev` está integrado.
+
+## 9. Definition of Done del proyecto
 
 El proyecto puede declararse listo para una liberación cuando se cumplen sus gates de release, seguridad, migración, documentación, recuperación y aprobación definidos en el perfil. No basta con que todas las historias estén en estado `Accepted` si aún existen riesgos de liberación sin resolver o defectos abiertos por encima de lo que el perfil permite liberar.

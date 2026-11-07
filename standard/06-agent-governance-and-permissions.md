@@ -201,6 +201,13 @@ Reglas:
 
 Un rol no debe dejar nada que el siguiente pueda tomar como propio: servidores escuchando, procesos, datos de prueba o archivos temporales dentro del repositorio. Si la aceptación reutiliza un servidor que dejó vivo otro rol, puede pasar contra código viejo; en el sandbox de AES, los servidores de un verificador bloquearon la compilación del programador siguiente.
 
+Cada rol que lee o escribe una rama de trabajo SHOULD hacerlo en un **checkout propio** de esa rama (por ejemplo, un *worktree* de git), no en el checkout del orquestador:
+
+- el orquestador se queda en `dev` y no cambia de rama; los roles no heredan sus archivos sin versionar ni él los suyos;
+- el verificador revisa una copia limpia de la rama, no la que acaba de usar el programador;
+- los archivos locales que un rol necesita y no están versionados (credenciales de su identidad, configuración local) se copian al checkout de forma explícita, nunca se versionan;
+- si varios roles trabajan a la vez, cada checkout necesita sus propios puertos y datos; hasta que el perfil lo resuelva, los roles se ejecutan de uno en uno.
+
 - Los servidores se arrancan con una herramienta que los detiene siempre al terminar y que **no reutiliza** un servidor ajeno: si el puerto está ocupado, falla.
 - Al terminar cada rol, un control comprueba que no quedó nada escuchando en los puertos del proyecto (L2 en la implementación de referencia; en la CI, cada ejecución empieza limpia).
 - Si un agente no puede detener algo que arrancó, es una acción denegada (§6.1).

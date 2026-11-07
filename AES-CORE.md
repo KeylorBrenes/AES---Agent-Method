@@ -1,4 +1,4 @@
-# Agentic Engineering Standard — AES Core 1.2.0
+# Agentic Engineering Standard — AES Core 1.3.0
 
 <!-- Archivo generado por scripts/build-core.sh a partir de standard/. No editar a mano. -->
 
@@ -28,6 +28,7 @@ AES define un proceso reproducible para producir software correcto, mantenible y
 16. **Mejora continua del harness.** Los fallos de los agentes se registran y se convierten en controles (09). El mismo error no debe depender de que alguien lo recuerde.
 17. **Estabilidad antes que avance.** No se construye funcionalidad nueva sobre defectos conocidos. Los defectos se clasifican por severidad y se corrigen antes de empezar la siguiente historia, salvo los menores (02 §9). Corregir un defecto viejo mientras se construye algo nuevo mezcla dos cambios y produce defectos nuevos.
 18. **Cada decisión tiene firma.** Toda ambigüedad que afecta el producto se resuelve con una decisión registrada: quién, cuándo, qué opciones había y qué cambió (03 §8). Lo que nadie decidió explícitamente no es una decisión, aunque una prueba o un agente ya lo haya fijado.
+19. **Lo estable está separado de lo que se construye.** La rama principal solo contiene lo liberado; todo lo demás se integra antes en una rama de desarrollo (07 §7). Un arreglo de algo liberado sale de lo liberado, no de lo que está en construcción.
 
 ## 3. Adaptabilidad
 
@@ -79,7 +80,8 @@ Los proyectos DEBERÍAN usar, como mínimo, estados equivalentes a:
 - `In Review`: esperando revisión o verificación.
 - `Blocked`: depende de una decisión, recurso o corrección.
 - `Ready for Acceptance`: gates técnicos superados; falta aceptación humana cuando aplique.
-- `Accepted`: aceptado por la autoridad correspondiente.
+- `Accepted`: aceptado por la autoridad correspondiente e integrado en la rama de desarrollo (07 §7).
+- `Released`: integrado en la rama principal mediante un release (07 §8) o un hotfix (07 §9).
 - `Rejected`: no aceptado; requiere corrección o replanteamiento.
 - `Deferred`: se pospone con motivo.
 
@@ -309,7 +311,7 @@ La severidad mide el daño del defecto; la prioridad (§4), el orden en que se t
 
 | Severidad | Cuándo | Ejemplos |
 |---|---|---|
-| **Crítica** | Pérdida o corrupción de datos, fallo de seguridad, la aplicación no arranca, el flujo principal es inutilizable, o la CI de la rama principal está en rojo | Un gasto guardado se pierde; un usuario ve datos de otro; `main` no compila |
+| **Crítica** | Pérdida o corrupción de datos, fallo de seguridad, la aplicación no arranca, el flujo principal es inutilizable, o la CI de `dev` o de `main` está en rojo | Un gasto guardado se pierde; un usuario ve datos de otro; `main` no compila |
 | **Alta** | Un criterio de aceptación ya aceptado deja de cumplirse, o un flujo importante falla sin alternativa razonable. Una **prueba inestable** en la suite que corre en la rama principal es Alta: puede poner en rojo a todos | Editar un gasto no guarda; una prueba de regresión falla 1 de cada 3 corridas |
 | **Media** | Comportamiento incorrecto con alternativa, o en un flujo secundario; un mensaje o una respuesta de error que lleva al usuario a una conclusión equivocada | Un monto `abc` dice «obligatorio» en lugar de «inválido»; un cuerpo mal codificado responde `500` en lugar de `400` |
 | **Menor** | Cosmético o de presentación, sin efecto en los datos ni en las decisiones del usuario | Un separador de miles distinto; dos paneles abiertos a la vez sin consecuencia |
@@ -320,11 +322,13 @@ El orquestador propone la severidad con la evidencia del hallazgo; el responsabl
 
 Una historia o enabler nuevo (T2/T3) **no puede pasar a `Ready`** mientras exista en el backlog algún defecto abierto de severidad **Crítica, Alta o Media**, ni mientras el número de defectos **Menores** abiertos supere el límite del perfil (por defecto, 5).
 
-- Un defecto **Crítico** detiene además todo el trabajo en curso, incluida la historia activa: no se integra ningún cambio de código en la rama principal salvo su corrección. Excepción: si el defecto es de la propia tarea en curso, se trata como ciclo `FAIL` de esa tarea (04 §9).
+- Un defecto **Crítico** detiene además todo el trabajo en curso, incluida la historia activa: no se integra ningún cambio de código en `dev` ni en `main` salvo su corrección. Excepción: si el defecto es de la propia tarea en curso, se trata como ciclo `FAIL` de esa tarea (04 §9).
 - Un defecto **Alto o Medio** encontrado durante una historia no la detiene: la historia termina, y la siguiente no empieza hasta corregirlo.
 - Los defectos **Menores** pueden quedar abiertos dentro del límite. Cuando se supera, se corrigen en lote antes de seguir.
 - Un defecto «abierto» es cualquiera que no está `Accepted` (corregido y aceptado) ni `Rejected` (no era un defecto). `Deferred` cuenta como abierto: posponer un defecto no lo corrige.
 - Las únicas formas de abrir la compuerta son corregir los defectos o una excepción documentada (00 §4). Absorber un defecto dentro de la historia siguiente es una excepción, no un camino normal: mezcla la corrección de lo viejo con la construcción de lo nuevo.
+
+La misma compuerta se evalúa al **liberar** (07 §8): un release no sale con defectos Críticos, Altos o Medios abiertos, ni con más Menores que el límite. Un defecto de algo ya liberado puede corregirse por hotfix o por `dev`, a elección del responsable humano (07 §9).
 
 El perfil puede endurecer la compuerta (por ejemplo, un límite menor de defectos menores), nunca relajarla sin excepción documentada. La compuerta SHOULD implementarse en la CI (L3), leyendo el backlog desde la rama protegida; la implementación de referencia lo hace.
 
@@ -797,7 +801,7 @@ Reglas adicionales:
 
 ## 12. Qué ejecuta la CI en cada fase
 
-La CI decide qué pruebas ejecutar según el tipo de rama. El perfil fija los nombres de rama; la intención es esta:
+La CI decide qué pruebas ejecutar según el tipo de rama y la rama destino (`dev` o `main`, 07 §7). El perfil fija los nombres de rama; la intención es esta:
 
 | Fase | Qué ejecuta |
 |---|---|
@@ -805,14 +809,17 @@ La CI decide qué pruebas ejecutar según el tipo de rama. El perfil fija los no
 | Pruebas de aceptación de un elemento (`qa/<ID>`) | Las pruebas del elemento, que **deben ejecutarse y fallar** (RED, §2.2) |
 | Tarea | Guardián + validaciones + los criterios que declara la tarea (o el elemento completo, si es la última) + regresión |
 | Cierre del elemento | El elemento completo, que **debe ejecutarse y pasar**, + regresión |
-| Rama principal | Regresión de todos los elementos cerrados |
+| `dev` y `main` | Regresión de todos los elementos cerrados en esa rama |
+| Release (`dev` → `main`) | Regresión completa + compuerta de estabilización + `main` contenido en `dev` (07 §8) |
+| Back-merge (`main` → `dev`) | Regresión completa de `dev` |
 
 Reglas:
 
 - El archivo de criterios de cada tarea se lee de la **rama protegida**, igual que la superficie de cambio.
 - La regresión incluye las pruebas de aceptación **y** los comandos de verificación de todos los elementos cerrados.
 - Un **comando de verificación** es un criterio que no se comprueba con una prueba de aceptación (configuración, herramientas, scripts, build). Es un script versionado en la ruta protegida del elemento, que termina con código 0 si el criterio se cumple. Se trata como una prueba protegida: lo escribe quien escribe las pruebas, lo aprueba el humano y la CI lo ejecuta desde la rama protegida.
-- Entre la integración de la última tarea de un elemento y la de su cierre no se integra nada más en la rama principal: durante ese intervalo la regresión todavía no incluye el elemento.
+- Entre la integración de la última tarea de un elemento y la de su cierre no se integra nada más en esa rama (`dev`, o `main` en un hotfix): durante ese intervalo la regresión todavía no incluye el elemento.
+- La lista de elementos en regresión es un archivo versionado. Viaja con los releases y los back-merges, así que la regresión de `main` cubre lo liberado y la de `dev`, todo lo integrado.
 
 ---
 
@@ -1019,6 +1026,13 @@ Reglas:
 
 Un rol no debe dejar nada que el siguiente pueda tomar como propio: servidores escuchando, procesos, datos de prueba o archivos temporales dentro del repositorio. Si la aceptación reutiliza un servidor que dejó vivo otro rol, puede pasar contra código viejo; en el sandbox de AES, los servidores de un verificador bloquearon la compilación del programador siguiente.
 
+Cada rol que lee o escribe una rama de trabajo SHOULD hacerlo en un **checkout propio** de esa rama (por ejemplo, un *worktree* de git), no en el checkout del orquestador:
+
+- el orquestador se queda en `dev` y no cambia de rama; los roles no heredan sus archivos sin versionar ni él los suyos;
+- el verificador revisa una copia limpia de la rama, no la que acaba de usar el programador;
+- los archivos locales que un rol necesita y no están versionados (credenciales de su identidad, configuración local) se copian al checkout de forma explícita, nunca se versionan;
+- si varios roles trabajan a la vez, cada checkout necesita sus propios puertos y datos; hasta que el perfil lo resuelva, los roles se ejecutan de uno en uno.
+
 - Los servidores se arrancan con una herramienta que los detiene siempre al terminar y que **no reutiliza** un servidor ajeno: si el puerto está ocupado, falla.
 - Al terminar cada rol, un control comprueba que no quedó nada escuchando en los puertos del proyecto (L2 en la implementación de referencia; en la CI, cada ejecución empieza limpia).
 - Si un agente no puede detener algo que arrancó, es una acción denegada (§6.1).
@@ -1091,7 +1105,7 @@ Una tarea no se integra sin el `PASS` del verificador, aunque la CI esté en ver
 
 ## 5. Liberación
 
-La liberación sigue el perfil del proyecto y debe considerar, cuando aplique:
+La liberación sigue el perfil del proyecto y el proceso de release (§8), y debe considerar, cuando aplique:
 
 - versión y notas de cambio;
 - migraciones y plan de recuperación;
@@ -1105,6 +1119,60 @@ La aceptación de una Historia de Usuario no implica automáticamente autorizaci
 ## 6. Defectos
 
 Los defectos se registran con severidad y se gestionan con la compuerta de estabilización (02 §9): un defecto Crítico detiene todo; uno Alto o Medio impide empezar la historia siguiente; los Menores se acumulan solo hasta el límite del perfil. Los defectos se corrigen en lotes de estabilización, en su propia sesión, sin mezclarse con funcionalidad nueva.
+
+## 7. Ramas: `main` y `dev`
+
+Todo proyecto AES MUST tener dos ramas permanentes y protegidas:
+
+| Rama | Contiene | Recibe |
+|---|---|---|
+| `main` | Lo liberado: estable, verificado y aceptado como producto | Solo releases desde `dev` (§8) y hotfixes (§9) |
+| `dev` | Lo integrado: historias aceptadas, lotes y tareas terminadas, aún sin liberar | Las ramas de trabajo de cada elemento (especificación, pruebas, tareas, cierre) y los back-merges desde `main` (§9) |
+
+Reglas:
+
+- La regla es la misma en proyectos pequeños y grandes. No hay variante «solo `main`» ni *feature flags* como sustituto: un flag es código condicional que un agente puede escribir mal, y revisar que algo queda apagado obliga a leer el código. El aislamiento lo da git.
+- `dev` MUST estar siempre en verde, con la misma CI y la misma protección que `main`. Es la base de todo el trabajo nuevo.
+- Las ramas de trabajo son **cortas**: nacen de `dev` (o de `main`, si son de un hotfix) y desaparecen al integrarse. No hay ramas permanentes de features ni de bugs: una rama larga se desfasa y vuelve a traer los conflictos que se querían evitar.
+- Una épica de muchas historias se construye en `dev` y sale a `main` cuando el responsable humano la libera. `main` nunca recibe una funcionalidad a medias.
+- La compuerta de estabilización (02 §9) se evalúa sobre `dev` para empezar historias, y sobre el candidato a release para liberar.
+
+## 8. Release (`dev` → `main`)
+
+Un release es un PR de `dev` a `main`. Es un gate humano propio, distinto de la aceptación de cada historia: aceptar una historia dice que cumple sus criterios; liberar dice que el conjunto se puede usar como producto.
+
+Antes de abrirlo:
+
+- se preparan las notas del release (plantilla `templates/release.md`): qué elementos salen, qué defectos conocidos quedan y cómo se vuelve atrás;
+- la compuerta de estabilización está abierta sobre `dev`;
+- `main` está contenido en `dev` (§9): todo hotfix previo ya volvió a `dev`.
+
+El PR de release:
+
+- ejecuta la regresión completa de `dev`;
+- MUST fallar si `main` tiene commits que `dev` no tiene (en git: `main` no es ancestro de `dev`). Así un hotfix que no volvió a `dev` no puede perderse ni reintroducir el defecto;
+- se integra con **merge commit**, no con *squash*. Con *squash*, los commits de `main` dejan de existir en `dev`, la comprobación anterior falla siempre y cada release trae conflictos. El *squash* se reserva para las ramas de trabajo;
+- lo aprueba e integra el responsable humano. No hay un periodo mínimo de uso: el responsable usa `dev` todo lo que considere necesario, y su aprobación del PR es la evidencia de que lo hizo.
+
+Después de integrarlo:
+
+- los elementos incluidos pasan a `Released`;
+- se hace un back-merge de `main` a `dev` (§9), porque el commit del release solo existe en `main`;
+- la versión se marca según el perfil (por ejemplo, con un tag).
+
+## 9. Hotfix y back-merge
+
+Un **hotfix** corrige un defecto de algo que ya está en `main`, sin pasar por lo que está en construcción en `dev`.
+
+- El responsable humano decide la ruta de cada defecto de algo liberado, sea cual sea su severidad: **hotfix** (sale ya, desde `main`) o **`dev`** (sale con el próximo release). La decisión se registra en el defecto (03 §8). El orquestador propone; lo habitual es hotfix para lo Crítico o Alto, pero no es una regla.
+- Un hotfix es un elemento T1 (04 §10) cuyas ramas de trabajo nacen de `main` y se integran en `main`. Solo defectos (`BUG-NNN`) pueden ir por esta ruta: ninguna funcionalidad entra a `main` sin pasar por `dev`.
+- Su comprobación de reproducción entra a la regresión de `main` al cerrarlo, como la de cualquier elemento.
+
+El **back-merge** lleva `main` a `dev`. MUST hacerse justo después de cada integración en `main` (hotfix o release):
+
+- es un PR de `main` a `dev`, integrado con **merge commit**, para que `dev` tenga exactamente los mismos commits. No se usa *cherry-pick* ni un segundo PR con el mismo arreglo: crean commits distintos con el mismo cambio y conflictos en el release siguiente;
+- si hay conflictos, se resuelven en ese PR, con la regresión de `dev` como evidencia;
+- la comprobación de reproducción del hotfix llega a `dev` con el back-merge: si `dev` no tuviera el arreglo, su propia CI se pondría roja.
 
 ---
 
@@ -1152,6 +1220,7 @@ Para T0 basta con la tarea (§3).
 Una tarea puede pasar a ejecución cuando:
 
 - [ ] pertenece a un elemento aprobado y en `Ready`;
+- [ ] su rama nace de `dev` (o de `main`, si es un hotfix: 07 §9);
 - [ ] tiene un resultado principal concreto;
 - [ ] alcance, exclusiones y restricciones están claros;
 - [ ] la superficie de cambio y la lista de criterios que deja en verde están publicadas en la rama protegida (la última tarea del elemento no necesita lista: ejecuta el elemento completo);
@@ -1202,7 +1271,7 @@ Una historia puede pasar a `Ready for Acceptance` cuando:
 
 Después de eso:
 
-- funcionalidades visibles o relevantes para el usuario pasan por aceptación humana según el perfil;
+- funcionalidades visibles o relevantes para el usuario pasan por aceptación humana según el perfil; aceptada, la historia queda en `dev` hasta el release (07 §8);
 - en T3, el responsable humano revisa el código de las zonas de riesgo (00 §8);
 - el responsable humano emite `Accepted` o `Rejected`;
 - solo entonces la historia se considera aceptada;
@@ -1220,7 +1289,24 @@ Un resultado `BLOCKED`, `NOT RUN` o una prueba omitida sin justificación no equ
 - [ ] el responsable humano aceptó el lote;
 - [ ] la compuerta de estabilización se volvió a evaluar.
 
-## 7. Definition of Done del proyecto
+## 7. Definition of Done — Hotfix
+
+- [ ] cumple la DoD de un T1, con todas sus ramas nacidas de `main` e integradas en `main`;
+- [ ] la ruta por hotfix es una decisión registrada en el defecto;
+- [ ] el back-merge de `main` a `dev` está integrado, con merge commit y la regresión de `dev` en verde;
+- [ ] el defecto está en `Released`.
+
+## 8. Definition of Done — Release
+
+- [ ] las notas del release están escritas (elementos, defectos conocidos, vuelta atrás);
+- [ ] la compuerta de estabilización está abierta sobre `dev`;
+- [ ] `main` está contenido en `dev`, comprobado por la CI;
+- [ ] la regresión completa pasa en el PR de release;
+- [ ] el responsable humano aprobó e integró el PR con merge commit;
+- [ ] los elementos incluidos están en `Released` y la versión está marcada;
+- [ ] el back-merge de `main` a `dev` está integrado.
+
+## 9. Definition of Done del proyecto
 
 El proyecto puede declararse listo para una liberación cuando se cumplen sus gates de release, seguridad, migración, documentación, recuperación y aprobación definidos en el perfil. No basta con que todas las historias estén en estado `Accepted` si aún existen riesgos de liberación sin resolver o defectos abiertos por encima de lo que el perfil permite liberar.
 

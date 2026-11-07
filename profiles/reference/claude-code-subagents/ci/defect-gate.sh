@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# AES 1.2.0 — Compuerta de estabilización (standard/02 §9.2), capa L3.
+# AES 1.3.0 — Compuerta de estabilización (standard/02 §9.2), capa L3.
 #
 # Lee el backlog DESDE LA BASE (no desde la rama) y decide si el elemento puede avanzar.
 # La tabla del backlog debe tener columnas «ID», «Severidad» y «Estado» (en cualquier orden).
@@ -9,10 +9,12 @@
 #   start  el elemento va a pasar a Ready (rama qa/<ID>): bloquean Crítica, Alta, Media y
 #          Menores por encima del límite
 #   work   el elemento está en curso (ramas task/<ID>/*): solo bloquea Crítica
+#   release  PR de dev a main (standard/07 §8): mismas reglas que start, sin exenciones;
+#            lee el backlog de BASE (en un release, el candidato: HEAD)
 #   report solo informa (push a main)
 #
 # Variables:
-#   BASE                ref protegida (por defecto origin/main)
+#   BASE                ref protegida (por defecto origin/dev)
 #   AES_BACKLOG         ruta del backlog en la base (por defecto docs/backlog.md)
 #   AES_MINOR_LIMIT     máximo de defectos Menores abiertos (por defecto 5)
 #   AES_GATE_EXEMPT     prefijos que no pasan por la compuerta, separados por espacio:
@@ -22,15 +24,15 @@
 set -euo pipefail
 
 phase="${1:-}"; item="${2:-}"
-BASE="${BASE:-origin/main}"
+BASE="${BASE:-origin/dev}"
 BACKLOG="${AES_BACKLOG:-docs/backlog.md}"
 LIMIT="${AES_MINOR_LIMIT:-5}"
 EXEMPT="${AES_GATE_EXEMPT:-BUG ST CH SP}"
 
-case "$phase" in start|work|report) ;; *) echo "Uso: defect-gate.sh start|work|report <ID>" >&2; exit 2 ;; esac
+case "$phase" in start|work|release|report) ;; *) echo "Uso: defect-gate.sh start|work|release|report <ID>" >&2; exit 2 ;; esac
 
 prefix="${item%%-*}"
-if [[ "$phase" != "report" && -n "$item" ]] && [[ " $EXEMPT " == *" $prefix "* ]]; then
+if [[ "$phase" =~ ^(start|work)$ && -n "$item" ]] && [[ " $EXEMPT " == *" $prefix "* ]]; then
   echo "AES defect-gate: $item corrige o mantiene ($prefix): no pasa por la compuerta."
   exit 0
 fi
@@ -87,9 +89,13 @@ echo "  Menor:   ${#minor[@]} ${minor[*]:-} (límite $LIMIT)"
 
 closed=0
 case "$phase" in
-  start)
+  start|release)
     if (( ${#crit[@]} + ${#high[@]} + ${#med[@]} > 0 )); then
-      echo "::error::Compuerta de estabilización cerrada: hay defectos Críticos, Altos o Medios abiertos. Corrígelos en un lote de estabilización antes de pasar $item a Ready (AES 02 §9)."
+      if [[ "$phase" == "release" ]]; then
+        echo "::error::No se puede liberar: hay defectos Críticos, Altos o Medios abiertos (AES 02 §9.2, 07 §8)."
+      else
+        echo "::error::Compuerta de estabilización cerrada: hay defectos Críticos, Altos o Medios abiertos. Corrígelos en un lote de estabilización antes de pasar $item a Ready (AES 02 §9)."
+      fi
       closed=1
     fi
     if (( ${#minor[@]} > LIMIT )); then

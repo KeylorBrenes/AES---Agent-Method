@@ -7,6 +7,8 @@
 - **Historia de origen:** US-[NNN] (la que introdujo o es dueña del comportamiento)
 - **Encontrado en:** [verificación de TASK-xxx, prueba manual, demo, CI de `main`, uso real]
 - **Lote de estabilización:** ST-[NNN] (si aplica)
+- **¿Está en `main`?:** sí (liberado) / no (solo en `dev`)
+- **Ruta:** `dev` (sale con el próximo release) / hotfix desde `main` (07 §9) — si está en `main`, la decide el responsable humano y se registra en «Decisiones»
 
 ## Comportamiento observado
 [Qué pasa hoy. Evidencia literal: salida, captura, ejecución de la CI.]

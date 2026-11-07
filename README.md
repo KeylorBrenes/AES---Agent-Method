@@ -1,6 +1,6 @@
 # Agentic Engineering Standard (AES)
 
-**Versión:** 1.2.0  
+**Versión:** 1.3.0 (en preparación, rama `release/1.3.0`)  
 **Estado:** Estándar en uso  
 **Idioma normativo:** Español  
 **Propósito:** establecer un proceso de ingeniería consistente para desarrollar y mantener software con agentes de IA, sin depender de un proveedor, modelo, harness o stack específico.
@@ -18,6 +18,7 @@ AES no es un generador automático de requisitos ni una metodología de cascada.
 - Procesos de especificación tan pesados que convierten un bug pequeño en una cascada de documentos.
 - Tener que leer cada línea de código para confiar en el resultado.
 - Arrastrar defectos de una historia a la siguiente, hasta que arreglar uno rompe otro.
+- Que una funcionalidad a medias o un arreglo apresurado rompa lo que ya funcionaba.
 
 ### Cómo lo hace, en una frase
 
@@ -44,8 +45,10 @@ AES no es un generador automático de requisitos ni una metodología de cascada.
    └─ 3 FAIL en la misma tarea → circuit breaker
    └─ hallazgos preexistentes → defectos con severidad en el backlog
 8. Tú: informe → apruebas la verificación → integras
-9. Cierre: demo (+ código en T3) → Accepted / Rejected → regresión
+9. Cierre: demo (+ código en T3) → Accepted / Rejected → regresión en dev
 10. Retrospectiva compuesta: registro de fallos → un control nuevo por patrón
+11. Release cuando tú decides: dev → main (merge commit) → back-merge a dev
+    Hotfix de algo liberado: ramas desde main → main → back-merge a dev
 ```
 
 | Track | Para qué | Proceso mínimo |
@@ -87,7 +90,7 @@ AES no es un generador automático de requisitos ni una metodología de cascada.
 | 04 | Diseño y ejecución de tareas, commits, circuit breaker, camino corto T0/T1 |
 | 05 | Pruebas: contrato de interfaz, RED confirmado, holdout, caracterización, aislamiento, guardián, prueba manual agéntica, qué ejecuta la CI |
 | 06 | Gobierno de agentes, permisos, controles en capas L1/L2/L3, acciones denegadas, estado entre roles |
-| 07 | Cambios, riesgos y liberación |
+| 07 | Cambios, riesgos, liberación, ramas `main`/`dev`, release, hotfix y back-merge |
 | 08 | Definition of Ready y Definition of Done |
 | 09 | Mejora continua del harness, evidencia del proceso y métricas |
 

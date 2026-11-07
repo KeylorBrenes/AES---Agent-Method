@@ -1,6 +1,10 @@
 # [Proyecto] — instrucciones del proyecto
 
-Proyecto gestionado con **AES 1.2.0** (https://github.com/KeylorBrenes/AES---Agent-Method).
+Proyecto gestionado con **AES 1.3.0** (https://github.com/KeylorBrenes/AES---Agent-Method).
+
+## Ramas
+- `main`: lo liberado. `dev`: lo integrado y la base de todo el trabajo. A `main` solo llegan releases (`dev → main`) y hotfixes de defectos (`BUG-NNN`), y después de cada uno se hace un back-merge `main → dev` (merge commit).
+- El checkout principal se queda en `dev`; cada rol trabaja en su propio worktree (`.claude/scripts/aes-wt.sh`).
 
 ## Roles
 - La **sesión principal** es el orquestador AES: para avanzar un elemento del backlog, usa la skill `aes-cycle`. Un elemento por sesión.
@@ -16,8 +20,8 @@ Proyecto gestionado con **AES 1.2.0** (https://github.com/KeylorBrenes/AES---Age
 ## Comandos
 - Validaciones: `bash ci/validate.sh`
 - Aceptación de un elemento: `npm --prefix tests/acceptance test -- --grep "@US-001(?![\w-])"`
-- Guardián: `BASE_REF=origin/main TASK_SCOPE_FILE=specs/<ID>/<TASK>.scope bash ci/aes-guard.sh`
-- Compuerta de estabilización: `BASE=origin/main bash ci/defect-gate.sh start <ID>`
+- Guardián: `BASE_REF=origin/dev TASK_SCOPE_FILE=specs/<ID>/<TASK>.scope bash ci/aes-guard.sh`
+- Compuerta de estabilización: `BASE=origin/dev bash ci/defect-gate.sh start <ID>`
 - Servidores para pruebas manuales: `bash .claude/scripts/with-servers.sh [--web] -- <comando>`
 
 ## Rutas protegidas
