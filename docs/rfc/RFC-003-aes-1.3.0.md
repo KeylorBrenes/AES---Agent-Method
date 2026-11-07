@@ -31,9 +31,29 @@
 
 **Pendiente de comprobar en el sandbox:** que Claude Code use el hook `WorktreeCreate` también para los subagentes, el formato exacto de su evento y el `cwd` que recibe `SubagentStop` desde un worktree. Si algo no coincide, la referencia falla cerrada: el subagente no arranca, o el hook de rol lo bloquea por no estar en una rama de tarea.
 
+## 3. Principios de diseño, patrones y el orquestador como senior — 00, 04, 06, 08, 10
+
+**Problema.** Un modelo de nivel junior aplica un patrón si se le pide, pero no sabe cuándo conviene ni cuándo no. Pedirle «aplica SOLID» o «escribe código limpio» no le da información nueva: es ruido. Y no aplicar ningún principio porque el código es pequeño produce el refactor caro el día que crece.
+
+**Decisiones del responsable humano (2026-11-06):**
+
+| Pregunta | Decisión |
+|---|---|
+| ¿Quién decide los patrones? | El **orquestador**, que actúa como diseñador senior y por eso corre en el modelo más capaz disponible (Opus o equivalente). No se crea un rol nuevo; el orquestador puede ocupar también el de arquitecto |
+| ¿Con qué decide? | Con **hechos**: artefactos, ADRs, catálogo de diseño y un resumen estructural generado por herramienta (archivos y firmas públicas). No lee implementaciones ni se basa en la descripción del programador |
+| ¿Cuándo? | Obligatorio en T2/T3 al dividir en tareas, antes de `Ready`; y a demanda, cuando el programador se detiene con una pregunta de diseño |
+| ¿Qué es obligatorio siempre? | Los principios del **nivel 1**, en todo código, también en scripts. Los patrones del **nivel 2**, solo con razón presente |
+
+**Cómo se decide el nivel.** Un principio es de nivel 1 si aplicarlo hoy no cuesta casi nada, aplicarlo después cuesta cada vez más y es local. Los del nivel 1 son los que hacen barato añadir un patrón después: por ejemplo, si el acceso a datos de cada funcionalidad está en un solo lugar, introducir un repositorio el día que haga falta toca ese lugar y nada más.
+
+**Cambio.** Capítulo 10 con las dos tablas (síntoma de incumplimiento en el nivel 1; «cuándo sí / cuándo no» en el nivel 2), la nota de diseño por tarea con lo que no se hace explícito, el catálogo de diseño del proyecto, la verificación del diff contra la nota y el nivel 1, y lo detectable por linter en la CI.
+
+**Consecuencia para RFC-002, cambio 9:** queda decidido que el orquestador corre en el modelo más capaz disponible, aunque el A/B de US-002 mostró que Sonnet respetaba los gates: el motivo nuevo es el diseño, que el A/B no evaluó.
+
 ## Migración de un proyecto en 1.2.0
 
 1. `git push origin main:dev` y hacer `dev` la rama por defecto.
 2. Aplicar los rulesets a `dev` y `main`; en `main`, solo merge commit.
 3. Copiar el workflow, `ci/` y `.claude/` de la referencia 1.3.0; añadir `.claude/worktrees/` a `.gitignore`.
 4. Los elementos ya cerrados quedan como `Released` (ya están en `main`).
+5. Crear `docs/design-catalog.md` con los patrones que el proyecto ya usa y lo que ya se decidió no usar (por ejemplo, «sin repositorio sobre EF Core»).

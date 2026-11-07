@@ -33,6 +33,9 @@ tests/unit/[modulo]/**
 ## Restricciones y permisos
 [Rutas protegidas adicionales, dependencias autorizadas, operaciones que requieren aprobación.]
 
+## Nota de diseño
+[T2/T3: copia o enlace a la nota (plantilla `design-note.md`). El programador no añade patrones, abstracciones ni piezas que la nota no contemple.]
+
 ## Estados que introduce
 [Si la tarea crea un estado (error, carga, edición, confirmación): qué lo crea y qué transiciones lo limpian. Omitir si no aplica.]
 

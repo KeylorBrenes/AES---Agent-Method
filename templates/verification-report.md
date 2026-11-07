@@ -8,6 +8,10 @@
 - **Track:**
 - **Resultado:** PASS / FAIL / BLOCKED
 
+## Diseño
+- ¿El diff sigue la nota de diseño (piezas, responsabilidades, patrón, lo que no se hace)?
+- ¿Síntomas del nivel 1 (AES 10 §3)? Lista los encontrados con archivo y línea.
+
 ## Puntos de atención recibidos
 [Hechos que el orquestador señaló. Se comprueban como hipótesis, no se aceptan como conclusiones.]
 

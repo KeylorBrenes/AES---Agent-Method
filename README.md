@@ -37,6 +37,7 @@ AES no es un generador automático de requisitos ni una metodología de cascada.
    → RED confirmado por herramienta → supuestos resueltos → rama protegida
                                                      [tú apruebas pruebas y supuestos]
 4. Tareas por criterio: superficie, criterios que cierran, comandos exactos
+   + nota de diseño por tarea (orquestador = senior, modelo más capaz)
 5. Programador (sesión nueva por tarea):
    baseline → RED/GREEN/REFACTOR → commits struct:/feat: → reporte
 6. CI (L3): criterios de la tarea + regresión desde ref confiable, holdout, guardián
@@ -73,7 +74,7 @@ AES no es un generador automático de requisitos ni una metodología de cascada.
 |---|---|
 | `standard/` | Reglas normativas de AES Core (00–09). |
 | `AES-CORE.md` | Las reglas de `standard/` consolidadas en un único documento (generado). |
-| `templates/` | Plantillas: brief, arquitectura, ADR, epic, historia, tarea, defecto, lote de estabilización, plan de aceptación, informe de verificación, perfil, registro de fallos y registro de hallazgos. |
+| `templates/` | Plantillas: brief, arquitectura, ADR, epic, historia, tarea, nota de diseño, catálogo de diseño, release, defecto, lote de estabilización, plan de aceptación, informe de verificación, perfil, registro de fallos y registro de hallazgos. |
 | `agent-contracts/` | Responsabilidades, permisos y límites de cada rol: orquestador, arquitecto, QA, programador, mecánico y verificador. |
 | `profiles/` | Perfiles de proyecto e implementaciones de referencia. |
 | `profiles/reference/claude-code-subagents/` | Implementación de referencia de 1.2.0, salida del experimento con agentes reales (las piezas nuevas de 1.2.0, probadas en simulación): subagentes de Claude Code, hooks, skill del orquestador, CI completa (guardián, RED, CI por criterio, compuerta de estabilización, aprobaciones validadas) e identidad de agentes con una GitHub App. |
@@ -93,6 +94,7 @@ AES no es un generador automático de requisitos ni una metodología de cascada.
 | 07 | Cambios, riesgos, liberación, ramas `main`/`dev`, release, hotfix y back-merge |
 | 08 | Definition of Ready y Definition of Done |
 | 09 | Mejora continua del harness, evidencia del proceso y métricas |
+| 10 | Principios de diseño (siempre) y patrones (con razón presente); nota de diseño y catálogo |
 
 ## Palabras normativas
 

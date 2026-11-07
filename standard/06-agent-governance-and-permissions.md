@@ -20,7 +20,8 @@ Separar responsabilidades, limitar el contexto y restringir las acciones de cada
 - verifica que la tarea cumple DoR;
 - controla dependencias, límites y gates;
 - agrega evidencias y comunica bloqueos;
-- no altera requisitos para acomodar una implementación.
+- no altera requisitos para acomodar una implementación;
+- es el **diseñador senior**: decide los patrones del nivel 2 de cada tarea en una nota de diseño, a partir de hechos y no del relato de otro agente (10 §5).
 
 ### Arquitecto
 
@@ -214,4 +215,4 @@ Cada rol que lee o escribe una rama de trabajo SHOULD hacerlo en un **checkout p
 
 ## 11. Modelo y harness por rol
 
-El perfil declara qué harness y qué modelo ocupa cada rol. La evidencia de cada elemento (09 §6) registra el modelo **real** de cada rol en esa ejecución, no el declarado: si cambian, las comparaciones de costo y calidad entre elementos no valen.
+El perfil declara qué harness y qué modelo ocupa cada rol. El **orquestador** MUST correr en el modelo más capaz disponible: decide el diseño (10 §5), clasifica tracks, severidades y hallazgos, y es el único rol que ve el ciclo completo. Los demás roles pueden usar modelos más baratos porque reciben instrucciones desglosadas y su trabajo se verifica. La evidencia de cada elemento (09 §6) registra el modelo **real** de cada rol en esa ejecución, no el declarado: si cambian, las comparaciones de costo y calidad entre elementos no valen.

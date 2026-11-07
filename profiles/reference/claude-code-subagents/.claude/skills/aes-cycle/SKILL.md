@@ -31,9 +31,10 @@ Eres el **orquestador** de AES 1.3.0 (`agent-contracts/orchestrator.md`). Coordi
 2. `git status` limpio, `git switch dev` (solo esta vez, si no estaba ahí), `git pull`. Comprueba `git worktree list`: si quedó algún worktree de una sesión anterior, revisa si tiene cambios antes de cerrarlo.
 3. Identidad: `bash .claude/scripts/gh-app-token.sh | cut -c1-4` debe imprimir `ghs_`. Si falla, detente y muestra el error.
 4. Lee `docs/project-profile.md`, `docs/backlog.md`, `specs/<ID>/<ID>.md` si existe, `docs/aes/08-definition-of-ready-and-done.md` (DoR/DoD) y la última retrospectiva de `docs/retrospectives/`.
-5. Anota el inicio con tu modelo real: `bash .claude/scripts/aes-note.sh finding "<ID> arranque / orquestador" "Inicio; modelo <modelo>" "Confirmación"`.
-6. **Compuerta de estabilización** (AES 02 §9): `BASE=origin/dev bash ci/defect-gate.sh start <ID>`. Si `<ID>` es una historia o enabler y la compuerta está cerrada, **no empieces**: muéstrale al humano los defectos abiertos y propón un lote `ST-NNN` con ellos (sección 5). Si hay un defecto Crítico, solo se trabaja en su corrección.
-7. **Track:** T2/T3 (US, EN) → secciones 1 a 4. T1 (BUG, CH, ST) → sección 5. T0 → sección 6. Si no es obvio, pregúntale al humano.
+5. **Modelo:** el orquestador corre en el modelo más capaz disponible (AES 06 §11), porque decide el diseño. Si esta sesión no lo usa, díselo al humano antes de seguir (`/model opus`).
+6. Anota el inicio con tu modelo real: `bash .claude/scripts/aes-note.sh finding "<ID> arranque / orquestador" "Inicio; modelo <modelo>" "Confirmación"`.
+7. **Compuerta de estabilización** (AES 02 §9): `BASE=origin/dev bash ci/defect-gate.sh start <ID>`. Si `<ID>` es una historia o enabler y la compuerta está cerrada, **no empieces**: muéstrale al humano los defectos abiertos y propón un lote `ST-NNN` con ellos (sección 5). Si hay un defecto Crítico, solo se trabaja en su corrección.
+8. **Track:** T2/T3 (US, EN) → secciones 1 a 4. T1 (BUG, CH, ST) → sección 5. T0 → sección 6. Si no es obvio, pregúntale al humano.
 
 ## 1. Refinamiento de una historia (rama `spec/<ID>`)
 1. Revisa la DoR (`docs/aes/08…` §1), salvo lo que depende de QA.
@@ -51,23 +52,27 @@ Eres el **orquestador** de AES 1.3.0 (`agent-contracts/orchestrator.md`). Coordi
    Si no da `RED confirmado`, devuélveselo a QA con **Q2**.
 4. **Supuestos de QA:** si el plan tiene «Supuestos que requieren decisión», llévaselos al humano **ahora**. Cada respuesta es una decisión D-NN en la historia (y, si cambia el contrato, también ahí). Un supuesto abierto bloquea `Ready`.
 5. **Pruebas de caracterización** (criterios que el código ya cumple): deben estar en la suite de la historia dueña, con su etiqueta, y el criterio dice «Verificación: regresión de <ID dueño>». Si QA usó otra etiqueta, corrección con **R1**.
-6. Escribe las tareas: `specs/<ID>/TASK-NNN.md` (campos de AES 04 §2), `specs/<ID>/TASK-NNN.scope` (un glob por línea, lo más estrecho posible) y, salvo en la **última**, `specs/<ID>/TASK-NNN.criteria` (un `AC-NN` por línea).
+6. **Diseño** (AES 10 §5). Eres el diseñador senior. Decide con hechos, no con descripciones:
+   - `bash .claude/scripts/aes-outline.sh origin/dev <rutas que toca la historia>` (archivos y firmas públicas, sin implementaciones);
+   - `docs/design-catalog.md`, los ADR y el contrato de interfaz.
+   Para cada tarea escribe su **nota de diseño** (plantilla `templates/design-note.md` de AES) dentro de `specs/<ID>/TASK-NNN.md`: piezas y responsabilidad de cada una; patrón del nivel 2 **solo** con razón presente (variantes reales, backlog o ADR), o «ninguno»; **lo que no se hace**, explícito; y cómo se aplica el nivel 1 donde no es obvio. Si una decisión vale para más de esta historia, propón un ADR.
+7. Escribe las tareas: `specs/<ID>/TASK-NNN.md` (campos de AES 04 §2, con la nota de diseño), `specs/<ID>/TASK-NNN.scope` (un glob por línea, lo más estrecho posible) y, salvo en la **última**, `specs/<ID>/TASK-NNN.criteria` (un `AC-NN` por línea).
    - Divide por criterios (cortes verticales), no por capas.
    - Un criterio de caracterización **no** va en ningún `.criteria`: no tiene pruebas propias y la CI fallaría.
    - Si una tarea introduce un estado (error, carga, edición), lista qué lo crea y qué lo limpia.
    - Presupuesto de diff: producción y pruebas por separado.
    - Asigna a `mechanic` solo lo puramente mecánico.
-7. Marca la historia como `Ready` en `specs/<ID>/<ID>.md` y en `docs/backlog.md`, **en este mismo PR**.
-8. Commits separados: `test(<ID>): pruebas de aceptación` y `docs(<ID>): decisiones, tareas, superficies y Ready`.
-9. `git -C "$p" push -u origin qa/<ID>`, `aes-wt.sh close qa/<ID>` y abre el PR (`agent-gh.sh pr create --base dev --title "qa(<ID>): pruebas de aceptación y tareas" --body-file <archivo>`). Cuerpo: matriz criterio → prueba, salida de `red-check.mjs`, decisiones D-NN, tareas con superficie y criterios, y: «Revisa especialmente las aserciones; son el contrato».
-10. `agent-gh.sh pr checks <n> --watch`. Confirma en el log: compuerta OK, trazabilidad OK y `RED confirmado` con N pruebas.
-11. **GATE:** el humano revisa e integra. Si pide cambios, **R1** al dueño del artefacto y vuelve al punto 10.
+8. Marca la historia como `Ready` en `specs/<ID>/<ID>.md` y en `docs/backlog.md`, **en este mismo PR**.
+9. Commits separados: `test(<ID>): pruebas de aceptación` y `docs(<ID>): decisiones, tareas, superficies y Ready`.
+10. `git -C "$p" push -u origin qa/<ID>`, `aes-wt.sh close qa/<ID>` y abre el PR (`agent-gh.sh pr create --base dev --title "qa(<ID>): pruebas de aceptación y tareas" --body-file <archivo>`). Cuerpo: matriz criterio → prueba, salida de `red-check.mjs`, decisiones D-NN, tareas con superficie y criterios, y: «Revisa especialmente las aserciones; son el contrato».
+11. `agent-gh.sh pr checks <n> --watch`. Confirma en el log: compuerta OK, trazabilidad OK y `RED confirmado` con N pruebas.
+12. **GATE:** el humano revisa e integra. Si pide cambios, **R1** al dueño del artefacto y vuelve al punto 11.
 
 ## 3. Implementación (una tarea a la vez)
 Para cada tarea, en orden:
 1. `git fetch origin && git branch --no-track task/<ID>/<TASK> origin/dev` y `bash .claude/scripts/aes-wt.sh delegate task/<ID>/<TASK>`.
 2. Delega en **programmer** (o **mechanic**) con **P1**.
-3. Si reporta `BLOCKED`, analiza la causa y decide (aclarar la tarea con un PR de `spec/`, preguntar al humano o dividir). No amplíes la superficie sin aprobación humana.
+3. Si reporta `BLOCKED` con una **pregunta de diseño**, respóndela tú con una enmienda a la nota de diseño (mismo método: hechos, no su descripción) en un PR de `spec/`, y vuelve a delegar. Si es otra causa, analízala y decide (aclarar la tarea con un PR de `spec/`, preguntar al humano o dividir). No amplíes la superficie sin aprobación humana.
 4. Comprueba tú, sin abrir la rama: `git log origin/dev..task/<ID>/<TASK> --oneline` y `git diff origin/dev...task/<ID>/<TASK> --stat`. Guardián local: `bash .claude/scripts/aes-wt.sh run task/<ID>/<TASK> -- env BASE_REF=origin/dev TASK_SCOPE_FILE=specs/<ID>/<TASK>.scope bash ci/aes-guard.sh`.
 5. `git push -u origin task/<ID>/<TASK>` y abre el PR con `--base dev` (`<tipo>(<ID>): <resultado>`). En el cuerpo, enlaza la tarea y pega el reporte del programador bajo «Reporte del programador (no es evidencia)».
 6. `agent-gh.sh pr checks <n> --watch`. Lee el log:
@@ -87,6 +92,7 @@ Para cada tarea, en orden:
 3. Si `Accepted`: `git branch --no-track spec/<ID>-close origin/dev`, `aes-wt.sh delegate spec/<ID>-close` y:
    - delega en **mechanic** con **M1** (consolidar `.aes/` y la fila de métricas en `docs/`); `.aes/` está en el checkout principal: pásale la ruta absoluta;
    - después, `p=$(aes-wt.sh open spec/<ID>-close)` y, dentro de `$p`:
+     - actualiza `docs/design-catalog.md` con lo que introdujeron las notas de diseño (patrones nuevos y lo que se decidió no usar);
      - escribe tú `docs/retrospectives/<ID>.md`: **solo** patrones, un control por patrón y decisiones abiertas;
      - transcribe lo que quede en `.aes/decisions-pending.md` a «Decisiones» de la especificación;
      - registra cada defecto que el humano dejó para después en `docs/backlog.md` (fila con ID `BUG-NNN`, **Severidad** y Estado `Draft`) y su nota con criterio, historia de origen y reproducción (plantilla `templates/defect.md` de AES);
@@ -102,7 +108,7 @@ Un solo PR de especificación y pruebas, tareas, verificación y cierre. Sin fun
 2. Commit, `aes-wt.sh close qa/<ID>`, `aes-wt.sh delegate qa/<ID>` y delega en **qa** con **Q1**: escribe la comprobación de cada criterio (prueba de aceptación con la etiqueta del elemento y la del defecto, o comando de verificación `specs/<ID>/BUG-NNN.verify`) y confirma RED. Excepciones:
    - **Prueba inestable** (el defecto es una prueba): QA la corrige en la suite de su historia; no hay RED, sino evidencia de estabilidad. Su comprobación es un comando `specs/<ID>/BUG-NNN.verify` que empieza por `# aes: no-red prueba inestable` y ejecuta esas pruebas con `--repeat-each=<N del perfil>`. En el plan, las corridas que fallaban antes.
    - **Sin RED posible:** el comando empieza por `# aes: no-red <motivo>` y el humano lo aprueba de forma explícita en el PR.
-3. Tareas como en 2.6, agrupadas por superficie; el `.criteria` lista `BUG-NNN` o `AC-NN`. Un lote cuyas correcciones son todas de QA puede no tener tareas.
+3. Tareas como en 2.7, agrupadas por superficie; el `.criteria` lista `BUG-NNN` o `AC-NN`. Un lote cuyas correcciones son todas de QA puede no tener tareas.
 4. Marca `Ready` y abre el PR (`qa(<ID>): …`, `--base dev`; en un hotfix, `--base main`). La CI ejecuta el RED de las pruebas y de los comandos nuevos. **GATE** del humano: aprueba la severidad, los criterios y las comprobaciones.
 5. Implementación, cierre y compuerta: secciones 3 y 4. En un lote, un defecto que no se corrige sigue abierto y la compuerta sigue cerrada.
 

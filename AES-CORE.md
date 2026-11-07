@@ -29,6 +29,7 @@ AES define un proceso reproducible para producir software correcto, mantenible y
 17. **Estabilidad antes que avance.** No se construye funcionalidad nueva sobre defectos conocidos. Los defectos se clasifican por severidad y se corrigen antes de empezar la siguiente historia, salvo los menores (02 §9). Corregir un defecto viejo mientras se construye algo nuevo mezcla dos cambios y produce defectos nuevos.
 18. **Cada decisión tiene firma.** Toda ambigüedad que afecta el producto se resuelve con una decisión registrada: quién, cuándo, qué opciones había y qué cambió (03 §8). Lo que nadie decidió explícitamente no es una decisión, aunque una prueba o un agente ya lo haya fijado.
 19. **Lo estable está separado de lo que se construye.** La rama principal solo contiene lo liberado; todo lo demás se integra antes en una rama de desarrollo (07 §7). Un arreglo de algo liberado sale de lo liberado, no de lo que está en construcción.
+20. **Principios fijos, patrones con razón.** Los principios de diseño del nivel 1 se aplican siempre, en todo código; los patrones, solo con una razón presente, y decidir no usarlos vale tanto como decidir usarlos (10). Ninguno se pide con una instrucción genérica: se pide con reglas, síntomas y una nota de diseño concreta.
 
 ## 3. Adaptabilidad
 
@@ -60,8 +61,8 @@ Una excepción no debe presentarse como cumplimiento normal del estándar. Las e
 Los nombres pueden cambiar según las herramientas, pero las responsabilidades deben mantenerse:
 
 - **Responsable del producto / humano:** define objetivos y prioridades; aprueba cambios materiales de alcance, decisiones reservadas y aceptación del producto.
-- **Orquestador:** coordina el proceso, prepara contexto, delega trabajo, mantiene estados y hace cumplir gates. No inventa requisitos ni se autoaprueba.
-- **Arquitecto:** analiza estructura y consecuencias técnicas; propone decisiones y ADRs.
+- **Orquestador:** coordina el proceso, prepara contexto, delega trabajo, mantiene estados y hace cumplir gates. Es el diseñador senior: decide los patrones de cada tarea (10 §5), por lo que corre en el modelo más capaz disponible. No inventa requisitos ni se autoaprueba.
+- **Arquitecto:** analiza estructura y consecuencias técnicas; propone decisiones y ADRs. El orquestador puede ocupar este rol.
 - **Diseñador de pruebas / QA:** transforma criterios aprobados en escenarios y pruebas de aceptación; protege su integridad.
 - **Programador:** implementa tareas delimitadas y sus pruebas técnicas permitidas.
 - **Mecánico (opcional):** ejecuta cambios mecánicos y acotados (configuración no funcional, renombres, formato, consolidación de notas), sin lógica nueva. Permite asignar ese trabajo a un modelo más barato.
@@ -481,6 +482,7 @@ Cada tarea lista para ejecución DEBE especificar:
 - **pruebas de regresión afectadas** (test map), cuando puedan generarse o deducirse;
 - **criterios que deja en verde**: los IDs de criterio (o de defecto) que esta tarea cumple. La CI de la tarea ejecuta solo esos más la regresión; la **última** tarea de la historia ejecuta la historia completa (05 §12);
 - presupuesto de diff orientativo, separado en producción y pruebas (02 §6);
+- **nota de diseño** (10 §5) en T2/T3: piezas, responsabilidades, patrón (o ausencia de patrón) y lo que no se hace;
 - si la tarea introduce un **estado** (de error, de carga, de edición), las transiciones que lo crean y las que lo limpian;
 - condición de finalización.
 
@@ -532,6 +534,7 @@ El programador NO DEBE:
 - ampliar el alcance con refactorizaciones no relacionadas;
 - añadir dependencias sin justificación y aprobación requerida;
 - editar a mano código generado por herramientas (por ejemplo, migraciones): se regenera;
+- introducir un patrón, una abstracción o una pieza que la nota de diseño no contempla: si cree que hace falta, se detiene con `BLOCKED` y la pregunta de diseño;
 - borrar un marcador del guardián que no escribió (por ejemplo, un `#pragma` de código generado) para que el control deje de marcarlo: se reporta;
 - afirmar que algo funciona sin evidencia de ejecución.
 
@@ -845,7 +848,8 @@ Separar responsabilidades, limitar el contexto y restringir las acciones de cada
 - verifica que la tarea cumple DoR;
 - controla dependencias, límites y gates;
 - agrega evidencias y comunica bloqueos;
-- no altera requisitos para acomodar una implementación.
+- no altera requisitos para acomodar una implementación;
+- es el **diseñador senior**: decide los patrones del nivel 2 de cada tarea en una nota de diseño, a partir de hechos y no del relato de otro agente (10 §5).
 
 ### Arquitecto
 
@@ -1039,7 +1043,7 @@ Cada rol que lee o escribe una rama de trabajo SHOULD hacerlo en un **checkout p
 
 ## 11. Modelo y harness por rol
 
-El perfil declara qué harness y qué modelo ocupa cada rol. La evidencia de cada elemento (09 §6) registra el modelo **real** de cada rol en esa ejecución, no el declarado: si cambian, las comparaciones de costo y calidad entre elementos no valen.
+El perfil declara qué harness y qué modelo ocupa cada rol. El **orquestador** MUST correr en el modelo más capaz disponible: decide el diseño (10 §5), clasifica tracks, severidades y hallazgos, y es el único rol que ve el ciclo completo. Los demás roles pueden usar modelos más baratos porque reciben instrucciones desglosadas y su trabajo se verifica. La evidencia de cada elemento (09 §6) registra el modelo **real** de cada rol en esa ejecución, no el declarado: si cambian, las comparaciones de costo y calidad entre elementos no valen.
 
 ---
 
@@ -1201,7 +1205,8 @@ Una historia puede pasar a `Ready` cuando:
 - [ ] **RED confirmado** por herramienta: todas las pruebas nuevas se ejecutaron y fallaron por la razón esperada (05 §2.2), salvo las de caracterización, que están en la regresión de su historia dueña (05 §2.4);
 - [ ] las pruebas holdout existen cuando el track es T3 (o el perfil las exige);
 - [ ] «Fuera de alcance» no está vacío;
-- [ ] las tareas están escritas, con superficie de cambio y criterios que dejan en verde, sin inventar requisitos.
+- [ ] las tareas están escritas, con superficie de cambio y criterios que dejan en verde, sin inventar requisitos;
+- [ ] cada tarea tiene su nota de diseño (10 §5), decidida a partir del catálogo de diseño y del resumen estructural.
 
 Si una casilla no aplica, se puede marcar `N/A` con justificación. No se debe forzar una historia a `Ready` por presión de planificación.
 
@@ -1239,6 +1244,7 @@ Una tarea está técnicamente terminada cuando:
 - [ ] cumple el resultado especificado;
 - [ ] el baseline de pruebas se registró al inicio de la sesión;
 - [ ] el cambio está dentro de la superficie de cambio;
+- [ ] el diseño sigue la nota de diseño y no muestra síntomas del nivel 1 (10 §3);
 - [ ] las pruebas pertinentes se añadieron/actualizaron y ejecutaron;
 - [ ] lint, tipos y análisis requeridos pasan;
 - [ ] los commits separan cambios estructurales y conductuales;
@@ -1265,7 +1271,7 @@ Una historia puede pasar a `Ready for Acceptance` cuando:
 - [ ] existe evidencia de la prueba manual agéntica cuando el track la exige (05 §11);
 - [ ] no quedan defectos Críticos ni bloqueantes conocidos;
 - [ ] cada hallazgo que no se corrigió está en el backlog como defecto, con severidad, historia de origen y criterio (02 §9);
-- [ ] documentación/ADRs afectados están actualizados;
+- [ ] documentación/ADRs afectados y el catálogo de diseño (10 §6) están actualizados;
 - [ ] el comportamiento existente relevante no sufrió regresiones;
 - [ ] el resultado puede probarse en un entorno apropiado.
 
@@ -1384,3 +1390,94 @@ Por cada elemento cerrado (historia, enabler, lote) se registra una fila de mét
 - Los hallazgos, fallos y decisiones se anotan **en el momento**, con la hora real que da un comando, no con una hora escrita por el agente. En el sandbox de AES, el orquestador escribió horas estimadas, algunas por delante del reloj.
 - Las notas en curso viven fuera del control de versiones (por ejemplo, `.aes/`) y se consolidan en los registros versionados en el cierre del elemento. Así no se cuelan en los PR de tareas, donde el guardián las rechazaría por estar fuera de la superficie.
 - La creación y el vaciado de las notas los hace un script, no un rol: si un rol no puede escribir en esa carpeta, la consolidación no debe depender de que pueda.
+
+---
+
+# 10 — Principios de diseño y patrones
+
+## 1. Objetivo
+
+Que el código, sea pequeño o grande, se pueda entender, probar, depurar y hacer crecer sin reescribirlo, **sin** añadir estructura que nadie necesita todavía.
+
+Decirle a un modelo «aplica SOLID» o «escribe código limpio» no le da información que no tuviera: añade ruido. Este capítulo convierte esos principios en reglas con un síntoma comprobable y una frontera explícita de cuándo no aplican, y asigna a alguien con criterio la decisión de qué patrón usar en cada caso.
+
+## 2. Dos niveles
+
+Un principio es de **nivel 1 (siempre obligatorio)** si cumple las tres condiciones:
+
+1. **Aplicarlo hoy no cuesta casi nada:** no añade tipos, capas ni indirección; es una forma de escribir lo que se iba a escribir de todos modos.
+2. **Aplicarlo después cuesta cada vez más:** introducirlo en código existente crece con el tamaño de ese código.
+3. **Es local:** no obliga a diseñar otros módulos alrededor.
+
+Lo que no cumple las tres es de **nivel 2 (condicional)**: se aplica solo cuando hay una **razón presente**, es decir, variantes reales en el código, historias del backlog que la piden o un ADR. «Por si acaso» no es una razón presente.
+
+Los dos niveles se refuerzan: los principios del nivel 1 son los que hacen que añadir un patrón del nivel 2 más adelante sea un cambio local y no un refactor de todo el código. Por eso el nivel 2 puede esperar sin que esperar salga caro.
+
+## 3. Nivel 1: principios siempre obligatorios
+
+Aplican a todo código del proyecto, en cualquier lenguaje, también en scripts. Un incumplimiento es un hallazgo del verificador (de la tarea → ciclo `FAIL`). Las excepciones son excepciones documentadas (00 §4).
+
+| Principio | Qué exige | Síntoma de incumplimiento |
+|---|---|---|
+| **Responsabilidad única** | Cada función y cada módulo hace una sola cosa. En un script: leer la entrada, procesar y escribir la salida son funciones distintas | Una unidad que cambia por dos motivos; un nombre con «y» o vago (`procesar`, `manejar`, `utils`) |
+| **Lógica separada de la entrada/salida** | Las reglas del negocio reciben datos y devuelven datos; no leen archivos, no llaman a la red ni a la base de datos | Una regla que no se puede probar sin levantar la base de datos, el servidor o el sistema de archivos |
+| **Dependencias recibidas, no creadas** | Lo que una pieza necesita lo recibe por parámetro o constructor; no lo crea por dentro ni lo toma de un global. No exige crear interfaces | Una regla de negocio que instancia un cliente HTTP, una conexión o un reloj, o que lee un global |
+| **Acceso a datos agrupado por funcionalidad** | Las consultas y escrituras de una funcionalidad viven juntas, en un solo lugar | La misma consulta, o una casi igual, repartida en varios archivos |
+| **Contratos explícitos en las fronteras** | Lo que se expone (API, CLI, eventos) tiene tipos propios, distintos de los internos | Cambiar una columna o un tipo interno cambia la respuesta pública |
+| **Errores explícitos** | Se falla pronto, con un mensaje que dice qué y dónde; ningún error se silencia | `catch` vacío; devolver `null`, `-1` o una cadena vacía para indicar un error |
+| **Sustitución (Liskov)** | Si se usa herencia, una subclase funciona donde se espera su base. La opción por defecto es la composición | Una subclase que lanza «no soportado», ignora o debilita un método de su base |
+| **Interfaces pequeñas** | Cuando se crea una interfaz (por una razón del nivel 2), contiene solo lo que usan sus clientes. No es una razón para crear interfaces | Una implementación con métodos vacíos o que lanzan «no implementado» |
+| **Visibilidad mínima** | Todo es privado salvo lo que otra pieza necesita usar | Miembros públicos que solo se usan dentro de su propio módulo |
+| **Configuración fuera del código** | Direcciones, rutas, credenciales y valores que cambian por entorno salen del entorno o de la configuración | Un valor de un entorno concreto escrito en el código |
+
+Lo que un linter del stack pueda detectar (complejidad y largo máximos por función, `catch` vacíos, variables globales, ShellCheck en scripts) SHOULD ir a la CI (L3): así deja de depender de que alguien lo recuerde. El perfil lista qué reglas del nivel 1 cubre su CI.
+
+## 4. Nivel 2: principios y patrones condicionales
+
+| Principio o patrón | Cuándo sí | Cuándo no |
+|---|---|---|
+| **Abierto/cerrado** | La variación ya existe: hay dos o más variantes reales, o están en el backlog | Para «facilitar extensiones futuras» que nadie pidió |
+| **DRY (no repetirse)** | A la **tercera** repetición del mismo conocimiento, no del mismo texto | Dos fragmentos que se parecen pero cambian por motivos distintos: unificarlos crea la abstracción equivocada |
+| **Interfaz o abstracción** | Hay dos implementaciones, o las pruebas necesitan sustituir la dependencia y el lenguaje no permite hacerlo sin una interfaz | Una sola implementación sin otra a la vista |
+| **Repository** | Varias fuentes de datos para el mismo agregado, consultas complejas que se repiten entre funcionalidades, o un ADR que lo pide | Encima de un ORM que ya es un repositorio, con una sola fuente y consultas simples |
+| **Strategy** | Varias formas de hacer lo mismo elegidas en tiempo de ejecución, ya presentes o en el backlog | Una sola forma, o dos que no cambian |
+| **Observer / eventos** | Varios consumidores independientes de un mismo hecho, o desacoplar módulos que de otro modo se llamarían en cadena | Un solo consumidor conocido: una llamada directa es más clara y más fácil de depurar |
+| **Factory** | La creación tiene lógica real (elegir tipo, validar, ensamblar varias piezas) | Un `new` con parámetros |
+| **Mediator, CQRS, bus de comandos** | Un ADR que lo justifica por escala, auditoría o separación de modelos de lectura y escritura | Un CRUD |
+| **Genéricos y plugins** | Tres casos concretos que comparten la forma | El primer caso |
+
+La tabla no es exhaustiva. Todo patrón del nivel 2 se decide con la misma pregunta: **¿qué razón presente lo justifica, y qué costaría añadirlo más adelante si se respeta el nivel 1?** Si la respuesta a la segunda es «poco», se espera.
+
+## 5. Nota de diseño
+
+El **orquestador** decide el nivel 2 y actúa como diseñador senior del equipo. Por eso MUST correr en el modelo más capaz disponible (06 §11): elegir un patrón, y sobre todo decidir no usarlo, es razonamiento, no redacción.
+
+**Cuándo:**
+- en cada historia o enabler T2/T3, al dividir en tareas y antes de `Ready`: una nota de diseño por tarea;
+- a demanda: si el programador tiene una duda de diseño a mitad de una tarea, termina con `BLOCKED` y la pregunta; el orquestador responde con una nota nueva o una enmienda.
+
+**Con qué decide:** con hechos, no con el relato de otro agente (00 §7):
+- la historia, sus criterios y el contrato de interfaz;
+- los ADR y el **catálogo de diseño** del proyecto (§6);
+- un **resumen estructural** generado por una herramienta: los archivos y las firmas públicas, sin el código de las implementaciones;
+- la pregunta del programador, si la hay.
+
+**Qué produce** (plantilla `templates/design-note.md`):
+- qué piezas crear o cambiar, dónde y con qué responsabilidad cada una;
+- qué patrón del nivel 2 se usa, con su razón presente;
+- **qué no se hace**, de forma explícita («no se crea interfaz para X: hay una sola implementación»), con el mismo peso que lo que sí;
+- cómo se aplica el nivel 1 donde no es obvio (por ejemplo, dónde termina la lógica y empieza la entrada/salida).
+
+La nota va en la especificación de la tarea y la aprueba el responsable humano con el resto del PR de pruebas y tareas. Una decisión que vale para más de una historia sube a un ADR (01 §4).
+
+## 6. Catálogo de diseño del proyecto
+
+Cada proyecto mantiene `docs/design-catalog.md` (plantilla `templates/design-catalog.md`): qué patrones del nivel 2 usa, dónde, por qué y qué se decidió no usar. Es la memoria de diseño del proyecto: sin él, cada nota de diseño vuelve a decidir lo mismo, o decide distinto.
+
+El orquestador lo actualiza en el cierre de cada elemento con lo que las notas de diseño introdujeron.
+
+## 7. Verificación
+
+- La nota de diseño es parte del contrato de la tarea: el verificador revisa el diff contra ella igual que contra la superficie de cambio. Un patrón que la nota no autoriza o una pieza con otra responsabilidad que la asignada es un hallazgo.
+- El verificador revisa el diff contra los síntomas del nivel 1 (§3).
+- Lo que detecta un linter en la CI no hace falta revisarlo a mano; lo que no, sí.

@@ -20,6 +20,7 @@ Cada tarea lista para ejecución DEBE especificar:
 - **pruebas de regresión afectadas** (test map), cuando puedan generarse o deducirse;
 - **criterios que deja en verde**: los IDs de criterio (o de defecto) que esta tarea cumple. La CI de la tarea ejecuta solo esos más la regresión; la **última** tarea de la historia ejecuta la historia completa (05 §12);
 - presupuesto de diff orientativo, separado en producción y pruebas (02 §6);
+- **nota de diseño** (10 §5) en T2/T3: piezas, responsabilidades, patrón (o ausencia de patrón) y lo que no se hace;
 - si la tarea introduce un **estado** (de error, de carga, de edición), las transiciones que lo crean y las que lo limpian;
 - condición de finalización.
 
@@ -71,6 +72,7 @@ El programador NO DEBE:
 - ampliar el alcance con refactorizaciones no relacionadas;
 - añadir dependencias sin justificación y aprobación requerida;
 - editar a mano código generado por herramientas (por ejemplo, migraciones): se regenera;
+- introducir un patrón, una abstracción o una pieza que la nota de diseño no contempla: si cree que hace falta, se detiene con `BLOCKED` y la pregunta de diseño;
 - borrar un marcador del guardián que no escribió (por ejemplo, un `#pragma` de código generado) para que el control deje de marcarlo: se reporta;
 - afirmar que algo funciona sin evidencia de ejecución.
 

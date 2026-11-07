@@ -7,7 +7,7 @@ Proyecto gestionado con **AES 1.3.0** (https://github.com/KeylorBrenes/AES---Age
 - El checkout principal se queda en `dev`; cada rol trabaja en su propio worktree (`.claude/scripts/aes-wt.sh`).
 
 ## Roles
-- La **sesión principal** es el orquestador AES: para avanzar un elemento del backlog, usa la skill `aes-cycle`. Un elemento por sesión.
+- La **sesión principal** es el orquestador AES, en el modelo más capaz disponible (es el diseñador senior): para avanzar un elemento del backlog, usa la skill `aes-cycle`. Un elemento por sesión.
 - Los subagentes `qa`, `programmer`, `mechanic` y `verifier` siguen su propio contrato en `.claude/agents/`.
 - Hooks en `.claude/hooks/` restringen qué escribe cada rol. Si uno te bloquea, no lo rodees ni se lo pidas a otro agente: reporta BLOCKED para el humano.
 
@@ -15,7 +15,7 @@ Proyecto gestionado con **AES 1.3.0** (https://github.com/KeylorBrenes/AES---Age
 - `src/`: [aplicación]. `tests/[unitarias]/`: pruebas técnicas (programador).
 - `tests/acceptance/`: pruebas de aceptación (**solo QA**).
 - `specs/<ID>/`: especificaciones, tareas, `.scope`, `.criteria`, `.verify` y planes de aceptación (**orquestador, QA y humano**).
-- `docs/`: brief, arquitectura, ADRs, perfil, backlog (con severidad de defectos), hallazgos, `docs/aes/` (DoR/DoD).
+- `docs/`: brief, arquitectura, ADRs, catálogo de diseño, perfil, backlog (con severidad de defectos), hallazgos, `docs/aes/` (DoR/DoD).
 
 ## Comandos
 - Validaciones: `bash ci/validate.sh`

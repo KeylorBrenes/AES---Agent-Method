@@ -23,7 +23,8 @@ Una historia puede pasar a `Ready` cuando:
 - [ ] **RED confirmado** por herramienta: todas las pruebas nuevas se ejecutaron y fallaron por la razón esperada (05 §2.2), salvo las de caracterización, que están en la regresión de su historia dueña (05 §2.4);
 - [ ] las pruebas holdout existen cuando el track es T3 (o el perfil las exige);
 - [ ] «Fuera de alcance» no está vacío;
-- [ ] las tareas están escritas, con superficie de cambio y criterios que dejan en verde, sin inventar requisitos.
+- [ ] las tareas están escritas, con superficie de cambio y criterios que dejan en verde, sin inventar requisitos;
+- [ ] cada tarea tiene su nota de diseño (10 §5), decidida a partir del catálogo de diseño y del resumen estructural.
 
 Si una casilla no aplica, se puede marcar `N/A` con justificación. No se debe forzar una historia a `Ready` por presión de planificación.
 
@@ -61,6 +62,7 @@ Una tarea está técnicamente terminada cuando:
 - [ ] cumple el resultado especificado;
 - [ ] el baseline de pruebas se registró al inicio de la sesión;
 - [ ] el cambio está dentro de la superficie de cambio;
+- [ ] el diseño sigue la nota de diseño y no muestra síntomas del nivel 1 (10 §3);
 - [ ] las pruebas pertinentes se añadieron/actualizaron y ejecutaron;
 - [ ] lint, tipos y análisis requeridos pasan;
 - [ ] los commits separan cambios estructurales y conductuales;
@@ -87,7 +89,7 @@ Una historia puede pasar a `Ready for Acceptance` cuando:
 - [ ] existe evidencia de la prueba manual agéntica cuando el track la exige (05 §11);
 - [ ] no quedan defectos Críticos ni bloqueantes conocidos;
 - [ ] cada hallazgo que no se corrigió está en el backlog como defecto, con severidad, historia de origen y criterio (02 §9);
-- [ ] documentación/ADRs afectados están actualizados;
+- [ ] documentación/ADRs afectados y el catálogo de diseño (10 §6) están actualizados;
 - [ ] el comportamiento existente relevante no sufrió regresiones;
 - [ ] el resultado puede probarse en un entorno apropiado.
 

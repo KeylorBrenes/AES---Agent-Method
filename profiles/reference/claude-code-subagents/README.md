@@ -1,6 +1,6 @@
 # Implementación de referencia — Claude Code con subagentes
 
-Implementación de AES 1.3.0 con **Claude Code** como único harness: la sesión principal es el orquestador y los roles `qa`, `programmer`, `mechanic` y `verifier` son subagentes con su propio contexto, modelo y permisos. GitHub aloja el repositorio, la CI y la protección de rama.
+Implementación de AES 1.3.0 con **Claude Code** como único harness: la sesión principal es el orquestador (en el modelo más capaz disponible, porque también decide el diseño de cada tarea) y los roles `qa`, `programmer`, `mechanic` y `verifier` son subagentes con su propio contexto, modelo y permisos. GitHub aloja el repositorio, la CI y la protección de rama.
 
 Sale del experimento [aes-sandbox-gastos](https://github.com/KeylorBrenes/aes-sandbox-gastos), una app de control de gastos en .NET 10 + React donde se aplicó AES con agentes reales en cuatro elementos (EN-001, US-001, CH-001, US-002). Lo que dice «probado» se usó ahí; lo que dice «simulación» se probó con repositorios y datos de prueba al publicar esta versión, pero todavía no en un ciclo real.
 
@@ -16,6 +16,7 @@ Es un punto de partida, no un perfil prescriptivo. Las partes del stack (.NET + 
 | `.claude/hooks/bash-guard.sh` | L2 | `PreToolUse` de terminal: escrituras evidentes a rutas prohibidas; los subagentes no publican ni cambian de rama | Probado |
 | `.claude/hooks/subagent-gate.sh` | L2 | `SubagentStop`: ningún rol termina con servidores vivos; programador y mecánico, además, con el guardián y `ci/validate.sh` en verde | Probado |
 | `.claude/scripts/with-servers.sh` | — | Arranca los servidores con datos temporales, ejecuta un comando y los detiene siempre; falla si el puerto está ocupado | Probado en Windows y Linux (la lectura de `.claude/aes.env`: simulación) |
+| `.claude/scripts/aes-outline.sh` | — | Resumen estructural (archivos y firmas públicas, sin implementaciones) para que el orquestador decida el diseño con hechos | Simulación |
 | `.claude/scripts/aes-wt.sh` | — | Checkouts propios por rol (worktrees): `open`, `close`, `run`, `delegate`. El checkout principal se queda en `dev` | Simulación |
 | `.claude/hooks/worktree-create.sh`, `worktree-remove.sh` | L2 | El subagente con `isolation: worktree` trabaja en la rama de trabajo real (la que indicó el orquestador con `delegate`); sin indicación, no arranca | Simulación (falta confirmar en Claude Code el formato del evento) |
 | `.claude/scripts/aes-note.sh` | — | Notas del orquestador con la hora real; `clear` las vacía tras el cierre | Probado (`clear`: simulación) |

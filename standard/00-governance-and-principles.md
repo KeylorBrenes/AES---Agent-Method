@@ -25,6 +25,7 @@ AES define un proceso reproducible para producir software correcto, mantenible y
 17. **Estabilidad antes que avance.** No se construye funcionalidad nueva sobre defectos conocidos. Los defectos se clasifican por severidad y se corrigen antes de empezar la siguiente historia, salvo los menores (02 §9). Corregir un defecto viejo mientras se construye algo nuevo mezcla dos cambios y produce defectos nuevos.
 18. **Cada decisión tiene firma.** Toda ambigüedad que afecta el producto se resuelve con una decisión registrada: quién, cuándo, qué opciones había y qué cambió (03 §8). Lo que nadie decidió explícitamente no es una decisión, aunque una prueba o un agente ya lo haya fijado.
 19. **Lo estable está separado de lo que se construye.** La rama principal solo contiene lo liberado; todo lo demás se integra antes en una rama de desarrollo (07 §7). Un arreglo de algo liberado sale de lo liberado, no de lo que está en construcción.
+20. **Principios fijos, patrones con razón.** Los principios de diseño del nivel 1 se aplican siempre, en todo código; los patrones, solo con una razón presente, y decidir no usarlos vale tanto como decidir usarlos (10). Ninguno se pide con una instrucción genérica: se pide con reglas, síntomas y una nota de diseño concreta.
 
 ## 3. Adaptabilidad
 
@@ -56,8 +57,8 @@ Una excepción no debe presentarse como cumplimiento normal del estándar. Las e
 Los nombres pueden cambiar según las herramientas, pero las responsabilidades deben mantenerse:
 
 - **Responsable del producto / humano:** define objetivos y prioridades; aprueba cambios materiales de alcance, decisiones reservadas y aceptación del producto.
-- **Orquestador:** coordina el proceso, prepara contexto, delega trabajo, mantiene estados y hace cumplir gates. No inventa requisitos ni se autoaprueba.
-- **Arquitecto:** analiza estructura y consecuencias técnicas; propone decisiones y ADRs.
+- **Orquestador:** coordina el proceso, prepara contexto, delega trabajo, mantiene estados y hace cumplir gates. Es el diseñador senior: decide los patrones de cada tarea (10 §5), por lo que corre en el modelo más capaz disponible. No inventa requisitos ni se autoaprueba.
+- **Arquitecto:** analiza estructura y consecuencias técnicas; propone decisiones y ADRs. El orquestador puede ocupar este rol.
 - **Diseñador de pruebas / QA:** transforma criterios aprobados en escenarios y pruebas de aceptación; protege su integridad.
 - **Programador:** implementa tareas delimitadas y sus pruebas técnicas permitidas.
 - **Mecánico (opcional):** ejecuta cambios mecánicos y acotados (configuración no funcional, renombres, formato, consolidación de notas), sin lógica nueva. Permite asignar ese trabajo a un modelo más barato.

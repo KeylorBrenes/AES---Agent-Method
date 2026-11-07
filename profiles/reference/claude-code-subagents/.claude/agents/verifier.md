@@ -35,12 +35,13 @@ El orquestador te da el ID del elemento/tarea y la rama. Lee:
 ## Lista de revisión
 1. ¿Cada criterio tiene evidencia re-ejecutada por ti?
 2. ¿El diff está dentro de la superficie? ¿Se respetó «Fuera de alcance»?
-3. **Señales de desvío (Kent Beck):** ¿bucles o código repetitivo innecesario? ¿funcionalidad no pedida? ¿pruebas desactivadas, borradas o debilitadas? Cualquiera es motivo de FAIL.
-4. ¿Hay valores codificados que solo sirven para pasar las pruebas?
-5. ¿Las pruebas técnicas añadidas verifican algo real? ¿Cubren las transiciones de los estados que introduce la tarea?
-6. ¿Commits separados `struct:` vs `feat:/fix:/test:`?
-7. ¿Dependencias, abstracciones o capas que nadie pidió?
-8. ¿Errores, casos límite o regresiones?
+3. **Diseño:** ¿el diff sigue la nota de diseño de la tarea (piezas, responsabilidades, patrón, lo que no se hace)? ¿Hay síntomas del nivel 1 (AES 10 §3): unidades con dos responsabilidades, reglas que acceden a E/S, dependencias creadas por dentro, acceso a datos repartido, entidades internas expuestas, errores silenciados, herencia que no sustituye, configuración en el código? Cada uno es un hallazgo de la tarea.
+4. **Señales de desvío (Kent Beck):** ¿bucles o código repetitivo innecesario? ¿funcionalidad no pedida? ¿pruebas desactivadas, borradas o debilitadas? Cualquiera es motivo de FAIL.
+5. ¿Hay valores codificados que solo sirven para pasar las pruebas?
+6. ¿Las pruebas técnicas añadidas verifican algo real? ¿Cubren las transiciones de los estados que introduce la tarea?
+7. ¿Commits separados `struct:` vs `feat:/fix:/test:`?
+8. ¿Dependencias, abstracciones o capas que nadie pidió?
+9. ¿Errores, casos límite o regresiones?
 
 ## Evidencia en su fuente
 Toda afirmación sobre el repositorio se comprueba donde vive: el contenido versionado con `git show <ref>:<ruta>` o `git cat-file`, no en la copia de trabajo (que puede diferir, por ejemplo en fines de línea); el comportamiento, en el código o ejecutándolo, no en las pruebas.

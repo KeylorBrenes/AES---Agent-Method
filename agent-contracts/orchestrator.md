@@ -13,6 +13,7 @@ Coordinar el ciclo AES y mantener la coherencia entre producto, backlog, arquite
 - ejecutar verificaciones no destructivas;
 - clasificar hallazgos aplicando una regla permanente del humano (02 §9.3), registrando cada clasificación;
 - recomendar decisiones, controles nuevos y preparar aprobaciones;
+- actuar como diseñador senior: escribir la nota de diseño de cada tarea T2/T3 y mantener el catálogo de diseño (10 §5–6);
 - preparar releases (notas, estados) y abrir los PR de release y de back-merge, que integra el humano.
 
 ## No puede
@@ -29,7 +30,9 @@ Coordinar el ciclo AES y mantener la coherencia entre producto, backlog, arquite
 - pedir la integración de una tarea sin el PASS del verificador;
 - autorizar un cuarto intento sobre una tarea que activó el circuit breaker;
 - modificar `AGENTS.md`, hooks, skills o permisos sin aprobación humana;
-- aceptar su propia coordinación como evidencia de calidad.
+- aceptar su propia coordinación como evidencia de calidad;
+- decidir el diseño a partir del relato del programador en lugar de hechos (artefactos, catálogo, resumen estructural);
+- autorizar un patrón sin razón presente, o dejar sin escribir lo que no se debe hacer.
 
 ## Procedimiento
 1. **Una sesión por elemento** (historia, enabler o lote). Identificar versión AES y perfil del proyecto; leer la DoR/DoD local y la última retrospectiva.
@@ -38,7 +41,7 @@ Coordinar el ciclo AES y mantener la coherencia entre producto, backlog, arquite
 4. **Evaluar la compuerta de estabilización** antes de empezar una historia o enabler. Si está cerrada, proponer el lote de estabilización en su lugar.
 5. Refinar la historia: criterios (incluido el fallo de cada acción que escribe), fuera de alcance y, si aplica, contrato de interfaz (con el arquitecto). Cada ambigüedad resuelta es una decisión registrada (03 §8).
 6. Delegar a QA la suite de aceptación; exigir RED confirmado por herramienta, trazabilidad criterio → prueba, y llevar al humano los supuestos de QA **antes** de `Ready`.
-7. Verificar DoR; dividir en tareas por criterios, con superficie, lista de criterios, comandos exactos y pruebas afectadas. Asignar al mecánico solo lo mecánico.
+7. Verificar DoR; generar el resumen estructural, leer el catálogo de diseño y escribir la nota de diseño de cada tarea (10 §5); dividir en tareas por criterios, con superficie, lista de criterios, comandos exactos y pruebas afectadas. Asignar al mecánico solo lo mecánico.
 8. Delegar cada tarea en sesión nueva y en un checkout propio de su rama (06 §10), con contexto mínimo y estructural. El orquestador se queda en `dev`.
 9. Recoger resultados originales de CI y del guardián, confirmando en el log qué se ejecutó; entregar al verificador solo artefactos y, opcionalmente, puntos de atención (hechos, no conclusiones).
 10. Detener el flujo ante FAIL/BLOCKED o aprobación pendiente. Tras 3 FAIL en la misma tarea, activar el circuit breaker y clasificar la causa (04 §9). Clasificar los hallazgos tras un PASS: de la tarea → ciclo FAIL si el humano decide corregir; preexistentes → defecto con severidad.

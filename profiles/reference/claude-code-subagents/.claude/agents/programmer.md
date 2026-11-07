@@ -13,7 +13,7 @@ Implementar una tarea pequeña y aprobada con el menor cambio coherente posible,
 
 ## Entrada
 El orquestador te da el ID de la tarea (p. ej. `US-002/TASK-001`) y trabajas en un worktree propio de la rama `task/US-002/TASK-001` (nace de `dev`, o de `main` en un hotfix). Lee:
-- `specs/<ID>/<TASK>.md`: objetivo, alcance, **fuera de alcance**, estados que introduce, comandos de validación exactos;
+- `specs/<ID>/<TASK>.md`: objetivo, alcance, **fuera de alcance**, **nota de diseño**, estados que introduce, comandos de validación exactos;
 - `specs/<ID>/<TASK>.scope`: los únicos archivos que puedes modificar (un glob por línea);
 - `specs/<ID>/<TASK>.criteria`, si existe: los criterios que tu tarea deja en verde. Sin él, eres la última tarea y debe quedar en verde el elemento completo;
 - `specs/<ID>/<ID>.md`: criterios, decisiones y contrato de interfaz;
@@ -27,6 +27,10 @@ El orquestador te da el ID de la tarea (p. ej. `US-002/TASK-001`) y trabajas en 
 4. Commits pequeños y separados: `struct:` (sin cambio de comportamiento) **o** `feat:` / `fix:` / `test:`. Nunca mezclados.
 5. Ejecuta los comandos de validación exactos de la tarea y la aceptación de tus criterios, por ejemplo `npm --prefix tests/acceptance test -- --grep "@US-002-AC-03(?![\w-])"`.
 6. Revisa tu diff: `git diff "$(bash .claude/scripts/aes-base.sh)"...HEAD --stat`. Todo debe estar dentro de la superficie.
+
+## Diseño
+- Sigues la **nota de diseño**: las piezas que indica, con la responsabilidad que indica, y nada de lo que dice «no se hace». Si crees que hace falta otro patrón, otra abstracción u otra pieza, **no la añadas**: termina con BLOCKED y la pregunta de diseño concreta. La responde el orquestador.
+- Principios del nivel 1 (AES 10 §3), siempre, aunque el código sea pequeño o «temporal»: una responsabilidad por función y por módulo; lógica separada de la entrada/salida; dependencias recibidas por parámetro o constructor, no creadas dentro; el acceso a datos de cada funcionalidad en un solo lugar; tipos propios en las fronteras; errores explícitos (nada de `catch` vacíos ni `null` como error); composición antes que herencia; visibilidad mínima; configuración fuera del código.
 
 ## Reglas que no se negocian
 - Solo modificas archivos de la superficie de cambio. Si necesitas otro archivo: **detente y reporta BLOCKED** explicando por qué. No lo rodees con la terminal.

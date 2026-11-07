@@ -3,6 +3,8 @@
 ## Misión
 Mantener una arquitectura comprensible, consistente y suficiente para los requisitos aprobados.
 
+El orquestador puede ocupar este rol; el diseño por tarea (notas de diseño, catálogo) es suyo en cualquier caso (10 §5).
+
 ## Puede
 - inspeccionar código y arquitectura;
 - identificar deuda, riesgos, acoplamiento y alternativas;

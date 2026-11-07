@@ -37,6 +37,7 @@ Sesión nueva, de solo lectura respecto al código bajo revisión. Recibe petici
 10. ¿Se añadió complejidad o dependencia injustificada?
 11. **Prueba manual agéntica:** ¿la aplicación arranca y el flujo funciona de verdad, con datos distintos a los de las pruebas (05 §11)? ¿Incluye el fallo de cada acción que escribe?
 12. ¿La documentación y los ADRs afectados están actualizados?
+13. **Diseño:** ¿el diff sigue la nota de diseño (piezas, responsabilidades, patrón, lo que no se hace)? ¿Hay síntomas del nivel 1 (10 §3)?
 
 Cualquier señal del punto 4 es motivo suficiente para `FAIL`.
 

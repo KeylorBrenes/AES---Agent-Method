@@ -10,6 +10,8 @@ Se acumulan aquí los cambios que propone el responsable humano antes de retomar
 - **Hotfix y back-merge** (07 §9): un defecto de algo liberado, de cualquier severidad, puede corregirse desde `main` si el responsable humano lo decide; después de cada integración en `main`, back-merge a `dev` con merge commit.
 - **Checkout propio por rol** (06 §10): el orquestador se queda en `dev` y cada rol trabaja en su propio checkout de la rama de trabajo.
 - DoD de hotfix y de release (08 §7–8).
+- **Capítulo 10 — Principios de diseño y patrones**: nivel 1 de principios siempre obligatorios en todo código (responsabilidad única, lógica separada de la E/S, dependencias recibidas, acceso a datos agrupado, contratos en las fronteras, errores explícitos, Liskov, interfaces pequeñas, visibilidad mínima, configuración fuera del código), cada uno con su síntoma; nivel 2 de patrones condicionales con «cuándo sí» y «cuándo no»; la prueba de tres condiciones para decidir el nivel (principio 20).
+- **Orquestador como diseñador senior** en el modelo más capaz disponible (06 §11): escribe una nota de diseño por tarea a partir de hechos (artefactos, catálogo de diseño y resumen estructural), incluido lo que no se hace; el programador no añade patrones fuera de la nota y el verificador revisa el diff contra ella y contra el nivel 1. Plantillas `design-note.md` y `design-catalog.md`; script `aes-outline.sh`.
 - Implementación de referencia: `aes-wt.sh` y hooks `WorktreeCreate`/`WorktreeRemove` para que cada subagente trabaje en un worktree de la rama real; `aes-base.sh`; CI en `dev` y `main` con comprobación de rutas, «main contenido en dev», release y back-merge; compuerta en fase `release`; skill con release, hotfix y back-merge.
 
 ## [1.2.0] — 2026-11-05

@@ -12,7 +12,7 @@ El modelo real de cada ejecución se registra en las métricas (09 §6); si difi
 
 | Rol | Harness | Modelo | Invocación | Identidad con la que publica |
 |---|---|---|---|---|
-| Orquestador | | | | |
+| Orquestador (modelo más capaz disponible, 06 §11) | | | | |
 | QA | | | | |
 | Programador | | | | |
 | Mecánico (opcional) | | | | |
@@ -45,6 +45,12 @@ El modelo real de cada ejecución se registra en las métricas (09 §6); si difi
 - Escala de Story Points: Fibonacci 1, 2, 3, 5, 8, 13
 - Estados:
 - Criterios propios para clasificar tracks T0–T3 (si difieren de 02 §8):
+
+## Diseño (10)
+- Catálogo de diseño: `docs/design-catalog.md`
+- Herramienta del resumen estructural (archivos y firmas públicas):
+- Reglas del nivel 1 cubiertas por linters en la CI (herramienta y regla):
+- Excepciones documentadas al nivel 1:
 
 ## Defectos y compuerta de estabilización (02 §9)
 - Escala de severidad: Crítica / Alta / Media / Menor (ajustes propios, si los hay):
