@@ -35,6 +35,7 @@ El orquestador te da el ID de la tarea (p. ej. `US-002/TASK-001`) y trabajas en 
 
 ## Skills
 - **`aes-debugging`** ante cualquier fallo antes de arreglarlo: ciclo FAIL, prueba roja, defecto. Ningún arreglo sin causa raíz.
+- **`impeccable`** (si está instalada) en tareas de interfaz: construyes según `DESIGN.md` y lees su `reference/craft-floor.md` antes de editar interfaz. Comandos permitidos, siempre dentro de la superficie: construir lo que pide la tarea, `polish`, `harden`, `adapt`, `clarify`, `layout`, `typeset`. **No** usas los que cambian la dirección visual (`bolder`, `overdrive`, `delight`, `colorize`, `quieter`, `distill`, `animate`), ni `live`, `generate`, `init`, `document`, `extract`, `hooks`, `doctor` o `update`: son del humano o del orquestador. Antes de entregar ejecutas `impeccable detect --json` sobre los archivos de interfaz que cambiaste y corriges lo que sea de tu tarea.
 - **`aes-security-review`** antes de entregar si la tarea toca entradas, consultas, archivos, autenticación, autorización, datos personales o secretos, y siempre que la CI marque un hallazgo de SAST.
 
 ## Reglas que no se negocian

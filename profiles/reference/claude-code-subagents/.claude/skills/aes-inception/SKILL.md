@@ -1,6 +1,6 @@
 ---
 name: aes-inception
-description: Incepción de AES (standard/01 §2). El orquestador entrevista al responsable del producto por temas, con bloques cortos de preguntas concretas, hasta que la idea es clara, y produce el brief, el backlog completo pero superficial con Epics y releases, la arquitectura inicial, el ADR del stack y EN-001 (esqueleto que camina), en un único PR. Úsala cuando el proyecto no tiene docs/backlog.md, o para una mini-incepción cuando llega una idea que no cabe en el backlog.
+description: Incepción de AES (standard/01 §2). El orquestador entrevista al responsable del producto por temas, con bloques cortos de preguntas concretas, hasta que la idea es clara, y produce el brief, el backlog completo pero superficial con Epics y releases, la arquitectura inicial, el ADR del stack, la dirección visual si hay interfaz y EN-001 (esqueleto que camina), en un único PR. Úsala cuando el proyecto no tiene docs/backlog.md, o para una mini-incepción cuando llega una idea que no cabe en el backlog.
 ---
 
 # Incepción (AES 01 §2)
@@ -28,6 +28,7 @@ Pregunta **por temas, un bloque a la vez**, en este orden (salta los que la idea
 | D. Restricciones | Privacidad, cuentas y acceso, dispositivos, idioma, plazos, integraciones |
 | E. Stack y operación | Preferencias o restricciones tecnológicas, dónde corre, quién lo mantiene |
 | F. Primer release | Qué es lo mínimo que ya sirve, qué puede esperar |
+| G. Interfaz (si la hay) | Tono de los textos, accesibilidad, marca y recursos que ya existen, restricciones visuales que no se discuten. Nada de colores ni estilos: eso es la dirección visual (sección 4.1) |
 
 ### Cómo es un bloque
 
@@ -78,6 +79,17 @@ No sigas preguntando para detallar historias lejanas: ese detalle se pregunta en
 4. **Project Profile** (`docs/project-profile.md`, plantilla `templates/project-profile.template.md`): stack, comandos (aunque todavía no funcionen: EN-001 los hará funcionar), convenciones, skills y herramientas registradas.
 5. **Brief** (`docs/project-brief.md`, plantilla `templates/project-brief.md`), con los releases previstos y la tabla de «por definir».
 6. Si no existe, la copia local de DoR/DoD en `docs/aes/` (el instalador de AES la deja ahí).
+7. **Interfaz**, si el proyecto la tiene (sección 4.1).
+
+### 4.1 Interfaz: contexto de producto y dirección visual
+
+Si el perfil registra **impeccable** (skill de terceros, AES 06 §6.2), la usas tú aquí; si no, describes la dirección visual en `docs/architecture.md` y le pides al humano que elija entre dos o tres opciones con muestras.
+
+1. **Contexto de producto, sin segunda entrevista.** Impeccable tiene su propia entrevista (`init`, y `shape` por pantalla) con preguntas que la tuya ya respondió: usuarios, propósito, situaciones, restricciones, stack. Ejecuta `impeccable context` y después `init` **con el brief y las respuestas de los bloques A–G como fuente**: escribe `PRODUCT.md` a partir de ellos, marca como inferido lo que dedujiste y no te dijeron, y preséntaselo al humano en **una sola ronda de confirmación**, preguntando solo lo que de verdad falte (máximo tres preguntas, con las reglas de la sección 1). No contestes tú las preguntas de impeccable sin enseñárselas: un hecho inferido sin confirmar es un supuesto, y los supuestos van al brief como «por definir».
+2. **La dirección visual la elige el humano.** Sigue el flujo de obra nueva de impeccable: te propondrá direcciones en una página para elegir. Esa página consulta el catálogo de impeccable (registrado en el perfil; no envía código ni archivos) y arranca un servidor local: ábrela solo con el humano presente y, cuando conteste, detén el servidor (`serve-question --stop --key <clave>`). El humano elige; tú no eliges por él a partir de lo que contestó.
+3. Con la dirección elegida, `DESIGN.md` (el sistema visual) entra en el PR de incepción. No lo confundas con `docs/design-catalog.md`, que es el diseño del código (AES 10).
+4. `PRODUCT.md` no sustituye al brief: si algo cambia, se cambia primero en el brief y después en `PRODUCT.md`.
+5. Comprueba que `.impeccable/config.json` tiene la telemetría, el aviso de actualizaciones y el hook desactivados (el instalador de AES lo deja así).
 
 ## 5. Mini-incepción
 
@@ -86,7 +98,7 @@ Para una idea que no cabe en el backlog: solo los bloques que cambian (normalmen
 ## 6. El PR de incepción
 
 1. Un commit `docs:` por documento o uno solo, sin código.
-2. Abre el PR a `dev`. En la descripción: visión en una frase, Epics, releases con sus historias, stack recomendado, «por definir» abiertos y lo que necesita la aprobación del humano.
+2. Abre el PR a `dev`. En la descripción: visión en una frase, Epics, releases con sus historias, stack recomendado, dirección visual elegida (si hay interfaz), «por definir» abiertos y lo que necesita la aprobación del humano.
 3. Regenera el tablero (en la implementación de referencia, `node .claude/scripts/aes-board.mjs`) y, si hay, el diagrama; dile al humano qué archivos abrir.
 4. Hasta que el humano aprueba el PR, nada es un compromiso. Después, cualquier cambio del backlog entra por PR.
 5. El siguiente paso es EN-001, con el ciclo normal (en la implementación de referencia, la skill `aes-cycle`).
@@ -95,7 +107,8 @@ Para una idea que no cabe en el backlog: solo los bloques que cambian (normalmen
 
 - Criterios Dado/Cuando/Entonces, notas de diseño o tareas: son del refinamiento de cada historia.
 - Preguntas abiertas o en bloque gigante.
-- Elegir el stack sin que el humano decida.
+- Elegir el stack o la dirección visual sin que el humano decida.
+- Dejar vivo el servidor de una página de decisión.
 - Inventar lo que el humano no sabe.
 
 ## Ejemplo

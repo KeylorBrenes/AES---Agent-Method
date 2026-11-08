@@ -63,6 +63,7 @@ Es un punto de partida, no un perfil prescriptivo. Las partes del stack (.NET + 
    - `AES_MINOR_LIMIT` (opcional, por defecto 5): defectos Menores abiertos permitidos.
    - `AES_REQUIRE_VERIFIED` (opcional, por defecto `1`): exige `aes:verified` en las tareas.
    - `AES_SAST` (opcional, `0` lo desactiva) y `AES_SAST_CONFIG` (opcional, por defecto `p/owasp-top-ten`): el paso de SAST.
+   - `AES_UI_DETECT` (opcional): el detector de interfaz, si impeccable está instalada. Por defecto solo anota en el PR; `block` hace que los hallazgos fallen la tarea; `0` lo desactiva.
 9. **El workflow:** la app no puede tocar `.github/workflows/`, así que cualquier cambio en él lo subes tú. Si instalaste con el script, ya entró en el commit inicial.
 10. Instala `jq` donde corran los hooks.
 11. **Incepción:** abre una sesión del orquestador (en el modelo más capaz) y pídele que empiece el proyecto. Usará la skill `aes-inception`: entrevista, backlog con releases, arquitectura, ADR del stack y EN-001, en un PR a `dev` que apruebas tú. Después, EN-001 con `aes-cycle`.

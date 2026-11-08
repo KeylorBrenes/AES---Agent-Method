@@ -143,6 +143,8 @@ El **análisis estático de seguridad** (SAST, con reglas mapeadas a OWASP y CWE
 
 La comprobación de dependencias con vulnerabilidades conocidas sigue la política del perfil.
 
+Si el proyecto tiene interfaz, un **detector determinista de interfaz** (contraste, legibilidad, desbordes, accesibilidad básica, desviaciones del sistema visual del proyecto) SHOULD ejecutarse en la CI de cada tarea sobre los archivos de interfaz que cambia. Mientras el proyecto no haya decidido qué reglas bloquean, sus hallazgos se anotan en el PR y el orquestador los registra como defectos; después, las reglas que el perfil declare bloqueantes fallan la tarea, igual que el SAST. Las revisiones de diseño de un agente (crítica, puntuaciones de estilo) son hallazgos, no evidencia (00 §7).
+
 ## 8. Cobertura y mutation testing
 
 La cobertura es una señal, no prueba de calidad. No se debe optimizar el porcentaje a costa de aserciones significativas.

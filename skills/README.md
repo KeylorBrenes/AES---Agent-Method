@@ -27,6 +27,7 @@ No son parte de AES y no viajan en este repositorio. Si el proyecto las usa, el 
 
 | Skill | Tipo | Licencia | Para qué en AES | Ajuste obligatorio |
 |---|---|---|---|---|
+| [impeccable](https://github.com/pbakaus/impeccable) | Técnica + herramienta | Apache-2.0 (se copian `LICENSE` y `NOTICE.md`) | Diseño de interfaz: contexto de producto (`PRODUCT.md`) y dirección visual (`DESIGN.md`) en la incepción, `shape` en el refinamiento de historias con interfaz, construcción y pulido por el programador dentro de la superficie, `audit` del verificador y el detector determinista en la CI | Telemetría, aviso de actualizaciones y hook por edición desactivados (`.impeccable/config.json` y variables en `settings.json`). Su catálogo de direcciones visuales no se puede desactivar: solo en la incepción, con el humano presente. Su motor se descarga en versión fija verificada por huella. Comandos por rol: ver los contratos de la referencia |
 | [archify](https://github.com/tt-a1i/archify) | Herramienta | MIT | Diagramas HTML validados desde JSON (arquitectura, flujo, secuencia, flujo de datos, ciclo de vida): el diagrama de componentes de la incepción, notas de diseño con flujo, ciclos de vida de una entidad | Desactivar su aviso de actualizaciones (`ARCHIFY_UPDATE_CHECK_DISABLED=1`, 06 §6.2). Se versiona el JSON; el HTML se genera en `.aes/` |
 
 ## Atribución

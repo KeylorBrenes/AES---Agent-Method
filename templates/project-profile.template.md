@@ -52,9 +52,12 @@ El modelo real de cada ejecución se registra en las métricas (09 §6); si difi
 |---|---|---|---|---|---|
 | aes-debugging | Técnica | AES vX.Y.Z | | | Programador, mecánico |
 | aes-inception | Técnica | AES vX.Y.Z | | | Orquestador |
+| impeccable (opcional) | Técnica + herramienta | vX.Y.Z (`docs/aes/skills.lock`) | Apache-2.0 | | Orquestador, programador, verificador |
 | archify (opcional) | Herramienta | vX.Y.Z (`docs/aes/skills.lock`) | MIT | | Orquestador |
 
 - Análisis estático de seguridad en la CI (05 §7): herramienta, reglas y qué severidad bloquea:
+- Detector de interfaz en la CI (05 §7): herramienta, y qué reglas bloquean (al principio, ninguna: solo anota):
+- Consultas de red que una skill no permite desactivar (06 §6.2): cuál, qué envía, cuándo se usa:
 
 ## Diseño (10)
 - Catálogo de diseño: `docs/design-catalog.md`

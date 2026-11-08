@@ -22,6 +22,7 @@ El orquestador pregunta **por temas, en bloques cortos de preguntas concretas**:
 | Restricciones | Privacidad, acceso, dispositivos, idioma, plazos, presupuesto, integraciones |
 | Stack y operación | Preferencias o restricciones tecnológicas, dónde corre, quién lo mantiene |
 | Primer release | Qué es lo mínimo que ya sirve, y qué puede esperar |
+| Interfaz (si la hay) | Tono de los textos, accesibilidad, marca y recursos que ya existen, restricciones visuales que no se discuten |
 
 Reglas de las preguntas:
 
@@ -50,8 +51,9 @@ No se sigue preguntando para completar el detalle de historias lejanas. Ese deta
 4. **ADR del stack** (§4): opciones consideradas y por qué se elige una.
 5. **Project Profile:** stack, entorno, comandos, convenciones, controles de calidad, agentes, permisos, skills y herramientas.
 6. **Quality Strategy:** niveles de prueba, CI y controles aplicables.
-7. **EN-001, el esqueleto que camina** (02 §3.2), primero en el backlog: la aplicación arrancando de punta a punta, con la CI en verde, sobre la que crecen las historias.
-8. **Copia local de las reglas que los agentes consultan:** como mínimo, las checklists de DoR y DoD (08) dentro del repositorio (por ejemplo, `docs/aes/`), con la versión de AES de la que salen. Un agente que solo tiene la referencia «AES 08» revisa la DoR de memoria.
+7. **Dirección visual** (si hay interfaz): el sistema visual del producto (colores, tipografía, componentes, tono), elegido por el responsable humano entre opciones concretas, como el stack. El agente propone y el humano elige; el agente no la decide a partir de lo que le contestaron. EN-001 monta la interfaz ya con ella.
+8. **EN-001, el esqueleto que camina** (02 §3.2), primero en el backlog: la aplicación arrancando de punta a punta, con la CI en verde, sobre la que crecen las historias.
+9. **Copia local de las reglas que los agentes consultan:** como mínimo, las checklists de DoR y DoD (08) dentro del repositorio (por ejemplo, `docs/aes/`), con la versión de AES de la que salen. Un agente que solo tiene la referencia «AES 08» revisa la DoR de memoria.
 
 ### 2.4 Aprobación y revisión
 

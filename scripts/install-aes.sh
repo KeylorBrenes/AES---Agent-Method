@@ -140,13 +140,37 @@ for v in "${vendors[@]}"; do
   [[ -f "$v/SKILL.md" ]] || { echo "Sin SKILL.md en $v: no es una skill." >&2; exit 1; }
   v=$(cd "$v" && pwd); name=$(basename "$v")
   [[ "$name" == aes-* ]] && { echo "$name: los nombres aes-* son del núcleo de AES." >&2; exit 1; }
-  ver=""
-  [[ -f "$v/package.json" ]] && ver=$(sed -n 's/^ *"version": *"\([^"]*\)".*/\1/p' "$v/package.json" | head -n1)
+  ver=$(sed -n '1,/^---$/{s/^version: *"\{0,1\}\([^"]*\)"\{0,1\} *$/\1/p}' "$v/SKILL.md" | head -n1)
+  [[ -z "$ver" && -f "$v/package.json" ]] && ver=$(sed -n 's/^ *"version": *"\([^"]*\)".*/\1/p' "$v/package.json" | head -n1)
   [[ -z "$ver" ]] && ver=$(git -C "$v" describe --tags --always 2>/dev/null || true)
   [[ -z "$ver" ]] && ver="sin-version"
   dst="$target/.claude/skills/$name"
   rm -rf "$dst"; mkdir -p "$dst"
   (cd "$v" && tar --exclude=.git --exclude=node_modules -cf - .) | (cd "$dst" && tar -xf -)
+  # Licencia y avisos: si la carpeta de la skill no los trae, se copian de la raíz de su repositorio
+  # (Apache-2.0, por ejemplo, exige conservar LICENSE y NOTICE al redistribuir).
+  if ! compgen -G "$dst/LICENSE*" >/dev/null; then
+    vroot=$(git -C "$v" rev-parse --show-toplevel 2>/dev/null || true)
+    if [[ -n "$vroot" ]]; then
+      for f in "$vroot"/LICENSE* "$vroot"/NOTICE*; do [[ -f "$f" ]] && cp "$f" "$dst/"; done
+    fi
+    compgen -G "$dst/LICENSE*" >/dev/null || echo "Aviso: $name no trae licencia; revísala antes de versionarla." >&2
+  fi
+  # Ajustes de 06 §6.2 por skill conocida: sin telemetría, sin avisos de actualización, sin hook propio.
+  case "$name" in
+    impeccable)
+      cfg="$target/.impeccable/config.json"
+      if [[ ! -f "$cfg" ]]; then
+        mkdir -p "$target/.impeccable"
+        printf '%s\n' '{' '  "telemetry": false,' '  "updateCheck": false,' '  "hook": { "enabled": false }' '}' > "$cfg"
+        echo "  .impeccable/config.json: telemetría, aviso de actualizaciones y hook desactivados."
+      else
+        echo "  Revisa .impeccable/config.json: telemetry false, updateCheck false, hook.enabled false (06 §6.2)."
+      fi
+      for line in .impeccable/config.local.json .impeccable/questions/ .impeccable/mocks/ .impeccable/live/; do
+        grep -qxF "$line" "$target/.gitignore" || printf '%s\n' "$line" >> "$target/.gitignore"
+      done ;;
+  esac
   touch "$lock"
   grep -v "^$name " "$lock" > "$lock.tmp" || true; mv "$lock.tmp" "$lock"
   printf '%s %s sha256:%s %s\n' "$name" "$ver" "$(hash_tree "$dst")" "$(date -u +%Y-%m-%d)" >> "$lock"

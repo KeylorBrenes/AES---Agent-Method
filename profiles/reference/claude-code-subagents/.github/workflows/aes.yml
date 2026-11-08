@@ -164,6 +164,27 @@ jobs:
           semgrep scan --config "$SEMGREP_RULES" --baseline-commit "$base" --metrics=off --severity WARNING --severity INFO || true
           semgrep scan --config "$SEMGREP_RULES" --baseline-commit "$base" --metrics=off --severity ERROR --error
 
+      # ---------- Detector de interfaz (05 §7; impeccable, si está instalada) ----------
+      - name: Detector de interfaz sobre lo que cambia la tarea (impeccable)
+        if: ${{ steps.ctx.outputs.kind == 'task' && vars.AES_UI_DETECT != '0' && hashFiles('.claude/skills/impeccable/scripts/impeccable') != '' }}
+        env:
+          IMPECCABLE_NO_UPDATE_CHECK: '1'
+          DO_NOT_TRACK: '1'
+          BLOCKING: ${{ vars.AES_UI_DETECT == 'block' && '1' || '0' }}
+        run: |
+          # Solo anota en el PR mientras el proyecto no decida qué reglas bloquean (AES_UI_DETECT=block).
+          # El motor se descarga en su versión fija y se verifica con las huellas de la skill.
+          base=$(git merge-base "$AES_BASE" HEAD)
+          mapfile -t files < <(git diff --name-only --diff-filter=AM "$base"...HEAD \
+            | grep -E '\.(html|css|scss|sass|less|tsx|jsx|vue|svelte|astro)$' || true)
+          if [[ ${#files[@]} -eq 0 ]]; then echo "La tarea no cambia archivos de interfaz."; exit 0; fi
+          rc=0; bash .claude/skills/impeccable/scripts/impeccable detect --github "${files[@]}" || rc=$?
+          case "$rc" in
+            0) echo "Sin hallazgos." ;;
+            2) echo "Hallazgos de interfaz: el orquestador los registra como defectos (02 §9)."; [[ "$BLOCKING" == 1 ]] && exit 1 || true ;;
+            *) echo "::warning::El detector de interfaz no pudo ejecutarse (código $rc)." ;;
+          esac
+
       - name: Restaurar suite de aceptación y especificaciones desde la rama destino
         if: ${{ steps.ctx.outputs.kind == 'task' }}
         run: |

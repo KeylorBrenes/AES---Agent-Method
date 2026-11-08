@@ -145,6 +145,7 @@ El orquestador pregunta **por temas, en bloques cortos de preguntas concretas**:
 | Restricciones | Privacidad, acceso, dispositivos, idioma, plazos, presupuesto, integraciones |
 | Stack y operación | Preferencias o restricciones tecnológicas, dónde corre, quién lo mantiene |
 | Primer release | Qué es lo mínimo que ya sirve, y qué puede esperar |
+| Interfaz (si la hay) | Tono de los textos, accesibilidad, marca y recursos que ya existen, restricciones visuales que no se discuten |
 
 Reglas de las preguntas:
 
@@ -173,8 +174,9 @@ No se sigue preguntando para completar el detalle de historias lejanas. Ese deta
 4. **ADR del stack** (§4): opciones consideradas y por qué se elige una.
 5. **Project Profile:** stack, entorno, comandos, convenciones, controles de calidad, agentes, permisos, skills y herramientas.
 6. **Quality Strategy:** niveles de prueba, CI y controles aplicables.
-7. **EN-001, el esqueleto que camina** (02 §3.2), primero en el backlog: la aplicación arrancando de punta a punta, con la CI en verde, sobre la que crecen las historias.
-8. **Copia local de las reglas que los agentes consultan:** como mínimo, las checklists de DoR y DoD (08) dentro del repositorio (por ejemplo, `docs/aes/`), con la versión de AES de la que salen. Un agente que solo tiene la referencia «AES 08» revisa la DoR de memoria.
+7. **Dirección visual** (si hay interfaz): el sistema visual del producto (colores, tipografía, componentes, tono), elegido por el responsable humano entre opciones concretas, como el stack. El agente propone y el humano elige; el agente no la decide a partir de lo que le contestaron. EN-001 monta la interfaz ya con ella.
+8. **EN-001, el esqueleto que camina** (02 §3.2), primero en el backlog: la aplicación arrancando de punta a punta, con la CI en verde, sobre la que crecen las historias.
+9. **Copia local de las reglas que los agentes consultan:** como mínimo, las checklists de DoR y DoD (08) dentro del repositorio (por ejemplo, `docs/aes/`), con la versión de AES de la que salen. Un agente que solo tiene la referencia «AES 08» revisa la DoR de memoria.
 
 ### 2.4 Aprobación y revisión
 
@@ -906,6 +908,8 @@ El **análisis estático de seguridad** (SAST, con reglas mapeadas a OWASP y CWE
 
 La comprobación de dependencias con vulnerabilidades conocidas sigue la política del perfil.
 
+Si el proyecto tiene interfaz, un **detector determinista de interfaz** (contraste, legibilidad, desbordes, accesibilidad básica, desviaciones del sistema visual del proyecto) SHOULD ejecutarse en la CI de cada tarea sobre los archivos de interfaz que cambia. Mientras el proyecto no haya decidido qué reglas bloquean, sus hallazgos se anotan en el PR y el orquestador los registra como defectos; después, las reglas que el perfil declare bloqueantes fallan la tarea, igual que el SAST. Las revisiones de diseño de un agente (crítica, puntuaciones de estilo) son hallazgos, no evidencia (00 §7).
+
 ## 8. Cobertura y mutation testing
 
 La cobertura es una señal, no prueba de calidad. No se debe optimizar el porcentaje a costa de aserciones significativas.
@@ -1153,7 +1157,8 @@ Reglas para toda skill:
 
 - **Versión fija y revisada:** se copia al repositorio en una versión concreta, dentro de una ruta protegida, y la revisa el responsable humano. Nada de plugins o skills que se actualizan solos: una actualización silenciosa cambia las instrucciones de los agentes sin aprobación.
 - **Registrada en el perfil:** origen, versión o commit, licencia, quién la revisó y qué roles la usan.
-- **Sin consultas de red propias:** si una skill consulta un servidor para avisar de actualizaciones o descargar algo, ese paso se desactiva en el proyecto (variable de entorno o instrucción en el perfil). Una actualización es un cambio de versión, y entra por PR como cualquier otro.
+- **Sin consultas de red propias:** los avisos de actualización, las actualizaciones automáticas y la telemetría de una skill se desactivan en el proyecto (variable de entorno o configuración). Una actualización es un cambio de versión, y entra por PR como cualquier otro. Se aceptan las descargas que el propio paquete fija en su versión y verifica con huellas incluidas en él, como un lockfile. Una consulta que no se puede desactivar (por ejemplo, un catálogo de opciones) se registra en el perfil, se usa solo con el responsable humano presente y nunca envía código ni datos del proyecto.
+- **Sin servidores ni procesos que queden vivos** al terminar el paso que los abrió (§10). Si la skill los arranca, el paso termina deteniéndolos.
 - **Se instala con AES:** el instalador de AES copia el núcleo y las skills de terceros registradas, en su versión fija, para que ninguna se quede atrás al instalar o actualizar AES.
 - **Hooks y scripts incluidos** se revisan como código propio, y respetan las demás reglas (por ejemplo, no dejar procesos vivos entre roles, 06 §10).
 - **Su salida no es evidencia** salvo que ejecute un comando y muestre la salida real (00 §7).

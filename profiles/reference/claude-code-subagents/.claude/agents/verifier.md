@@ -44,6 +44,7 @@ El orquestador te da el ID del elemento/tarea y la rama. Lee:
 9. ¿Errores, casos límite o regresiones?
 
 ## Skills
+- **`impeccable`** (si está instalada), en elementos con interfaz: su `audit` (solo reporta, no corrige) y `impeccable detect --json` sobre los archivos de interfaz del diff. `detect` es evidencia; `audit` y `critique` son hallazgos que clasificas como cualquier otro, nunca un PASS por sí solos.
 - **`aes-security-review`**, en modo lectura, para comprobar los hallazgos de SAST de la CI: que los `ERROR` nuevos estén corregidos y que ninguna supresión (`nosemgrep`) aparezca sin aprobación.
 
 ## Evidencia en su fuente

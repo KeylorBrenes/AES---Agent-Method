@@ -105,6 +105,27 @@
 
 **Pendiente de probar en el sandbox nuevo:** la entrevista real (¿bloques del tamaño correcto?, ¿la regla de parada se cumple sin preguntar de más?), el PR de incepción con la CI todavía sin stack, el instalador en Windows y el diagrama de archify generado por el orquestador.
 
+## 7. Interfaz con impeccable — 01, 05, 06
+
+**Problema.** AES verificaba comportamiento, pero no la calidad de la interfaz: lo que construye un agente sin guía visual converge en el mismo aspecto genérico, y ningún control lo detectaba. impeccable (Apache-2.0) cubre diseño, crítica y un detector determinista, pero trae su propia entrevista, consultas de red, un hook propio, servidores locales y comandos que empujan más allá de la tarea.
+
+**Decisiones del responsable humano (2026-11-08):**
+
+| Tema | Decisión |
+|---|---|
+| Uso | impeccable se integra en AES |
+| Hook por edición | No por ahora: el programador ejecuta `detect` antes de entregar y la CI anota |
+| Red | Se acepta la descarga verificada de su motor y su catálogo de direcciones visuales (solo con el humano presente), con telemetría y avisos de actualización apagados |
+| CI | El detector solo anota mientras se prueba; después se decide qué reglas bloquean |
+| Dirección visual | En la incepción |
+| Entrevista de impeccable | No como entrevista aparte al final. El orquestador la ejecuta con lo que ya contestó el humano y le presenta el resultado para confirmar |
+
+**Decisión del orquestador, a revisar en el sandbox:** las preguntas de producto de impeccable (`init`, `shape`) se contestan con el brief y la entrevista de AES, pero el resultado se le enseña al humano en una sola ronda de confirmación, con lo inferido marcado. Que el agente las conteste solo, sin enseñarlas, convertiría suposiciones suyas en hechos del producto; mandar al humano a una segunda entrevista repetiría preguntas ya respondidas. La dirección visual no se infiere nunca: la elige el humano.
+
+**Comprobado aquí:** el instalador copia la skill (con `LICENSE` y `NOTICE.md`), anota `impeccable 4.8.1` y deja `.impeccable/config.json` seguro; `impeccable detect --github` descargó y verificó el motor 0.1.19 y anotó contraste bajo, texto con gradiente y brillos en un archivo de prueba (código 2).
+
+**Pendiente de probar en el sandbox nuevo:** la ronda de confirmación de `PRODUCT.md`, la página de decisión de la dirección visual desde Claude Code en Windows, `shape` dentro del refinamiento y el detector en Actions.
+
 ## Migración de un proyecto en 1.2.0
 
 1. `git push origin main:dev` y hacer `dev` la rama por defecto.
