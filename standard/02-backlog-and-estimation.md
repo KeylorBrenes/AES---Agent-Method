@@ -110,7 +110,7 @@ Heurísticas específicas para tareas ejecutadas por agentes (el perfil las ajus
 
 La planificación tiene dos niveles, y el detalle llega tarde a propósito:
 
-1. **Al inicio del proyecto** (ligero): visión del producto, stack, y un **backlog completo pero superficial**: todas las historias que se conocen para llegar a la app completa, cada una con su título en formato, una línea de valor, `Requiere:` y una estimación aproximada. Nada de criterios detallados, diseño ni tareas.
+1. **Al inicio del proyecto** (ligero, en la incepción, 01 §2): visión del producto, stack, y un **backlog completo pero superficial**: todas las historias que se conocen para llegar a la app completa, cada una con su título en formato, una línea de valor, `Requiere:`, una estimación aproximada y el release al que apunta. Nada de criterios detallados, diseño ni tareas.
 2. **Cuando le toca a cada historia** (detallado): criterios, decisiones, fuera de alcance, plan técnico y tareas. Solo entonces, porque es cuando se sabe lo que las historias anteriores enseñaron.
 
 El backlog inicial va a cambiar: reordenar, dividir, fusionar o descartar historias es parte del proceso, no un fallo de la planificación. Solo las historias próximas necesitan cumplir completamente la DoR.
@@ -213,8 +213,20 @@ El formato MUST ser una tabla con estas columnas, en cualquier orden:
 | `Severidad` | Solo defectos (§9.1); el resto, `—` |
 | `Estado` | 00 §6 |
 
+Dos columnas son opcionales y SHOULD usarse desde la incepción: `Epic`, la acción del usuario a la que pertenece la historia (§2), y `Release` (por ejemplo, `REL-001`), el release al que apunta (§12). Con ellas, el backlog es también el mapa de historias: Epics en una dimensión, releases en la otra.
+
 Para el responsable humano, una tabla en un archivo no es la mejor forma de ver dónde va el proyecto. Las **vistas** (un tablero) se generan desde el archivo, en una sola dirección:
 
 - la implementación de referencia genera un tablero HTML autocontenido, sin ningún servicio;
 - adaptadores opcionales publican el mismo backlog en GitHub Projects, Trello, GitLab u otro tablero. Cambiar de herramienta es cambiar de adaptador, no de metodología;
 - lo que se mueve en una vista no vuelve solo al archivo: se le pide al orquestador y entra por PR.
+
+## 12. Releases como horizonte de planificación
+
+AES planifica por **releases**, no por sprints. Un release es un conjunto de historias que, juntas, dan un resultado que el usuario puede usar, y se libera cuando está completo y la compuerta de estabilización lo permite (§9.2, 07 §8). No hay una duración fija: con agentes, el ritmo lo marcan la aprobación humana y la CI, no el calendario.
+
+- **La incepción define los releases** (01 §2): el primero es lo mínimo que ya sirve; los siguientes, lo que se sabe que viene después. Cada uno tiene un objetivo de una frase y una lista de historias.
+- **Solo el release en curso está comprometido.** Los siguientes son una previsión: se reordenan con lo que enseñe el primero.
+- **Mover una historia de release** es un cambio del backlog y entra por PR. Si el release en curso crece, lo normal es mover historias al siguiente, no esperar.
+- Los puntos aceptados por release (§5) sirven para prever los siguientes. No son una meta ni se comparan entre proyectos.
+

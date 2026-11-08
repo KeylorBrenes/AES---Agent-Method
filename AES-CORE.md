@@ -127,20 +127,64 @@ En T3 no existe una forma responsable de omitir la revisión humana del código 
 
 Establecer una comprensión compartida del producto y una arquitectura suficiente para guiar los incrementos sin diseñar prematuramente todos sus detalles.
 
-## 2. Inicio del proyecto
+## 2. Incepción: de la idea al backlog
 
-Antes de implementar funcionalidades, el orquestador DEBE ayudar a crear o localizar:
+Antes de escribir código, el responsable del producto y el orquestador **conversan en lenguaje natural** hasta que la idea es lo bastante clara para planificar. La incepción produce la visión, el backlog completo pero superficial, la arquitectura inicial y el stack. No produce criterios detallados, diseño de tareas ni código: eso llega cuando le toca a cada historia (02 §7).
 
-1. **Project Brief:** problema, usuarios, objetivos, alcance inicial, restricciones y criterios generales de éxito.
-2. **Project Profile:** stack, entorno, comandos, convenciones, controles de calidad, agentes y permisos.
-3. **Architecture Overview:** contexto, componentes principales, límites, datos e integraciones conocidas.
-4. **Backlog inicial, completo pero superficial** (02 §7): todas las historias que se conocen para llegar al producto, cada una con su título en formato, una línea de valor, `Requiere:` y una estimación aproximada; Epics y riesgos conocidos. Sin criterios detallados, diseño ni tareas: eso llega cuando le toca a cada historia.
-5. **Quality Strategy:** niveles de prueba, CI y controles aplicables.
-6. **Copia local de las reglas que los agentes consultan:** como mínimo, las checklists de DoR y DoD (08) dentro del repositorio (por ejemplo, `docs/aes/`), con la versión de AES de la que salen. Un agente que solo tiene la referencia «AES 08» revisa la DoR de memoria.
+La conduce el orquestador, en el modelo más capaz disponible (06 §11): de esta conversación salen el corte de las historias y las decisiones de arquitectura, que todo lo demás hereda.
 
-El primer elemento que se implementa es el **esqueleto que camina** (02 §3.2): un enabler que deja la aplicación arrancando de punta a punta, con la CI en verde, sobre el que crecen las historias. La arquitectura inicial describe lo suficiente para ese esqueleto y para las primeras historias; el resto se decide cuando haga falta.
+### 2.1 La entrevista
 
-Si se trabaja sobre un proyecto existente, primero se inspecciona el repositorio y el comportamiento actual. No se asume que la documentación está actualizada ni que la arquitectura deseada coincide con la implementada.
+El orquestador pregunta **por temas, en bloques cortos de preguntas concretas**:
+
+| Tema | Qué tiene que quedar claro |
+|---|---|
+| Problema y usuarios | Quién usa el producto, qué hace hoy sin él y qué le duele |
+| Lo que el usuario hace | Las acciones principales, de principio a fin (serán los Epics del mapa de historias) |
+| Datos y reglas | Qué se guarda, qué reglas lo limitan, qué pasa en los casos raros |
+| Restricciones | Privacidad, acceso, dispositivos, idioma, plazos, presupuesto, integraciones |
+| Stack y operación | Preferencias o restricciones tecnológicas, dónde corre, quién lo mantiene |
+| Primer release | Qué es lo mínimo que ya sirve, y qué puede esperar |
+
+Reglas de las preguntas:
+
+- **Un bloque es un tema**, con 2 a 5 preguntas. No se mezclan temas, y no se manda la entrevista entera de una vez.
+- **Cada pregunta es concreta y se responde en una o dos frases.** Cuando hay opciones razonables, el orquestador las propone con su recomendación, y el responsable elige o corrige. «¿Qué más necesitas?» o «¿Cómo te imaginas la app?» no son preguntas de AES: obligan al responsable a hacer el trabajo del orquestador.
+- **Se pregunta por comportamiento, no por tecnología**, salvo en el bloque de stack. «¿Una tarea puede tener fecha límite?», no «¿Guardamos un `DateOnly` nullable?».
+- **Cada bloque parte de las respuestas anteriores.** Antes del siguiente, el orquestador resume en tres o cuatro líneas lo que entendió, para que el responsable corrija a tiempo.
+- **Lo que el responsable no sabe no se inventa:** queda «por definir» en el brief (supuesto o incertidumbre, con cómo se resolverá), o se convierte en un Spike (§7).
+
+### 2.2 Cuándo parar
+
+La entrevista termina cuando:
+
+1. cada acción principal del usuario tiene historias con título en formato (02 §3), una línea de valor, `Requiere:` y una estimación aproximada;
+2. el primer release está delimitado: qué historias entran y qué resultado observable da;
+3. hay datos suficientes para elegir el stack y describir la arquitectura del esqueleto que camina;
+4. lo que falta está nombrado como «por definir» o como Spike, con quién y cuándo lo resolverá.
+
+No se sigue preguntando para completar el detalle de historias lejanas. Ese detalle se pregunta en el refinamiento de cada historia, cuando lo que enseñaron las anteriores ya está a la vista.
+
+### 2.3 Lo que produce
+
+1. **Project Brief:** problema, usuarios, objetivos, alcance, fuera de alcance, restricciones, supuestos e incertidumbres, riesgos, y los releases previstos.
+2. **Backlog inicial, completo pero superficial** (02 §7, §11): todas las historias que se conocen para llegar al producto, agrupadas por Epic y asignadas a un release. Las historias pasan el control de atomicidad (02 §3.1) desde el principio: dividir en la incepción es barato, dividir a media implementación no.
+3. **Architecture Overview** (§3) del esqueleto y las primeras historias, con un diagrama de componentes. El texto es la fuente; el diagrama es una vista y se regenera desde él.
+4. **ADR del stack** (§4): opciones consideradas y por qué se elige una.
+5. **Project Profile:** stack, entorno, comandos, convenciones, controles de calidad, agentes, permisos, skills y herramientas.
+6. **Quality Strategy:** niveles de prueba, CI y controles aplicables.
+7. **EN-001, el esqueleto que camina** (02 §3.2), primero en el backlog: la aplicación arrancando de punta a punta, con la CI en verde, sobre la que crecen las historias.
+8. **Copia local de las reglas que los agentes consultan:** como mínimo, las checklists de DoR y DoD (08) dentro del repositorio (por ejemplo, `docs/aes/`), con la versión de AES de la que salen. Un agente que solo tiene la referencia «AES 08» revisa la DoR de memoria.
+
+### 2.4 Aprobación y revisión
+
+Todo lo anterior entra en **un PR de incepción**, que aprueba el responsable humano. Hasta entonces, nada de lo producido es un compromiso; después, cambiarlo es normal y entra por PR como cualquier otro cambio del backlog.
+
+Cuando aparece una idea nueva que no cabe en el backlog (un Epic nuevo, un cambio de usuario o de alcance), el orquestador hace una **mini-incepción**: solo los bloques afectados, con las mismas reglas, y un PR que actualiza el brief, el backlog y, si hace falta, la arquitectura. Una historia nueva dentro de un Epic existente no necesita mini-incepción: se añade al backlog.
+
+### 2.5 Proyecto existente
+
+Si se trabaja sobre un proyecto existente, primero se inspecciona el repositorio y el comportamiento actual, y la entrevista empieza por lo que el código no dice (para qué es, quién lo usa, qué falta). No se asume que la documentación está actualizada ni que la arquitectura deseada coincide con la implementada.
 
 ## 3. Contenido mínimo de arquitectura
 
@@ -317,7 +361,7 @@ Heurísticas específicas para tareas ejecutadas por agentes (el perfil las ajus
 
 La planificación tiene dos niveles, y el detalle llega tarde a propósito:
 
-1. **Al inicio del proyecto** (ligero): visión del producto, stack, y un **backlog completo pero superficial**: todas las historias que se conocen para llegar a la app completa, cada una con su título en formato, una línea de valor, `Requiere:` y una estimación aproximada. Nada de criterios detallados, diseño ni tareas.
+1. **Al inicio del proyecto** (ligero, en la incepción, 01 §2): visión del producto, stack, y un **backlog completo pero superficial**: todas las historias que se conocen para llegar a la app completa, cada una con su título en formato, una línea de valor, `Requiere:`, una estimación aproximada y el release al que apunta. Nada de criterios detallados, diseño ni tareas.
 2. **Cuando le toca a cada historia** (detallado): criterios, decisiones, fuera de alcance, plan técnico y tareas. Solo entonces, porque es cuando se sabe lo que las historias anteriores enseñaron.
 
 El backlog inicial va a cambiar: reordenar, dividir, fusionar o descartar historias es parte del proceso, no un fallo de la planificación. Solo las historias próximas necesitan cumplir completamente la DoR.
@@ -420,11 +464,23 @@ El formato MUST ser una tabla con estas columnas, en cualquier orden:
 | `Severidad` | Solo defectos (§9.1); el resto, `—` |
 | `Estado` | 00 §6 |
 
+Dos columnas son opcionales y SHOULD usarse desde la incepción: `Epic`, la acción del usuario a la que pertenece la historia (§2), y `Release` (por ejemplo, `REL-001`), el release al que apunta (§12). Con ellas, el backlog es también el mapa de historias: Epics en una dimensión, releases en la otra.
+
 Para el responsable humano, una tabla en un archivo no es la mejor forma de ver dónde va el proyecto. Las **vistas** (un tablero) se generan desde el archivo, en una sola dirección:
 
 - la implementación de referencia genera un tablero HTML autocontenido, sin ningún servicio;
 - adaptadores opcionales publican el mismo backlog en GitHub Projects, Trello, GitLab u otro tablero. Cambiar de herramienta es cambiar de adaptador, no de metodología;
 - lo que se mueve en una vista no vuelve solo al archivo: se le pide al orquestador y entra por PR.
+
+## 12. Releases como horizonte de planificación
+
+AES planifica por **releases**, no por sprints. Un release es un conjunto de historias que, juntas, dan un resultado que el usuario puede usar, y se libera cuando está completo y la compuerta de estabilización lo permite (§9.2, 07 §8). No hay una duración fija: con agentes, el ritmo lo marcan la aprobación humana y la CI, no el calendario.
+
+- **La incepción define los releases** (01 §2): el primero es lo mínimo que ya sirve; los siguientes, lo que se sabe que viene después. Cada uno tiene un objetivo de una frase y una lista de historias.
+- **Solo el release en curso está comprometido.** Los siguientes son una previsión: se reordenan con lo que enseñe el primero.
+- **Mover una historia de release** es un cambio del backlog y entra por PR. Si el release en curso crece, lo normal es mover historias al siguiente, no esperar.
+- Los puntos aceptados por release (§5) sirven para prever los siguientes. No son una meta ni se comparan entre proyectos.
+
 
 ---
 
@@ -1097,6 +1153,8 @@ Reglas para toda skill:
 
 - **Versión fija y revisada:** se copia al repositorio en una versión concreta, dentro de una ruta protegida, y la revisa el responsable humano. Nada de plugins o skills que se actualizan solos: una actualización silenciosa cambia las instrucciones de los agentes sin aprobación.
 - **Registrada en el perfil:** origen, versión o commit, licencia, quién la revisó y qué roles la usan.
+- **Sin consultas de red propias:** si una skill consulta un servidor para avisar de actualizaciones o descargar algo, ese paso se desactiva en el proyecto (variable de entorno o instrucción en el perfil). Una actualización es un cambio de versión, y entra por PR como cualquier otro.
+- **Se instala con AES:** el instalador de AES copia el núcleo y las skills de terceros registradas, en su versión fija, para que ninguna se quede atrás al instalar o actualizar AES.
 - **Hooks y scripts incluidos** se revisan como código propio, y respetan las demás reglas (por ejemplo, no dejar procesos vivos entre roles, 06 §10).
 - **Su salida no es evidencia** salvo que ejecute un comando y muestre la salida real (00 §7).
 - **Pocas por rol:** cada skill disponible ocupa contexto; un rol carga las que su trabajo necesita.

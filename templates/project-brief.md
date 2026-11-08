@@ -15,11 +15,18 @@
 ## Fuera de alcance
 [Qué no se busca resolver ahora.]
 
+## Releases previstos
+| Release | Objetivo (lo que el usuario ya puede hacer) | Epics que toca |
+|---|---|---|
+| REL-001 | | |
+
+El detalle (qué historias entran) está en `docs/backlog.md`.
+
 ## Restricciones
 [Normativas, técnicas, presupuesto, plazo, privacidad, integración, operación.]
 
-## Supuestos e incertidumbres
-| Elemento | Tipo (supuesto/incertidumbre) | Impacto | Cómo resolver |
+## Supuestos e incertidumbres («por definir»)
+| Elemento | Tipo (supuesto/incertidumbre) | Impacto | Cómo y cuándo se resuelve (pregunta, Spike, historia) |
 |---|---|---|---|
 
 ## Riesgos iniciales
@@ -28,4 +35,5 @@
 
 ## Aprobaciones
 - Responsable del producto:
+- PR de incepción (o de la última mini-incepción):
 - Fecha/versión aprobada:

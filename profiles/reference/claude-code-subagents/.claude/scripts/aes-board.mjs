@@ -9,7 +9,8 @@
 // Uso: node .claude/scripts/aes-board.mjs [docs/backlog.md] [--json] [--out <archivo>]
 //
 // La tabla del backlog se reconoce por sus encabezados (en cualquier orden): ID, Tipo, Título,
-// Requiere, Puntos, Prioridad, Severidad, Estado. Solo ID, Título y Estado son imprescindibles.
+// Requiere, Puntos, Prioridad, Severidad, Estado y, opcionales, Epic y Release (02 §12). Solo ID,
+// Título y Estado son imprescindibles. El tablero filtra por release y muestra el avance de cada uno.
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
@@ -23,6 +24,7 @@ const COLS = {
   id: ['id'], tipo: ['tipo', 'type'], titulo: ['título', 'titulo', 'title'],
   requiere: ['requiere', 'requires'], puntos: ['puntos', 'points', 'pts'],
   prioridad: ['prioridad', 'priority'], severidad: ['severidad', 'severity'], estado: ['estado', 'status'],
+  epic: ['epic', 'épica', 'epica'], release: ['release'],
 };
 const STATES = ['Draft', 'Ready', 'In Progress', 'In Review', 'Blocked', 'Ready for Acceptance', 'Accepted', 'Released', 'Deferred', 'Rejected'];
 const DONE = new Set(['accepted', 'released']);
@@ -45,6 +47,7 @@ function parse(md) {
       items.push({
         id, tipo: clean(get('tipo')), titulo: get('titulo'), puntos: clean(get('puntos')),
         prioridad: clean(get('prioridad')), severidad: clean(get('severidad')), estado: get('estado') || 'Draft',
+        epic: clean(get('epic')), release: clean(get('release')),
         requiere: clean(get('requiere')).split(/[,\s]+/).filter(Boolean),
       });
     }
@@ -70,10 +73,10 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&
 const known = new Set(STATES.map((s) => s.toLowerCase()));
 const columns = [...STATES, ...new Set(items.map((i) => i.estado).filter((e) => !known.has(e.toLowerCase())))];
 const card = (it) => `
-      <article class="card${it.pendientes.length && !DONE.has(it.estado.toLowerCase()) ? ' waiting' : ''}">
+      <article data-rel="${esc(it.release)}" class="card${it.pendientes.length && !DONE.has(it.estado.toLowerCase()) ? ' waiting' : ''}">
         <header><span class="id">${esc(it.id)}</span>${it.tipo ? `<span class="tag">${esc(it.tipo)}</span>` : ''}${it.severidad ? `<span class="sev sev-${esc(it.severidad.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''))}">${esc(it.severidad)}</span>` : ''}</header>
         <p>${esc(it.titulo)}</p>
-        <footer>${it.puntos ? `<span>${esc(it.puntos)} pts</span>` : ''}${it.prioridad ? `<span>${esc(it.prioridad)}</span>` : ''}${it.requiere.length ? `<span title="Requiere">↳ ${it.requiere.map((r) => (it.pendientes.includes(r) ? `<b>${esc(r)}</b>` : esc(r))).join(', ')}</span>` : ''}</footer>
+        <footer>${it.puntos ? `<span>${esc(it.puntos)} pts</span>` : ''}${it.prioridad ? `<span>${esc(it.prioridad)}</span>` : ''}${it.release ? `<span>${esc(it.release)}</span>` : ''}${it.epic ? `<span title="Epic">${esc(it.epic)}</span>` : ''}${it.requiere.length ? `<span title="Requiere">↳ ${it.requiere.map((r) => (it.pendientes.includes(r) ? `<b>${esc(r)}</b>` : esc(r))).join(', ')}</span>` : ''}</footer>
       </article>`;
 const cols = columns.map((st) => {
   const list = items.filter((i) => i.estado.toLowerCase() === st.toLowerCase());
@@ -83,6 +86,12 @@ const cols = columns.map((st) => {
     </section>`;
 }).join('');
 const total = (f) => items.filter(f).reduce((n, i) => n + (Number(i.puntos) || 0), 0);
+const releases = [...new Set(items.map((i) => i.release).filter(Boolean))].sort();
+const relSummary = releases.map((r) => {
+  const of = (i) => i.release === r;
+  return `<span>${esc(r)}: ${total((i) => of(i) && DONE.has(i.estado.toLowerCase()))}/${total(of)} pts</span>`;
+}).join('');
+const relFilter = releases.length ? `<label>Release <select id="rel"><option value="">Todos</option>${releases.map((r) => `<option>${esc(r)}</option>`).join('')}</select></label>` : '';
 const html = `<!DOCTYPE html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Backlog</title>
@@ -105,10 +114,16 @@ const html = `<!DOCTYPE html>
 </style></head><body>
 <header class="top"><h1>Backlog</h1>
   <span>${items.length} elementos · ${total(() => true)} pts · ${total((i) => DONE.has(i.estado.toLowerCase()))} pts terminados</span>
+  ${relSummary}${relFilter}
   <span>Generado desde ${esc(src)} el ${esc(new Date().toLocaleString('es'))}. Solo lectura: los cambios se hacen en el archivo, por PR.</span>
 </header>
 <main>${cols}
-</main></body></html>
+</main>${releases.length ? `
+<script>
+  document.getElementById('rel').addEventListener('change', (e) => {
+    for (const c of document.querySelectorAll('.card')) c.hidden = !!e.target.value && c.dataset.rel !== e.target.value;
+  });
+</script>` : ''}</body></html>
 `;
 const target = out ?? '.aes/board.html';
 mkdirSync(dirname(resolve(target)), { recursive: true });

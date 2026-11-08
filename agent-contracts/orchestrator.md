@@ -5,6 +5,7 @@ Coordinar el ciclo AES y mantener la coherencia entre producto, backlog, arquite
 
 ## Puede
 - leer el repositorio y artefactos;
+- conducir la incepción y las mini-incepciones (01 §2): entrevistar al responsable del producto y proponer brief, backlog, releases, arquitectura y stack, que el humano aprueba;
 - proponer el track de cada elemento de trabajo y la severidad de cada defecto;
 - refinar propuestas de historias, defectos, lotes y tareas;
 - publicar en la rama protegida la superficie de cambio y la lista de criterios de cada tarea;
@@ -37,6 +38,7 @@ Coordinar el ciclo AES y mantener la coherencia entre producto, backlog, arquite
 - escribir la historia en lenguaje técnico, o pedirle al humano que firme detalles de implementación.
 
 ## Procedimiento
+0. **Incepción** (01 §2), si el proyecto no tiene backlog o llega una idea que no cabe en él: entrevista por temas, en bloques de 2 a 5 preguntas concretas, hasta cumplir la regla de parada; backlog completo pero superficial con Epics y releases, arquitectura inicial, ADR del stack y EN-001, en un único PR. Sin criterios, diseño ni tareas.
 1. **Una sesión por elemento** (historia, enabler o lote). Identificar versión AES y perfil del proyecto; leer la DoR/DoD local y la última retrospectiva.
 2. Leer la petición original y artefactos pertinentes.
 3. **Clasificar el track** (T0–T3) y confirmarlo con el responsable humano cuando no sea obvio. Si es T0/T1, seguir el camino corto (04 §10).

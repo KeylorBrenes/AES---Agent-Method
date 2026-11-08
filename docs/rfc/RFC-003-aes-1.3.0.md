@@ -82,6 +82,29 @@
 | Tablero | `backlog.md` como única fuente (sin atarse a GitHub); vistas generadas en una sola dirección: tablero HTML propio y adaptadores opcionales |
 | Atajos | Prohibido el código provisional («todo en `App.tsx` y después refactorizamos»): cada pieza en su archivo desde el primer commit. Evidencia: el formulario de US-001 del sandbox terminó en `App.tsx` |
 
+## 6. Incepción, releases y AES instalado como paquete — 01, 02, 06
+
+**Problema.** AES empezaba en la primera historia: suponía que ya existían brief, backlog y arquitectura. En el sandbox los escribió el humano a mano, y el backlog salió por capas antes de 1.3.0. Faltaba el paso en el que el cliente explica la idea y alguien hace las preguntas correctas. Además, instalar AES era copiar a mano carpetas de tres sitios (referencia, `skills/`, DoR/DoD), con el riesgo de olvidar una skill o mezclar versiones.
+
+**Decisiones del responsable humano (2026-11-08):**
+
+| Tema | Decisión |
+|---|---|
+| Incepción | El cliente conversa con el orquestador en lenguaje natural; el orquestador pregunta hasta que la idea es clara y produce historias, backlog superficial, arquitectura, stack y esqueleto. El detalle técnico, por historia |
+| Preguntas | En bloques, siempre que no sean bloques grandes ni preguntas generales: el orquestador formula preguntas específicas, que dejen claro el punto |
+| Horizonte | Releases, no sprints |
+| Diagramas | archify como herramienta para la arquitectura de la incepción (y otros diagramas) |
+| Paquete | Las skills propias y las de terceros se instalan con AES, para no olvidar ninguna |
+| Prueba | Un proyecto nuevo y sencillo (una app de tareas) para probar incepción → EN-001 → primera historia |
+
+**Decisiones del orquestador, a revisar en el sandbox:**
+
+- archify se integra como skill de **herramienta**, no de flujo, y solo para diagramas. El tablero del backlog sigue siendo `aes-board.mjs`: archify no tiene un tipo de diagrama para un tablero kanban. Se versiona el JSON del diagrama; el HTML (unos 700 KB) se genera en `.aes/`. Su aviso de actualizaciones consulta un servidor, así que se desactiva (`ARCHIFY_UPDATE_CHECK_DISABLED=1`), y se añade a 06 §6.2 como regla general.
+- El paquete es un **script de instalación**, no un plugin de Claude Code: copia todo al repositorio en una versión fija, que es lo que pide 06 §6.2, y funciona igual en Windows (Git Bash) y Linux. Un plugin se actualiza desde su marketplace y quedaría fuera del repositorio y del PR.
+- Las skills de terceros **no viajan en el repositorio de AES** (licencias y tamaño): el instalador las copia desde una carpeta local en la versión que tenga el usuario y anota versión y huella.
+
+**Pendiente de probar en el sandbox nuevo:** la entrevista real (¿bloques del tamaño correcto?, ¿la regla de parada se cumple sin preguntar de más?), el PR de incepción con la CI todavía sin stack, el instalador en Windows y el diagrama de archify generado por el orquestador.
+
 ## Migración de un proyecto en 1.2.0
 
 1. `git push origin main:dev` y hacer `dev` la rama por defecto.
@@ -91,3 +114,4 @@
 5. Crear `docs/design-catalog.md` con los patrones que el proyecto ya usa y lo que ya se decidió no usar (por ejemplo, «sin repositorio sobre EF Core»).
 6. Copiar las skills de `skills/` a `.claude/skills/` y registrarlas en el perfil; desinstalar cualquier plugin de flujo de terceros.
 7. Pasar `docs/backlog.md` al formato de `templates/backlog.md` (columnas `Tipo`, `Requiere`, `Puntos`) y reescribir los títulos de las historias abiertas en el formato «Como… quiero… para…».
+8. Instalar con `./scripts/install-aes.sh <proyecto> --upgrade` en lugar de copiar a mano (los pasos 3 y 6 quedan cubiertos), revisar los `.aes-new` y añadir a `docs/backlog.md` las columnas `Epic` y `Release` con los releases previstos.

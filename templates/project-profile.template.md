@@ -39,7 +39,8 @@ El modelo real de cada ejecución se registra en las métricas (09 §6); si difi
 - Reglas de compatibilidad:
 
 ## Backlog
-- Herramienta / ubicación:
+- Herramienta / ubicación: `docs/backlog.md` (02 §11)
+- Releases: definidos en la incepción (01 §2, 02 §12)
 - Prefijos de ID: historias `US-`, enablers `EN-`, defectos `BUG-`, chores `CH-`, lotes `ST-`, spikes `SP-`
 - Escala de prioridad:
 - Escala de Story Points: Fibonacci 1, 2, 3, 5, 8, 13
@@ -50,6 +51,8 @@ El modelo real de cada ejecución se registra en las métricas (09 §6); si difi
 | Skill / herramienta | Tipo (técnica / herramienta) | Origen y versión | Licencia | Revisada por | Roles |
 |---|---|---|---|---|---|
 | aes-debugging | Técnica | AES vX.Y.Z | | | Programador, mecánico |
+| aes-inception | Técnica | AES vX.Y.Z | | | Orquestador |
+| archify (opcional) | Herramienta | vX.Y.Z (`docs/aes/skills.lock`) | MIT | | Orquestador |
 
 - Análisis estático de seguridad en la CI (05 §7): herramienta, reglas y qué severidad bloquea:
 

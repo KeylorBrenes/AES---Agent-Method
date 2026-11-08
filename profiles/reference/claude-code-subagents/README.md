@@ -23,7 +23,7 @@ Es un punto de partida, no un perfil prescriptivo. Las partes del stack (.NET + 
 | `.claude/scripts/aes-note.sh` | — | Notas del orquestador con la hora real; `clear` las vacía tras el cierre | Probado (`clear`: simulación) |
 | `.claude/scripts/gh-app-token.sh`, `git-credential-aes-app.sh`, `agent-gh.sh` | L3 | Identidad de los agentes: GitHub App sin permiso de workflows | Probado |
 | `.claude/skills/aes-cycle/SKILL.md` | — | Procedimiento del orquestador, con plantillas de delegación | Probado (caminos T1 y lote: simulación) |
-| `.claude/skills/aes-{debugging,security-review,design-note}/` | — | Skills del núcleo de AES, copiadas de `skills/` en la raíz del repo de AES (no se editan aquí) | Pendiente de uso real |
+| `.claude/skills/aes-{inception,debugging,security-review,design-note}/` | — | Skills del núcleo de AES, copiadas de `skills/` en la raíz del repo de AES (no se editan aquí) | Pendiente de uso real |
 | `.claude/aes.env` | — | Puertos y comandos de servidores del proyecto | — |
 | `ci/aes-guard.sh` | L3 | Guardián: rutas protegidas, superficie, dependencias, pruebas borradas, marcadores | Probado |
 | `ci/red-check.mjs` | L3 | RED confirmado (todas ejecutadas y fallando) y trazabilidad criterio → prueba | RED probado; trazabilidad: simulación |
@@ -39,32 +39,33 @@ Es un punto de partida, no un perfil prescriptivo. Las partes del stack (.NET + 
 
 ## Puesta en marcha
 
-1. **Copia** estos archivos a la raíz de tu proyecto, respetando las rutas. Sustituye `@tu-usuario` en `CODEOWNERS`, los comandos de `.claude/aes.env`, `ci/validate.sh` y la sección `STACK` del workflow.
-2. **Añade a `.gitignore`:** `.aes/` (notas del orquestador), `.claude/settings.local.json` (credenciales) y `.claude/worktrees/` (checkouts de los roles).
-3. **Copia la DoR/DoD** de AES (`standard/08-definition-of-ready-and-done.md`) a `docs/aes/`, para que los agentes la tengan en el repo.
-4. **Backlog:** `docs/backlog.md` con la plantilla `templates/backlog.md` de AES (columnas `ID`, `Tipo`, `Título`, `Requiere`, `Puntos`, `Prioridad`, `Severidad`, `Estado`; AES 02 §11). La severidad solo se rellena en los defectos; el resto lleva `—`. La compuerta lee esa tabla desde `dev`, y `aes-board.mjs` genera el tablero.
-5. **Regresión:** crea `specs/active-stories.txt` (un ID por línea; empieza vacío). El orquestador añade cada elemento en su cierre.
-6. **Identidad de los agentes: GitHub App** sin permiso de *Workflows*. Así ningún agente puede editar la CI para saltarse el guardián, y sus PR aparecen como `<app>[bot]`, que tú puedes aprobar.
+1. **Instala** desde la raíz del repositorio de AES, en la versión que quieres usar: `./scripts/install-aes.sh <proyecto>` (añade `--vendor <carpeta>` por cada skill de terceros, por ejemplo archify). Copia estos archivos, las skills del núcleo, la DoR/DoD, `AES-CORE.md` y las plantillas en `docs/aes/`, crea `specs/active-stories.txt` y añade a `.gitignore` `.aes/`, `.claude/settings.local.json` y `.claude/worktrees/`.
+   - Los **archivos de AES** (hooks, scripts, skills del núcleo, scripts de la CI, `docs/aes/`) no se editan en el proyecto: `--upgrade` los sobrescribe y `--check` comprueba que coinciden con la versión.
+   - Los **archivos semilla** (subagentes, `settings.json`, `aes.env`, el workflow, `CODEOWNERS`, `ci/validate.sh`, `CLAUDE.md`) son tuyos: sustituye `@tu-usuario` en `CODEOWNERS`, los comandos de `.claude/aes.env`, `ci/validate.sh` y la sección `STACK` del workflow (si todavía no hay stack, lo hace EN-001). Al actualizar, si AES cambió una semilla, la nueva queda al lado como `<archivo>.aes-new` para que la compares.
+2. **Backlog:** lo crea la incepción (paso 11) en `docs/backlog.md`, con la plantilla de AES (02 §11). La compuerta lee esa tabla desde `dev`, y `aes-board.mjs` genera el tablero.
+3. **Commit inicial** en `main` con lo instalado (tú, antes de proteger las ramas).
+4. **Identidad de los agentes: GitHub App** sin permiso de *Workflows*. Así ningún agente puede editar la CI para saltarse el guardián, y sus PR aparecen como `<app>[bot]`, que tú puedes aprobar.
    - Créala en *Settings → Developer settings → GitHub Apps* con permisos de *Contents* y *Pull requests* (lectura y escritura) y nada más. Instálala solo en el repositorio.
    - La llave se genera en ***Credentials → Key pairs → New key***. Guárdala fuera del repo.
    - Copia `.claude/settings.local.example.json` a `.claude/settings.local.json` y rellena el App ID, el Installation ID, la ruta de la llave (con `/`) y, para que los commits lleven la autoría del bot, el *slug* y el ID del usuario bot (`gh api "/users/<slug>%5Bbot%5D" --jq .id`).
    - Prueba: `bash .claude/scripts/gh-app-token.sh | cut -c1-4` debe imprimir `ghs_`.
    - No uses una cuenta bot ni un token personal *fine-grained*: las cuentas nuevas pueden quedar suspendidas por el antiabuso de GitHub, y los tokens *fine-grained* no acceden a repos de otra cuenta personal.
-7. **Rama `dev`** (AES 07 §7): créala desde `main` (`git push origin main:dev`) y hazla la **rama por defecto** del repositorio (*Settings → General → Default branch*). Así los PR apuntan a `dev` sin pensarlo.
-8. **Protección de `main` y `dev` con dos rulesets**, cada uno aplicado a las dos ramas. GitHub exige cumplir todos los que aplican, y el bypass de uno no salta el otro:
+5. **Rama `dev`** (AES 07 §7): créala desde `main` (`git push origin main:dev`) y hazla la **rama por defecto** del repositorio (*Settings → General → Default branch*). Así los PR apuntan a `dev` sin pensarlo.
+6. **Protección de `main` y `dev` con dos rulesets**, cada uno aplicado a las dos ramas. GitHub exige cumplir todos los que aplican, y el bypass de uno no salta el otro:
    - **`ramas-ci`, sin bypass para nadie:** *Restrict deletions*, *Block force pushes*, *Require status checks to pass* (`aes`) con *Require branches to be up to date*.
    - **`ramas-aprobacion`:** *Require a pull request before merging* con 1 aprobación, *Require review from Code Owners* y *Dismiss stale approvals*. Bypass: *Repository admin* en modo **For pull requests only**, para que puedas integrar tus propios PR.
    - **Métodos de integración:** en `main`, solo *merge commit* (releases y hotfixes). En `dev`, *squash* para las ramas de trabajo y *merge commit* para los back-merges. Si tu plan de GitHub permite limitar los métodos por ruleset, hazlo para `main`. En `dev` tienes que elegir bien en cada PR: un back-merge integrado con *squash* rompe la comprobación «main contenido en dev» del siguiente release.
 
    Un único ruleset con bypass permite integrar con la CI en rojo: el bypass salta todas sus reglas. Pasó en el sandbox (FL-003).
-9. **Etiquetas:** crea `aes:deps-approved`, `aes:markers-approved` y `aes:verified`. Solo tú las pones.
-10. **Variables del repositorio** (*Settings → Secrets and variables → Actions → Variables*):
+7. **Etiquetas:** crea `aes:deps-approved`, `aes:markers-approved` y `aes:verified`. Solo tú las pones.
+8. **Variables del repositorio** (*Settings → Secrets and variables → Actions → Variables*):
    - `AES_APPROVERS`: tu login (o los logins autorizados, separados por coma). La CI acepta una etiqueta solo si la última vez la puso una de estas personas, nunca un `[bot]`. Sin esta variable, solo rechaza las que puso un bot.
    - `AES_MINOR_LIMIT` (opcional, por defecto 5): defectos Menores abiertos permitidos.
    - `AES_REQUIRE_VERIFIED` (opcional, por defecto `1`): exige `aes:verified` en las tareas.
    - `AES_SAST` (opcional, `0` lo desactiva) y `AES_SAST_CONFIG` (opcional, por defecto `p/owasp-top-ten`): el paso de SAST.
-11. **Activar el workflow:** la app no puede tocar `.github/workflows/`, así que lo subes tú en un PR propio.
-12. Instala `jq` donde corran los hooks.
+9. **El workflow:** la app no puede tocar `.github/workflows/`, así que cualquier cambio en él lo subes tú. Si instalaste con el script, ya entró en el commit inicial.
+10. Instala `jq` donde corran los hooks.
+11. **Incepción:** abre una sesión del orquestador (en el modelo más capaz) y pídele que empiece el proyecto. Usará la skill `aes-inception`: entrevista, backlog con releases, arquitectura, ADR del stack y EN-001, en un PR a `dev` que apruebas tú. Después, EN-001 con `aes-cycle`.
 
 ## Convención de ramas
 

@@ -1,4 +1,7 @@
 {
+  "env": {
+    "ARCHIFY_UPDATE_CHECK_DISABLED": "1"
+  },
   "permissions": {
     "deny": [
       "Bash(git push --force:*)",

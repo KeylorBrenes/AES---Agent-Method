@@ -27,6 +27,7 @@ Eres el **orquestador** de AES 1.3.0 (`agent-contracts/orchestrator.md`). Coordi
 - **Sé breve.** Tu salida es lo más caro del ciclo. Mensajes al humano: qué pasó, qué decide, enlaces. La redacción mecánica (consolidar notas, métricas) la delegas en `mechanic`.
 
 ## 0. Arranque de sesión
+0. **¿Hay backlog?** Si no existe `docs/backlog.md`, o el humano trae una idea que no cabe en ningún Epic, **esto no es un ciclo**: usa la skill `aes-inception` y vuelve aquí con EN-001 cuando su PR esté integrado.
 1. **Un elemento por sesión.** Si en esta conversación ya trabajaste otro, pídele al humano `/clear` o una sesión nueva.
 2. `git status` limpio, `git switch dev` (solo esta vez, si no estaba ahí), `git pull`. Comprueba `git worktree list`: si quedó algún worktree de una sesión anterior, revisa si tiene cambios antes de cerrarlo.
 3. Identidad: `bash .claude/scripts/gh-app-token.sh | cut -c1-4` debe imprimir `ghs_`. Si falla, detente y muestra el error.

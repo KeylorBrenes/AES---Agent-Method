@@ -109,12 +109,12 @@ Estas palabras describen la fuerza de la regla, no una herramienta particular.
 
 ## Inicio rápido
 
-1. Copiar AES al repositorio o referenciar una versión fija (tag `vX.Y.Z`).
-2. Completar `project-profile.md` a partir de `templates/project-profile.template.md`.
-3. Implementar las capas de control. Si usas Claude Code + GitHub, parte de `profiles/reference/claude-code-subagents/`; si el programador es OpenCode, toma de `claude-code-opencode/` la parte de OpenCode. Copia la DoR/DoD a tu repositorio.
-4. Documentar visión y contexto con `templates/project-brief.md`.
-5. Describir la arquitectura conocida y registrar decisiones importantes con ADR.
-6. Crear un backlog inicial de Epics. Refinar solo las Historias de Usuario próximas.
+1. Instalar AES en el proyecto desde una versión fija (tag `vX.Y.Z`): `./scripts/install-aes.sh <proyecto>` copia la implementación de referencia de Claude Code + GitHub (`profiles/reference/claude-code-subagents/`), las skills del núcleo, la DoR/DoD y las plantillas, y anota la versión en `docs/aes/VERSION`. Con `--vendor <carpeta>` copia además una skill de terceros en su versión (por ejemplo, archify); con `--upgrade` actualiza, y con `--check` comprueba. Si el programador es OpenCode, toma de `claude-code-opencode/` la parte de OpenCode.
+2. Completar la puesta en marcha que el instalador lista al terminar (GitHub App, ramas, rulesets, variables).
+3. **Incepción** (01 §2): el orquestador entrevista al responsable del producto por temas, con preguntas concretas, y produce el brief, el backlog completo pero superficial con Epics y releases, la arquitectura inicial, el ADR del stack y EN-001, en un PR que el humano aprueba (skill `aes-inception`).
+4. Implementar EN-001, el esqueleto que camina.
+5. Ir release a release. Refinar solo las Historias de Usuario próximas.
+6. Mantener `project-profile.md` al día con lo que se decide en cada historia.
 7. Para cada historia: aprobar criterios, definir el contrato de interfaz, aprobar las pruebas de aceptación con RED confirmado.
 8. Dividir en tareas pequeñas con superficie de cambio y ejecutar el ciclo.
 9. No cerrar la historia hasta cumplir la Definition of Done, registrar la aceptación y ejecutar la retrospectiva compuesta.
