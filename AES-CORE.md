@@ -30,6 +30,7 @@ AES define un proceso reproducible para producir software correcto, mantenible y
 18. **Cada decisión tiene firma.** Toda ambigüedad que afecta el producto se resuelve con una decisión registrada: quién, cuándo, qué opciones había y qué cambió (03 §8). Lo que nadie decidió explícitamente no es una decisión, aunque una prueba o un agente ya lo haya fijado.
 19. **Lo estable está separado de lo que se construye.** La rama principal solo contiene lo liberado; todo lo demás se integra antes en una rama de desarrollo (07 §7). Un arreglo de algo liberado sale de lo liberado, no de lo que está en construcción.
 20. **Principios fijos, patrones con razón.** Los principios de diseño del nivel 1 se aplican siempre, en todo código; los patrones, solo con una razón presente, y decidir no usarlos vale tanto como decidir usarlos (10). Ninguno se pide con una instrucción genérica: se pide con reglas, síntomas y una nota de diseño concreta.
+21. **Cortes verticales, historias atómicas, detalle a tiempo.** Cada historia es una sola capacidad del usuario, construida de punta a punta (datos, servidor, interfaz) y comprobable el mismo día; nunca una capa entera antes que la siguiente. El backlog se planifica completo pero superficial al inicio, y el detalle técnico de cada historia se decide cuando le toca (02 §3, §7).
 
 ## 3. Adaptabilidad
 
@@ -133,9 +134,11 @@ Antes de implementar funcionalidades, el orquestador DEBE ayudar a crear o local
 1. **Project Brief:** problema, usuarios, objetivos, alcance inicial, restricciones y criterios generales de éxito.
 2. **Project Profile:** stack, entorno, comandos, convenciones, controles de calidad, agentes y permisos.
 3. **Architecture Overview:** contexto, componentes principales, límites, datos e integraciones conocidas.
-4. **Backlog inicial:** Epics y riesgos/incertidumbres conocidos; no es necesario detallar todas las historias futuras.
+4. **Backlog inicial, completo pero superficial** (02 §7): todas las historias que se conocen para llegar al producto, cada una con su título en formato, una línea de valor, `Requiere:` y una estimación aproximada; Epics y riesgos conocidos. Sin criterios detallados, diseño ni tareas: eso llega cuando le toca a cada historia.
 5. **Quality Strategy:** niveles de prueba, CI y controles aplicables.
 6. **Copia local de las reglas que los agentes consultan:** como mínimo, las checklists de DoR y DoD (08) dentro del repositorio (por ejemplo, `docs/aes/`), con la versión de AES de la que salen. Un agente que solo tiene la referencia «AES 08» revisa la DoR de memoria.
+
+El primer elemento que se implementa es el **esqueleto que camina** (02 §3.2): un enabler que deja la aplicación arrancando de punta a punta, con la CI en verde, sobre el que crecen las historias. La arquitectura inicial describe lo suficiente para ese esqueleto y para las primeras historias; el resto se decide cuando haga falta.
 
 Si se trabaja sobre un proyecto existente, primero se inspecciona el repositorio y el comportamiento actual. No se asume que la documentación está actualizada ni que la arquitectura deseada coincide con la implementada.
 
@@ -222,11 +225,42 @@ Los defectos, chores y hallazgos que se dejan para después son **elementos de p
 
 ## 3. Historias de Usuario
 
-Una Historia de Usuario representa una necesidad/comportamiento con valor identificable para un usuario o actor. Formato recomendado:
+Una Historia de Usuario representa una necesidad/comportamiento con valor identificable para un usuario o actor. Su **título** MUST tener este formato:
 
 > Como [tipo de usuario], quiero [capacidad], para [beneficio].
 
-El formato no es obligatorio para trabajo puramente técnico; en ese caso se declara el resultado técnico y su justificación. Cada historia debe incluir criterios de aceptación verificables y límites de alcance.
+> Como usuario, quiero registrar un pago pendiente, para no olvidarme de él.
+
+Otros elementos tienen su propio formato, porque no tienen un usuario que los pida:
+
+| Tipo | Formato del título | Ejemplo |
+|---|---|---|
+| Enabler | Para [historia u objetivo], necesitamos [capacidad técnica] | Para que las historias de pagos se puedan probar de punta a punta, necesitamos la app arrancando con base de datos, API y web |
+| Defecto | [Comportamiento incorrecto, en una frase] | Un monto «abc» dice «obligatorio» en lugar de «inválido» |
+| Chore | [Cambio de mantenimiento] para [motivo] | Fijar las fuentes de paquetes para que la restauración no dependa de la máquina |
+
+Cada historia incluye criterios de aceptación verificables y límites de alcance, y declara con `Requiere:` los elementos que deben estar terminados antes (por ejemplo, `Requiere: US-001`).
+
+### 3.1 Historias atómicas
+
+Una historia MUST ser **atómica**: una sola capacidad del usuario que se puede demostrar por sí sola, y que no contiene otra capacidad que también se podría demostrar sola. No se mide por verbos: «crear tareas y verlas en mi lista» es una capacidad, porque crear sin ver no se puede comprobar; «registrarme y crear tareas» son dos.
+
+- Un «y» que une dos objetivos del usuario en el «quiero» es la señal de que hay que dividirla.
+- Las épicas y las funcionalidades grandes existen, pero solo como agrupación: se implementan como historias atómicas, nunca de una sola vez.
+- Motivo: una historia atómica se puede verificar, auditar, medir y depurar. Una historia que implica muchas funcionalidades a la vez es más difícil de depurar, hace que el agente pierda el control del contexto y alucine, y retrasa el momento de comprobar que lo construido sirve.
+
+Una historia puede ser atómica para el usuario y aun así grande por dentro. Dos señales objetivas obligan a dividirla:
+
+1. **Al estimar:** 8 puntos o más (§5).
+2. **Al diseñar:** si el orquestador no consigue dividirla en **3 tareas como máximo**, cada una dentro del presupuesto de diff de producción y dejando criterios en verde (04 §3). No se hacen tareas más grandes: se divide la historia (§10).
+
+### 3.2 Cortes verticales
+
+Cada historia es un **corte vertical completo**: la parte mínima de cada capa (datos, servidor, interfaz) para que la capacidad funcione de verdad y se pueda usar. No se construye una capa entera antes que la siguiente: «toda la base de datos, después todo el servidor, después toda la interfaz» tarda semanas en mostrar que algo no servía, y un corte vertical lo muestra el mismo día.
+
+- El esquema de datos crece historia a historia: cada historia trae la migración que necesita, y nada más.
+- El primer elemento del proyecto es un **esqueleto que camina** (*walking skeleton*): un enabler que deja la aplicación arrancando de punta a punta con un caso trivial (por ejemplo, una página que muestra el estado de la API, que a su vez lee la base de datos), con la CI ya en verde. Las historias siguientes engrosan ese esqueleto.
+- Dentro de una historia vale lo mismo: primero el camino más delgado de punta a punta, después las reglas y los casos límite.
 
 ## 4. Priorización
 
@@ -248,10 +282,10 @@ Guía orientativa:
 - **2:** pequeño, con pocas dependencias y comportamiento claro.
 - **3:** complejidad moderada, alcance conocido.
 - **5:** varias partes o escenarios, pero entendidos.
-- **8:** trabajo amplio o con incertidumbre/dependencias importantes; revisar si conviene dividir.
-- **13:** demasiado grande o incierto para planificar con confianza; normalmente debe dividirse o investigarse antes.
+- **8:** demasiado grande para una historia atómica: MUST dividirse antes de refinarse (§3.1, §10).
+- **13:** demasiado grande o incierto para planificar con confianza: se divide o se investiga con un Spike.
 
-Si una historia supera 13, no se asigna un número mayor: se divide en historias con valor verificable o se crea un Spike cuando la incertidumbre impide dividirla de forma responsable.
+Una historia de 8 o más no pasa a refinamiento: se divide en historias con valor verificable, o se crea un Spike cuando la incertidumbre impide dividirla de forma responsable.
 
 La estimación debe basarse en el alcance aprobado y en referencias históricas del proyecto. No se debe usar para comparar personas, modelos o equipos.
 
@@ -279,9 +313,14 @@ Heurísticas específicas para tareas ejecutadas por agentes (el perfil las ajus
 - el presupuesto se estima **por separado para código de producción y para pruebas**. El desvío que exige justificación es el de producción: un único número castiga probar bien (en el sandbox de AES, el 60 % de una tarea de 474 líneas eran pruebas unitarias);
 - la tarea SHOULD tocar una única superficie de cambio coherente (04 §2).
 
-## 7. Refinamiento continuo
+## 7. Refinamiento continuo: planificación en dos niveles
 
-El backlog es continuo. Solo las historias próximas necesitan cumplir completamente DoR. El resto puede permanecer como Epic, idea o historia preliminar. El refinamiento debe ocurrir antes de comprometer una historia para implementación y cuando aparece nueva información.
+La planificación tiene dos niveles, y el detalle llega tarde a propósito:
+
+1. **Al inicio del proyecto** (ligero): visión del producto, stack, y un **backlog completo pero superficial**: todas las historias que se conocen para llegar a la app completa, cada una con su título en formato, una línea de valor, `Requiere:` y una estimación aproximada. Nada de criterios detallados, diseño ni tareas.
+2. **Cuando le toca a cada historia** (detallado): criterios, decisiones, fuera de alcance, plan técnico y tareas. Solo entonces, porque es cuando se sabe lo que las historias anteriores enseñaron.
+
+El backlog inicial va a cambiar: reordenar, dividir, fusionar o descartar historias es parte del proceso, no un fallo de la planificación. Solo las historias próximas necesitan cumplir completamente la DoR.
 
 No se debe congelar un plan detallado de meses de trabajo si las historias posteriores dependen de descubrimientos aún no realizados.
 
@@ -348,26 +387,82 @@ Los defectos que cierran la compuerta se corrigen juntos en un **lote de estabil
 - Las comprobaciones de reproducción del lote pasan a la regresión al cerrarlo, como las de una historia.
 - Un defecto que el lote no logra corregir sigue abierto y la compuerta sigue cerrada.
 
+## 10. Cómo dividir una historia
+
+Formas de dividir una historia grande, de la más habitual a la menos. Cada parte resultante sigue siendo atómica, vertical y con valor propio.
+
+| Forma | Cuándo | Ejemplo |
+|---|---|---|
+| **Camino feliz primero, reglas después** | La historia tiene validaciones, errores y casos límite | «Registrarme con email y contraseña y entrar con la sesión iniciada» primero; «ver un aviso si el email ya existe» después |
+| **Por variación de datos o de reglas** | La misma capacidad aplica a varios tipos, monedas, canales o roles | Un tipo de pago ahora, los demás después |
+| **Por pasos del flujo** | El usuario completa etapas por separado | «Agregar un pago» y «marcar un pago como hecho» |
+| **Por operación** | Crear, ver, editar y eliminar pueden demostrarse por separado | «Registrar un gasto» y «editar un gasto» |
+| **Lo no funcional después** | Rendimiento, caché, paginación, exportación | «Ver mis pagos» primero; «ver mis pagos paginados» cuando sean muchos |
+| **Spike** | Lo grande es la incertidumbre, no el trabajo | Averiguar cómo autenticar contra un proveedor antes de planificar el inicio de sesión |
+| **Enabler** | Una pieza técnica es inevitable y la necesitan varias historias | La infraestructura de autenticación, con un criterio verificable propio (un comando o un caso mínimo de punta a punta), nunca «toda la base de datos» |
+
+Una historia dividida conserva su orden con `Requiere:`. Si ninguna forma la deja en 3 tareas o menos, el problema suele ser de diseño o de incertidumbre: se pregunta al responsable humano o se abre un Spike.
+
+## 11. El backlog como archivo y sus vistas
+
+El backlog vive en **un archivo del repositorio** (por ejemplo, `docs/backlog.md`), que es la única fuente de verdad. No depende de ningún servicio, viaja con el código y pasa por PR, así que cada cambio lleva la firma del responsable humano. La CI lo lee (la compuerta de estabilización, 02 §9) y los agentes lo leen sin herramientas externas.
+
+El formato MUST ser una tabla con estas columnas, en cualquier orden:
+
+| Columna | Contenido |
+|---|---|
+| `ID` | `US-NNN`, `EN-NNN`, `BUG-NNN`, `CH-NNN`, `ST-NNN`, `SP-NNN`, `REL-NNN` |
+| `Tipo` | Historia, Enabler, Defecto, Chore, Lote, Spike, Release |
+| `Título` | En el formato de su tipo (§3) |
+| `Requiere` | IDs separados por coma, o `—` |
+| `Puntos` | Fibonacci (§5), o `—` |
+| `Prioridad` | Escala del perfil (§4) |
+| `Severidad` | Solo defectos (§9.1); el resto, `—` |
+| `Estado` | 00 §6 |
+
+Para el responsable humano, una tabla en un archivo no es la mejor forma de ver dónde va el proyecto. Las **vistas** (un tablero) se generan desde el archivo, en una sola dirección:
+
+- la implementación de referencia genera un tablero HTML autocontenido, sin ningún servicio;
+- adaptadores opcionales publican el mismo backlog en GitHub Projects, Trello, GitLab u otro tablero. Cambiar de herramienta es cambiar de adaptador, no de metodología;
+- lo que se mueve en una vista no vuelve solo al archivo: se le pide al orquestador y entra por PR.
+
 ---
 
 # 03 — Historias de Usuario y aceptación
 
-## 1. Contenido mínimo de una historia
+## 1. Dos documentos: la historia y el plan técnico
 
-Cada Historia de Usuario refinada DEBE tener:
+Cada historia refinada tiene **dos** documentos, escritos para lectores distintos:
 
-- identificador estable y título;
-- usuario/actor y necesidad, o resultado técnico justificado;
-- beneficio/objetivo;
-- contexto y reglas relevantes;
-- alcance incluido y exclusiones importantes;
-- criterios de aceptación observables y verificables;
-- prioridad, Story Points y track (02 §8);
-- dependencias y riesgos relevantes;
-- contrato de interfaz contra el que se escribirán las pruebas de aceptación, cuando la historia introduce o modifica una frontera observable (05 §2.1);
-- estrategia de pruebas/aceptación;
+| Documento | Para quién | Lenguaje | Vida |
+|---|---|---|---|
+| **La historia** (`US-NNN.md`) | El responsable humano, y cualquiera que quiera saber qué hace el producto | De cliente, no de programador: qué se logra y cómo se comprueba, sin tablas, clases, endpoints ni patrones | Permanente |
+| **El plan técnico** | Los agentes: orquestador, QA, programador, verificador | Técnico: contrato de interfaz, nota de diseño, tareas, superficies | Se elimina en el cierre, después de consolidar lo que tenga valor futuro (§1.2) |
+
+Al responsable humano le interesa qué hace la historia, qué queda fuera, cómo se sabe que funciona y que funcione; no cómo se llaman los métodos ni qué patrón se usó. Mezclar los dos lectores en un documento hace que el humano firme detalles que no le corresponden y que los agentes tomen el lenguaje de negocio como especificación técnica.
+
+### 1.1 Contenido de la historia
+
+- título en el formato de su tipo (02 §3) y `Requiere:`;
+- contexto y reglas relevantes, en términos del negocio;
+- criterios de aceptación en lenguaje de cliente (§2);
+- fuera de alcance (§4);
+- **plan**: cómo se va a construir, contado como a un cliente (qué verá el usuario primero, qué viene después, qué se deja para otra historia);
+- **sugerencias** del orquestador: qué considera el mejor camino y por qué, y qué alternativas descartó, también en lenguaje de cliente;
+- prioridad, Story Points y track (02 §8); riesgos relevantes;
 - estado y responsable de decisión;
 - registro de decisiones (§8).
+
+Un buen criterio de esta parte se lee así: «Dado que soy un visitante, cuando me registro con un email válido y una contraseña de al menos 8 caracteres, entonces mi cuenta queda creada y entro a la app con la sesión iniciada». No así: «Crear la tabla `usuarios`, un endpoint `POST /auth` y emitir un JWT».
+
+### 1.2 Contenido del plan técnico
+
+- contrato de interfaz contra el que se escriben las pruebas de aceptación, cuando la historia toca una frontera observable (05 §2.1);
+- nota de diseño de cada tarea (10 §5);
+- tareas, con su superficie de cambio y los criterios que dejan en verde (04 §2);
+- plan de pruebas de aceptación (05).
+
+En el **cierre** del elemento, antes de eliminar el plan técnico, lo que tenga valor para historias futuras pasa a donde se conserva: patrones y decisiones de no usar algo, al catálogo de diseño (10 §6); convenciones que valen para varias historias, a un ADR (01 §4). Lo demás se elimina: queda en el historial del control de versiones si alguna vez hace falta. Las pruebas de aceptación y los comandos de verificación **no** son parte del plan: son la regresión y se conservan.
 
 No se deben rellenar campos con texto vacío. Un elemento puede permanecer en `Draft` hasta que exista información suficiente.
 
@@ -381,7 +476,7 @@ Los criterios deben expresar resultados observables, no detalles internos innece
 - específicos sobre permisos, errores y límites cuando sean relevantes;
 - independientes de una implementación concreta salvo que exista una restricción técnica aprobada.
 
-Se puede usar Given/When/Then, ejemplos tabulares, casos de prueba o lenguaje natural estructurado. AES no obliga a una sintaxis BDD determinada.
+En la historia, los criterios se escriben en lenguaje natural estructurado (Dado / Cuando / Entonces) y en términos del usuario. El detalle observable que necesitan las pruebas (selectores, rutas, códigos de respuesta) va en el contrato de interfaz del plan técnico, no en el criterio.
 
 ## 3. Casos negativos y límites
 
@@ -495,6 +590,8 @@ El estudio TDAD (Alonso, Yovine y Braberman, arXiv:2603.17973; tesis de maestrí
 ## 3. Tamaño y divisibilidad
 
 Una tarea es suficientemente pequeña si un agente puede comprender su objetivo, implementarla, inspeccionar el diff y ejecutar su validación sin tener que aceptar varios resultados independientes como un bloque indivisible.
+
+Una historia tiene **3 tareas como máximo**. Si no cabe, la historia es demasiado grande y se divide (02 §3.1, §10), en lugar de hacer tareas más grandes.
 
 Las tareas se dividen **por criterios** (cortes verticales que dejan criterios en verde), no por capas técnicas. Una tarea «solo API» y otra «solo UI» no pueden quedar verdes por separado si la aceptación cruza ambas. Sin CI por criterio, toda historia termina en una sola tarea grande: en el sandbox de AES, las dos primeras historias acabaron en tareas únicas de 300 a 500 líneas.
 
@@ -632,7 +729,7 @@ Los escenarios de aceptación deben estar disponibles antes de declarar que la i
 QA no puede escribir pruebas útiles antes de que exista el código si no sabe por dónde entrar al sistema. Cuando la historia introduce o modifica una frontera observable, el orden es:
 
 1. criterios de aceptación aprobados;
-2. **contrato de interfaz** propuesto por el arquitecto/orquestador: el punto de entrada observable que usarán las pruebas. Por defecto, la frontera externa del sistema:
+2. **contrato de interfaz** propuesto por el arquitecto/orquestador, en el plan técnico de la historia (03 §1.2): el punto de entrada observable que usarán las pruebas. Por defecto, la frontera externa del sistema:
    - HTTP/API: método, ruta, payload, códigos y forma de la respuesta;
    - CLI: comando, argumentos, salida y código de salida;
    - UI: flujo y selectores estables acordados (por ejemplo, `data-testid`);
@@ -1217,7 +1314,9 @@ Los proyectos SHOULD copiar estas checklists dentro de su repositorio (01 §2), 
 Una historia puede pasar a `Ready` cuando:
 
 - [ ] **la compuerta de estabilización está abierta**: no hay defectos abiertos de severidad Crítica, Alta o Media, y los Menores no superan el límite del perfil (02 §9);
-- [ ] objetivo, actor y beneficio/resultante están claros;
+- [ ] el título tiene el formato de su tipo («Como… quiero… para…» en historias; «Para…, necesitamos…» en enablers) y declara `Requiere:` (02 §3);
+- [ ] la historia es **atómica** (una capacidad que se demuestra sola) y un **corte vertical** (02 §3.1–3.2), con menos de 8 puntos;
+- [ ] la historia está escrita en lenguaje de cliente; el detalle técnico está en el plan técnico (03 §1);
 - [ ] alcance y exclusiones relevantes están definidos;
 - [ ] criterios de aceptación son observables y verificables;
 - [ ] cada acción que escribe tiene criterio de fallo (03 §3);
@@ -1234,7 +1333,8 @@ Una historia puede pasar a `Ready` cuando:
 - [ ] las pruebas holdout existen cuando el track es T3 (o el perfil las exige);
 - [ ] «Fuera de alcance» no está vacío;
 - [ ] las tareas están escritas, con superficie de cambio y criterios que dejan en verde, sin inventar requisitos;
-- [ ] cada tarea tiene su nota de diseño (10 §5), decidida a partir del catálogo de diseño y del resumen estructural.
+- [ ] cada tarea tiene su nota de diseño (10 §5), decidida a partir del catálogo de diseño y del resumen estructural;
+- [ ] la historia tiene **3 tareas como máximo** (04 §3); si no, se dividió.
 
 Si una casilla no aplica, se puede marcar `N/A` con justificación. No se debe forzar una historia a `Ready` por presión de planificación.
 
@@ -1299,7 +1399,8 @@ Una historia puede pasar a `Ready for Acceptance` cuando:
 - [ ] existe evidencia de la prueba manual agéntica cuando el track la exige (05 §11);
 - [ ] no quedan defectos Críticos ni bloqueantes conocidos;
 - [ ] cada hallazgo que no se corrigió está en el backlog como defecto, con severidad, historia de origen y criterio (02 §9);
-- [ ] documentación/ADRs afectados y el catálogo de diseño (10 §6) están actualizados;
+- [ ] documentación/ADRs afectados y el catálogo de diseño (10 §6) están actualizados con lo que el plan técnico tenía de valor futuro, y el plan técnico se eliminó (03 §1.2);
+- [ ] las vistas del backlog están regeneradas (02 §11);
 - [ ] el comportamiento existente relevante no sufrió regresiones;
 - [ ] el resultado puede probarse en un entorno apropiado.
 
@@ -1458,9 +1559,12 @@ Aplican a todo código del proyecto, en cualquier lenguaje, también en scripts.
 | **Visibilidad mínima** | Todo es privado salvo lo que otra pieza necesita usar | Miembros públicos que solo se usan dentro de su propio módulo |
 | **Configuración fuera del código** | Direcciones, rutas, credenciales y valores que cambian por entorno salen del entorno o de la configuración | Un valor de un entorno concreto escrito en el código |
 | **Validar en la frontera y convertir** («parse, don't validate») | Lo que entra (petición, archivo, argumento) se valida una vez, en la frontera, y se convierte a un tipo que ya no puede ser inválido; el interior trabaja con ese tipo | La misma validación repetida dentro del sistema; funciones internas que vuelven a comprobar si un valor es nulo, vacío o tiene el formato correcto |
+| **Sin código provisional** | Un corte mínimo se escribe con la estructura que va a tener: cada pieza en el archivo y el módulo que le corresponden desde el primer commit, aunque eso signifique cuatro archivos de dos líneas en lugar de uno de seis. «Después lo refactorizamos» no es un plan | Un archivo que acumula piezas de responsabilidades distintas para que funcione rápido (todo en `App.tsx`, toda la API en `Program.cs`); lógica dentro de componentes de interfaz o de endpoints; comentarios como «temporal», «por ahora», «TODO: mover» |
 | **Comprobaciones estrictas del compilador** | El modo estricto del lenguaje está activado (por ejemplo, `strict` en TypeScript, *nullable reference types* y advertencias como errores en C#, `set -euo pipefail` en bash) | Valores que pueden ser nulos sin que el tipo lo diga; advertencias del compilador ignoradas |
 
-Lo que un linter del stack pueda detectar (complejidad y largo máximos por función, `catch` vacíos, variables globales, ShellCheck en scripts) SHOULD ir a la CI (L3): así deja de depender de que alguien lo recuerde. El perfil lista qué reglas del nivel 1 cubre su CI.
+Lo que un linter del stack pueda detectar (complejidad y largo máximos por función y por archivo, un componente por archivo, `catch` vacíos, variables globales, ShellCheck en scripts) SHOULD ir a la CI (L3): así deja de depender de que alguien lo recuerde. El perfil lista qué reglas del nivel 1 cubre su CI. Los marcadores de trabajo pendiente (`TODO`, `FIXME`, `HACK`) añadidos por un agente se tratan como marcadores del guardián (05 §10): exigen aprobación humana o un elemento del backlog que los resuelva.
+
+Los modelos tienden al camino más corto que hace funcionar algo, y ese camino no suele ser el que evita retrabajo. Por eso esta regla no se deja a criterio del agente: la nota de diseño dice en qué archivo va cada pieza, y juntarlas es un hallazgo de la tarea (ciclo `FAIL`).
 
 ## 4. Nivel 2: principios y patrones condicionales
 

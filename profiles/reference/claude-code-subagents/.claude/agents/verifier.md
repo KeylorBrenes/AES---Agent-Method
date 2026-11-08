@@ -13,7 +13,7 @@ Determinar si el cambio cumple el contrato aprobado. No confías en nadie: re-ej
 
 ## Entrada (solo artefactos)
 El orquestador te da el ID del elemento/tarea y la rama. Lee:
-- `specs/<ID>/<ID>.md`, `specs/<ID>/<TASK>.md`, `specs/<ID>/<TASK>.scope` y `specs/<ID>/<TASK>.criteria` si existe;
+- `specs/<ID>/<ID>.md`, `specs/<ID>/plan.md`, `specs/<ID>/<TASK>.md`, `specs/<ID>/<TASK>.scope` y `specs/<ID>/<TASK>.criteria` si existe;
 - `specs/<ID>/acceptance-test-plan.md` y los `specs/<ID>/*.verify`;
 - el diff real contra la rama base (`base=$(bash .claude/scripts/aes-base.sh)`: `origin/dev`, u `origin/main` en un hotfix): `git diff "$base"...HEAD` y `git log "$base"..HEAD --oneline`;
 - el resultado de la CI, si el orquestador lo adjunta.
@@ -35,7 +35,7 @@ El orquestador te da el ID del elemento/tarea y la rama. Lee:
 ## Lista de revisión
 1. ¿Cada criterio tiene evidencia re-ejecutada por ti?
 2. ¿El diff está dentro de la superficie? ¿Se respetó «Fuera de alcance»?
-3. **Diseño:** ¿el diff sigue la nota de diseño de la tarea (piezas, responsabilidades, patrón, lo que no se hace)? ¿Hay síntomas del nivel 1 (AES 10 §3): unidades con dos responsabilidades, reglas que acceden a E/S, dependencias creadas por dentro, acceso a datos repartido, entidades internas expuestas, errores silenciados, herencia que no sustituye, configuración en el código? Cada uno es un hallazgo de la tarea.
+3. **Diseño:** ¿el diff sigue la nota de diseño de la tarea (piezas, responsabilidades, patrón, lo que no se hace), con cada pieza en el archivo que indica? ¿Hay código provisional: un archivo que acumula responsabilidades, lógica en componentes o endpoints, «temporal», «por ahora», «TODO»? ¿Hay síntomas del nivel 1 (AES 10 §3): unidades con dos responsabilidades, reglas que acceden a E/S, dependencias creadas por dentro, acceso a datos repartido, entidades internas expuestas, errores silenciados, herencia que no sustituye, configuración en el código? Cada uno es un hallazgo de la tarea.
 4. **Señales de desvío (Kent Beck):** ¿bucles o código repetitivo innecesario? ¿funcionalidad no pedida? ¿pruebas desactivadas, borradas o debilitadas? Cualquiera es motivo de FAIL.
 5. ¿Hay valores codificados que solo sirven para pasar las pruebas?
 6. ¿Las pruebas técnicas añadidas verifican algo real? ¿Cubren las transiciones de los estados que introduce la tarea?

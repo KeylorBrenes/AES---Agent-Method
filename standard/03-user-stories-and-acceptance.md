@@ -1,21 +1,38 @@
 # 03 — Historias de Usuario y aceptación
 
-## 1. Contenido mínimo de una historia
+## 1. Dos documentos: la historia y el plan técnico
 
-Cada Historia de Usuario refinada DEBE tener:
+Cada historia refinada tiene **dos** documentos, escritos para lectores distintos:
 
-- identificador estable y título;
-- usuario/actor y necesidad, o resultado técnico justificado;
-- beneficio/objetivo;
-- contexto y reglas relevantes;
-- alcance incluido y exclusiones importantes;
-- criterios de aceptación observables y verificables;
-- prioridad, Story Points y track (02 §8);
-- dependencias y riesgos relevantes;
-- contrato de interfaz contra el que se escribirán las pruebas de aceptación, cuando la historia introduce o modifica una frontera observable (05 §2.1);
-- estrategia de pruebas/aceptación;
+| Documento | Para quién | Lenguaje | Vida |
+|---|---|---|---|
+| **La historia** (`US-NNN.md`) | El responsable humano, y cualquiera que quiera saber qué hace el producto | De cliente, no de programador: qué se logra y cómo se comprueba, sin tablas, clases, endpoints ni patrones | Permanente |
+| **El plan técnico** | Los agentes: orquestador, QA, programador, verificador | Técnico: contrato de interfaz, nota de diseño, tareas, superficies | Se elimina en el cierre, después de consolidar lo que tenga valor futuro (§1.2) |
+
+Al responsable humano le interesa qué hace la historia, qué queda fuera, cómo se sabe que funciona y que funcione; no cómo se llaman los métodos ni qué patrón se usó. Mezclar los dos lectores en un documento hace que el humano firme detalles que no le corresponden y que los agentes tomen el lenguaje de negocio como especificación técnica.
+
+### 1.1 Contenido de la historia
+
+- título en el formato de su tipo (02 §3) y `Requiere:`;
+- contexto y reglas relevantes, en términos del negocio;
+- criterios de aceptación en lenguaje de cliente (§2);
+- fuera de alcance (§4);
+- **plan**: cómo se va a construir, contado como a un cliente (qué verá el usuario primero, qué viene después, qué se deja para otra historia);
+- **sugerencias** del orquestador: qué considera el mejor camino y por qué, y qué alternativas descartó, también en lenguaje de cliente;
+- prioridad, Story Points y track (02 §8); riesgos relevantes;
 - estado y responsable de decisión;
 - registro de decisiones (§8).
+
+Un buen criterio de esta parte se lee así: «Dado que soy un visitante, cuando me registro con un email válido y una contraseña de al menos 8 caracteres, entonces mi cuenta queda creada y entro a la app con la sesión iniciada». No así: «Crear la tabla `usuarios`, un endpoint `POST /auth` y emitir un JWT».
+
+### 1.2 Contenido del plan técnico
+
+- contrato de interfaz contra el que se escriben las pruebas de aceptación, cuando la historia toca una frontera observable (05 §2.1);
+- nota de diseño de cada tarea (10 §5);
+- tareas, con su superficie de cambio y los criterios que dejan en verde (04 §2);
+- plan de pruebas de aceptación (05).
+
+En el **cierre** del elemento, antes de eliminar el plan técnico, lo que tenga valor para historias futuras pasa a donde se conserva: patrones y decisiones de no usar algo, al catálogo de diseño (10 §6); convenciones que valen para varias historias, a un ADR (01 §4). Lo demás se elimina: queda en el historial del control de versiones si alguna vez hace falta. Las pruebas de aceptación y los comandos de verificación **no** son parte del plan: son la regresión y se conservan.
 
 No se deben rellenar campos con texto vacío. Un elemento puede permanecer en `Draft` hasta que exista información suficiente.
 
@@ -29,7 +46,7 @@ Los criterios deben expresar resultados observables, no detalles internos innece
 - específicos sobre permisos, errores y límites cuando sean relevantes;
 - independientes de una implementación concreta salvo que exista una restricción técnica aprobada.
 
-Se puede usar Given/When/Then, ejemplos tabulares, casos de prueba o lenguaje natural estructurado. AES no obliga a una sintaxis BDD determinada.
+En la historia, los criterios se escriben en lenguaje natural estructurado (Dado / Cuando / Entonces) y en términos del usuario. El detalle observable que necesitan las pruebas (selectores, rutas, códigos de respuesta) va en el contrato de interfaz del plan técnico, no en el criterio.
 
 ## 3. Casos negativos y límites
 

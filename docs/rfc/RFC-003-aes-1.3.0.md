@@ -66,6 +66,22 @@
 
 **Descartado:** las skills de flujo de Superpowers (`brainstorming`, `writing-plans`, `executing-plans`, `subagent-driven-development`, `using-git-worktrees`, `finishing-a-development-branch`, `using-superpowers`): duplican el ciclo de AES.
 
+## 5. Historias atómicas, cortes verticales y la historia en lenguaje de cliente — 00, 01, 02, 03, 04, 08, 10
+
+**Problema.** Los agentes (y muchos equipos) construyen por capas: toda la base de datos, luego todo el servidor, luego toda la interfaz. Se tarda semanas en descubrir que algo no servía. Las metodologías que planifican todo por adelantado llegan a lo mismo por otra vía: sobreingeniería y alucinaciones. Y una historia grande, aunque sea «una cosa», hace que el agente pierda el control y que sea difícil depurar y verificar.
+
+**Decisiones del responsable humano (2026-11-07):**
+
+| Tema | Decisión |
+|---|---|
+| Cortes | Cada historia es un corte vertical completo (datos, servidor, interfaz); el primer elemento es un *walking skeleton* |
+| Formato | Título «Como [usuario], quiero [capacidad], para [beneficio]» obligatorio; formato propio para enablers |
+| Atomicidad | Una capacidad del usuario que se verifica sola, no un solo verbo. Obligatoria: lo grande se divide siempre, también lo que es «una cosa» pero grande por dentro (señales: 8 puntos o más, más de 3 tareas) |
+| Planificación | Backlog completo pero superficial al inicio; detalle técnico cuando llega cada historia |
+| Documentos | La historia, en lenguaje de cliente, se conserva; el plan técnico se elimina al cerrar, después de consolidar |
+| Tablero | `backlog.md` como única fuente (sin atarse a GitHub); vistas generadas en una sola dirección: tablero HTML propio y adaptadores opcionales |
+| Atajos | Prohibido el código provisional («todo en `App.tsx` y después refactorizamos»): cada pieza en su archivo desde el primer commit. Evidencia: el formulario de US-001 del sandbox terminó en `App.tsx` |
+
 ## Migración de un proyecto en 1.2.0
 
 1. `git push origin main:dev` y hacer `dev` la rama por defecto.
@@ -74,3 +90,4 @@
 4. Los elementos ya cerrados quedan como `Released` (ya están en `main`).
 5. Crear `docs/design-catalog.md` con los patrones que el proyecto ya usa y lo que ya se decidió no usar (por ejemplo, «sin repositorio sobre EF Core»).
 6. Copiar las skills de `skills/` a `.claude/skills/` y registrarlas en el perfil; desinstalar cualquier plugin de flujo de terceros.
+7. Pasar `docs/backlog.md` al formato de `templates/backlog.md` (columnas `Tipo`, `Requiere`, `Puntos`) y reescribir los títulos de las historias abiertas en el formato «Como… quiero… para…».

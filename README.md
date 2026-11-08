@@ -30,8 +30,8 @@ AES no es un generador automático de requisitos ni una metodología de cascada.
 0. Compuerta de estabilización: ¿defectos abiertos?   [CI]
    └─ Crítico, Alto o Medio abierto → lote de estabilización antes de seguir
    Clasificar track (T0–T3)                          [orquestador → tú confirmas]
-1. Refinar historia: criterios + fuera de alcance
-   + decisiones registradas (D-NN)                   [orquestador → tú apruebas]
+1. Historia atómica y vertical («Como… quiero… para…»), en lenguaje de cliente:
+   criterios + fuera de alcance + plan + decisiones (D-NN)   [orquestador → tú apruebas]
 2. Contrato de interfaz (si hay frontera nueva)       [arquitecto]
 3. QA: pruebas visibles + holdout, cada una con su criterio
    → RED confirmado por herramienta → supuestos resueltos → rama protegida
@@ -74,7 +74,7 @@ AES no es un generador automático de requisitos ni una metodología de cascada.
 |---|---|
 | `standard/` | Reglas normativas de AES Core (00–09). |
 | `AES-CORE.md` | Las reglas de `standard/` consolidadas en un único documento (generado). |
-| `templates/` | Plantillas: brief, arquitectura, ADR, epic, historia, tarea, nota de diseño, catálogo de diseño, release, defecto, lote de estabilización, plan de aceptación, informe de verificación, perfil, registro de fallos y registro de hallazgos. |
+| `templates/` | Plantillas: brief, arquitectura, ADR, backlog, epic, historia (lenguaje de cliente), plan técnico, tarea, nota de diseño, catálogo de diseño, release, defecto, lote de estabilización, plan de aceptación, informe de verificación, perfil, registro de fallos y registro de hallazgos. |
 | `skills/` | Skills del núcleo de AES (depuración por causa raíz, revisión de seguridad, nota de diseño), en formato Agent Skills. |
 | `agent-contracts/` | Responsabilidades, permisos y límites de cada rol: orquestador, arquitecto, QA, programador, mecánico y verificador. |
 | `profiles/` | Perfiles de proyecto e implementaciones de referencia. |
@@ -87,8 +87,8 @@ AES no es un generador automático de requisitos ni una metodología de cascada.
 |---|---|
 | 00 | Gobierno, principios, roles, estados, evidencia, revisión humana proporcional |
 | 01 | Inicio del proyecto y arquitectura |
-| 02 | Backlog, estimación, tracks T0–T3, severidad de defectos y compuerta de estabilización |
-| 03 | Historias de Usuario, aceptación y registro de decisiones |
+| 02 | Backlog (archivo y vistas), historias atómicas y verticales, cómo dividirlas, planificación en dos niveles, tracks T0–T3, severidad de defectos y compuerta de estabilización |
+| 03 | Historia (lenguaje de cliente) y plan técnico (se elimina al cerrar), aceptación y registro de decisiones |
 | 04 | Diseño y ejecución de tareas, commits, circuit breaker, camino corto T0/T1 |
 | 05 | Pruebas: contrato de interfaz, RED confirmado, holdout, caracterización, aislamiento, guardián, prueba manual agéntica, qué ejecuta la CI |
 | 06 | Gobierno de agentes, permisos, controles en capas L1/L2/L3, acciones denegadas, estado entre roles |

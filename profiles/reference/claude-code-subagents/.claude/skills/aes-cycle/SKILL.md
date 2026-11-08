@@ -37,23 +37,25 @@ Eres el **orquestador** de AES 1.3.0 (`agent-contracts/orchestrator.md`). Coordi
 8. **Track:** T2/T3 (US, EN) → secciones 1 a 4. T1 (BUG, CH, ST) → sección 5. T0 → sección 6. Si no es obvio, pregúntale al humano.
 
 ## 1. Refinamiento de una historia (rama `spec/<ID>`)
-1. Revisa la DoR (`docs/aes/08…` §1), salvo lo que depende de QA.
-2. Cada acción que escribe (guardar, editar, eliminar) necesita un **criterio de fallo**: qué ve el usuario con un error del servidor o sin red, y qué lo limpia. Si falta, propónlo.
-3. Si hay ambigüedades, pregúntale al humano **antes** de seguir, con opciones concretas.
-4. **Cada respuesta es una decisión registrada** en la sección «Decisiones» de `specs/<ID>/<ID>.md`: `D-NN | pregunta | opciones | decisión | quién y fecha | impacto`. Si la decisión vale para más de esta historia (una convención de UI, de API o de validación), propón un ADR.
-5. Todo esto en `p=$(bash .claude/scripts/aes-wt.sh open spec/<ID>)`; commit, `git -C "$p" push -u origin spec/<ID>`, PR con `--base dev`, `aes-wt.sh close spec/<ID>`. Aprobarlo es la firma del humano sobre las decisiones.
+1. **¿Es atómica y vertical?** (AES 02 §3.1–3.2). Una sola capacidad que se demuestra sola, construida de punta a punta, con menos de 8 puntos. Si el «quiero» une dos objetivos con «y», o son 8 puntos o más, **no la refines**: propónle al humano cómo dividirla (formas de AES 02 §10) y actualiza el backlog en este mismo PR.
+2. Revisa la DoR (`docs/aes/08…` §1), salvo lo que depende de QA.
+3. Escribe `specs/<ID>/<ID>.md` con la plantilla `templates/user-story.md` de AES, **en lenguaje de cliente**: título «Como… quiero… para…» (o «Para…, necesitamos…» en un enabler), `Requiere:`, criterios Dado/Cuando/Entonces en términos del usuario, fuera de alcance, plan y sugerencias. Nada de tablas, clases, endpoints, patrones ni nombres de archivos: eso es del plan técnico (sección 2).
+4. Cada acción que escribe (guardar, editar, eliminar) necesita un **criterio de fallo**: qué ve el usuario con un error del servidor o sin red, y qué lo limpia. Si falta, propónlo.
+5. Si hay ambigüedades, pregúntale al humano **antes** de seguir, con opciones concretas y en lenguaje de cliente.
+6. **Cada respuesta es una decisión registrada** en la sección «Decisiones» de `specs/<ID>/<ID>.md`: `D-NN | pregunta | opciones | decisión | quién y fecha | impacto`. Si la decisión vale para más de esta historia (una convención de UI, de API o de validación), propón un ADR.
+7. Todo esto en `p=$(bash .claude/scripts/aes-wt.sh open spec/<ID>)`; commit, `git -C "$p" push -u origin spec/<ID>`, PR con `--base dev`, `aes-wt.sh close spec/<ID>`. Aprobarlo es la firma del humano sobre las decisiones.
 
 ## 2. Pruebas de aceptación y tareas (rama `qa/<ID>`)
-1. Crea la rama: `git branch --no-track qa/<ID> origin/dev`, y `bash .claude/scripts/aes-wt.sh delegate qa/<ID>`.
+1. Crea la rama y el **plan técnico** (AES 03 §1.2): `p=$(bash .claude/scripts/aes-wt.sh open qa/<ID>)` y escribe en `$p` `specs/<ID>/plan.md` con la plantilla `templates/technical-plan.md` de AES: contrato de interfaz y corte vertical (qué mínimo de cada capa necesita la historia). Commit y `aes-wt.sh close qa/<ID>`. Luego `bash .claude/scripts/aes-wt.sh delegate qa/<ID>`.
 2. Delega en **qa** con **Q1**.
 3. QA no hace commits: su worktree se conserva con los cambios. Ábrelo (`p=$(bash .claude/scripts/aes-wt.sh open qa/<ID>)` devuelve el mismo) y, dentro de `$p`, comprueba el RED y la trazabilidad con las mismas reglas que la CI:
    `PLAYWRIGHT_JSON_OUTPUT_NAME="$TEMP/red.json" npm --prefix tests/acceptance test -- --grep "@<ID>(?![\w-])" --reporter=list,json; node ci/red-check.mjs "$TEMP/red.json" <ID> 0 specs/<ID>/<ID>.md`
    Si escribió comandos de verificación: `bash ci/run-verify.sh red HEAD specs/<ID>/*.verify`.
    Si no da `RED confirmado`, devuélveselo a QA con **Q2**.
-4. **Supuestos de QA:** si el plan tiene «Supuestos que requieren decisión», llévaselos al humano **ahora**. Cada respuesta es una decisión D-NN en la historia (y, si cambia el contrato, también ahí). Un supuesto abierto bloquea `Ready`.
+4. **Supuestos de QA:** si el plan tiene «Supuestos que requieren decisión», llévaselos al humano **ahora**. Cada respuesta es una decisión D-NN en la historia (y, si cambia el contrato, también en `plan.md`). Un supuesto abierto bloquea `Ready`.
 5. **Pruebas de caracterización** (criterios que el código ya cumple): deben estar en la suite de la historia dueña, con su etiqueta, y el criterio dice «Verificación: regresión de <ID dueño>». Si QA usó otra etiqueta, corrección con **R1**.
-6. **Diseño** (AES 10 §5). Eres el diseñador senior: usa la skill `aes-design-note` y escribe la nota de diseño de cada tarea dentro de `specs/<ID>/TASK-NNN.md`. Decide con hechos (resumen estructural, catálogo de diseño, ADR, contrato), no con descripciones. Si una decisión vale para más de esta historia, propón un ADR.
-7. Escribe las tareas: `specs/<ID>/TASK-NNN.md` (campos de AES 04 §2, con la nota de diseño), `specs/<ID>/TASK-NNN.scope` (un glob por línea, lo más estrecho posible) y, salvo en la **última**, `specs/<ID>/TASK-NNN.criteria` (un `AC-NN` por línea).
+6. **Diseño** (AES 10 §5). Eres el diseñador senior: usa la skill `aes-design-note` y escribe la nota de diseño de cada tarea dentro de `specs/<ID>/TASK-NNN.md`. La nota dice **en qué archivo va cada pieza**: un corte mínimo no es código provisional (AES 10 §3). Decide con hechos (resumen estructural, catálogo de diseño, ADR, contrato), no con descripciones. Si una decisión vale para más de esta historia, propón un ADR.
+7. Escribe **3 tareas como máximo** (si no caben, la historia es demasiado grande: vuelve al humano para dividirla, sección 1, paso 1). Cada una en `specs/<ID>/TASK-NNN.md` (campos de AES 04 §2, con la nota de diseño), y lístalas en `plan.md`; `specs/<ID>/TASK-NNN.scope` (un glob por línea, lo más estrecho posible) y, salvo en la **última**, `specs/<ID>/TASK-NNN.criteria` (un `AC-NN` por línea).
    - Divide por criterios (cortes verticales), no por capas.
    - Un criterio de caracterización **no** va en ningún `.criteria`: no tiene pruebas propias y la CI fallaría.
    - Si una tarea introduce un estado (error, carga, edición), lista qué lo crea y qué lo limpia.
@@ -90,14 +92,15 @@ Para cada tarea, en orden:
 3. Si `Accepted`: `git branch --no-track spec/<ID>-close origin/dev`, `aes-wt.sh delegate spec/<ID>-close` y:
    - delega en **mechanic** con **M1** (consolidar `.aes/` y la fila de métricas en `docs/`); `.aes/` está en el checkout principal: pásale la ruta absoluta;
    - después, `p=$(aes-wt.sh open spec/<ID>-close)` y, dentro de `$p`:
-     - actualiza `docs/design-catalog.md` con lo que introdujeron las notas de diseño (patrones nuevos y lo que se decidió no usar);
+     - actualiza `docs/design-catalog.md` con lo que introdujeron las notas de diseño (patrones nuevos y lo que se decidió no usar), y propón un ADR para lo que el plan técnico tenga de convención para otras historias;
+     - **elimina el plan técnico** (AES 03 §1.2): `git rm specs/<ID>/plan.md specs/<ID>/TASK-* specs/<ID>/acceptance-test-plan.md`. Se conservan `specs/<ID>/<ID>.md` y los `*.verify`; lo eliminado queda en el historial de git. Anota en «Cierre» de la historia qué consolidaste;
      - escribe tú `docs/retrospectives/<ID>.md`: **solo** patrones, un control por patrón y decisiones abiertas;
      - transcribe lo que quede en `.aes/decisions-pending.md` a «Decisiones» de la especificación;
      - registra cada defecto que el humano dejó para después en `docs/backlog.md` (fila con ID `BUG-NNN`, **Severidad** y Estado `Draft`) y su nota con criterio, historia de origen y reproducción (plantilla `templates/defect.md` de AES);
      - actualiza el estado del elemento y del backlog, y agrega `<ID>` a `specs/active-stories.txt`;
    - commit, push y `aes-wt.sh close spec/<ID>-close`.
 4. PR con `--base dev` (o `--base main` en un hotfix). Confirma en el log `tipo: close | elemento: <ID>`, que la aceptación `@<ID>` y sus comandos de verificación se ejecutaron y pasaron. **GATE** de aprobación.
-5. Después de integrar el cierre, pídele al humano que ejecute `bash .claude/scripts/aes-note.sh clear`.
+5. Después de integrar el cierre, pídele al humano que ejecute `bash .claude/scripts/aes-note.sh clear` y regenera el tablero: `node .claude/scripts/aes-board.mjs` (lo deja en `.aes/board.html`; si el perfil tiene un adaptador a otro tablero, ejecútalo con `--json`).
 6. Evalúa la compuerta (`BASE=origin/dev bash ci/defect-gate.sh start <siguiente>`) y dile al humano qué sigue: el lote de estabilización, un release (sección 7) o la siguiente historia. La siguiente va en una **sesión nueva**.
 
 ## 5. Camino corto T1: defecto, chore o lote de estabilización

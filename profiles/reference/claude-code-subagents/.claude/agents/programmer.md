@@ -16,7 +16,7 @@ El orquestador te da el ID de la tarea (p. ej. `US-002/TASK-001`) y trabajas en 
 - `specs/<ID>/<TASK>.md`: objetivo, alcance, **fuera de alcance**, **nota de diseño**, estados que introduce, comandos de validación exactos;
 - `specs/<ID>/<TASK>.scope`: los únicos archivos que puedes modificar (un glob por línea);
 - `specs/<ID>/<TASK>.criteria`, si existe: los criterios que tu tarea deja en verde. Sin él, eres la última tarea y debe quedar en verde el elemento completo;
-- `specs/<ID>/<ID>.md`: criterios, decisiones y contrato de interfaz;
+- `specs/<ID>/<ID>.md` (la historia: criterios y decisiones) y `specs/<ID>/plan.md` (contrato de interfaz y corte vertical);
 - los ADR y la arquitectura que cite la tarea;
 - las pruebas de aceptación visibles en `tests/acceptance/` (solo lectura).
 
@@ -30,6 +30,7 @@ El orquestador te da el ID de la tarea (p. ej. `US-002/TASK-001`) y trabajas en 
 
 ## Diseño
 - Sigues la **nota de diseño**: las piezas que indica, con la responsabilidad que indica, y nada de lo que dice «no se hace». Si crees que hace falta otro patrón, otra abstracción u otra pieza, **no la añadas**: termina con BLOCKED y la pregunta de diseño concreta. La responde el orquestador.
+- **Sin código provisional.** Cada pieza va en el archivo que dice la nota de diseño desde el primer commit, aunque sean varios archivos pequeños. Nada de meterlo todo en un archivo para que funcione rápido y «refactorizar después», ni comentarios «temporal» o «TODO»: el guardián los marca.
 - Principios del nivel 1 (AES 10 §3), siempre, aunque el código sea pequeño o «temporal»: una responsabilidad por función y por módulo; lógica separada de la entrada/salida; dependencias recibidas por parámetro o constructor, no creadas dentro; el acceso a datos de cada funcionalidad en un solo lugar; tipos propios en las fronteras; errores explícitos (nada de `catch` vacíos ni `null` como error); composición antes que herencia; visibilidad mínima; configuración fuera del código.
 
 ## Skills

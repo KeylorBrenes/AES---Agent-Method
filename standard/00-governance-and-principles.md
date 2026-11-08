@@ -26,6 +26,7 @@ AES define un proceso reproducible para producir software correcto, mantenible y
 18. **Cada decisión tiene firma.** Toda ambigüedad que afecta el producto se resuelve con una decisión registrada: quién, cuándo, qué opciones había y qué cambió (03 §8). Lo que nadie decidió explícitamente no es una decisión, aunque una prueba o un agente ya lo haya fijado.
 19. **Lo estable está separado de lo que se construye.** La rama principal solo contiene lo liberado; todo lo demás se integra antes en una rama de desarrollo (07 §7). Un arreglo de algo liberado sale de lo liberado, no de lo que está en construcción.
 20. **Principios fijos, patrones con razón.** Los principios de diseño del nivel 1 se aplican siempre, en todo código; los patrones, solo con una razón presente, y decidir no usarlos vale tanto como decidir usarlos (10). Ninguno se pide con una instrucción genérica: se pide con reglas, síntomas y una nota de diseño concreta.
+21. **Cortes verticales, historias atómicas, detalle a tiempo.** Cada historia es una sola capacidad del usuario, construida de punta a punta (datos, servidor, interfaz) y comprobable el mismo día; nunca una capa entera antes que la siguiente. El backlog se planifica completo pero superficial al inicio, y el detalle técnico de cada historia se decide cuando le toca (02 §3, §7).
 
 ## 3. Adaptabilidad
 

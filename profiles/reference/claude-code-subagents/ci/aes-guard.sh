@@ -26,7 +26,7 @@ PROTECTED_RE='^(tests/acceptance/|specs/|ci/|\.github/|\.claude/|docs/ci/|AGENTS
 # herramienta es tan sensible como cambiar un paquete (FL de nuget.config y dotnet-tools.json).
 DEPS_RE='(^|/)(package\.json|package-lock\.json|pnpm-lock\.yaml|yarn\.lock|requirements[^/]*\.txt|poetry\.lock|pyproject\.toml|uv\.lock|Cargo\.toml|Cargo\.lock|go\.mod|go\.sum|[^/]*\.csproj|packages\.lock\.json|Directory\.Packages\.props|composer\.(json|lock)|Gemfile(\.lock)?|nuget\.config|NuGet\.Config|\.npmrc|\.yarnrc(\.yml)?|pip\.conf|global\.json|\.config/dotnet-tools\.json)$'
 # Marcadores de omisión, silenciado o errores tragados.
-MARKERS_RE='\.skip\(|\bxit\(|\bxdescribe\(|@Disabled|@Ignore|#\[ignore\]|pytest\.mark\.skip|Skip *= *"|eslint-disable|@ts-ignore|@ts-expect-error|#[[:space:]]*type:[[:space:]]*ignore|#pragma warning disable|noqa|nosemgrep|NOSONAR|catch *(\([^)]*\))? *\{ *\}|except[^:]*: *pass'
+MARKERS_RE='\.skip\(|\bxit\(|\bxdescribe\(|@Disabled|@Ignore|#\[ignore\]|pytest\.mark\.skip|Skip *= *"|eslint-disable|@ts-ignore|@ts-expect-error|#[[:space:]]*type:[[:space:]]*ignore|#pragma warning disable|noqa|nosemgrep|NOSONAR|\bTODO\b|\bFIXME\b|\bHACK\b|catch *(\([^)]*\))? *\{ *\}|except[^:]*: *pass'
 
 fail=0
 report() { printf '%s\n' "$*"; }

@@ -7,7 +7,9 @@ Los proyectos SHOULD copiar estas checklists dentro de su repositorio (01 §2), 
 Una historia puede pasar a `Ready` cuando:
 
 - [ ] **la compuerta de estabilización está abierta**: no hay defectos abiertos de severidad Crítica, Alta o Media, y los Menores no superan el límite del perfil (02 §9);
-- [ ] objetivo, actor y beneficio/resultante están claros;
+- [ ] el título tiene el formato de su tipo («Como… quiero… para…» en historias; «Para…, necesitamos…» en enablers) y declara `Requiere:` (02 §3);
+- [ ] la historia es **atómica** (una capacidad que se demuestra sola) y un **corte vertical** (02 §3.1–3.2), con menos de 8 puntos;
+- [ ] la historia está escrita en lenguaje de cliente; el detalle técnico está en el plan técnico (03 §1);
 - [ ] alcance y exclusiones relevantes están definidos;
 - [ ] criterios de aceptación son observables y verificables;
 - [ ] cada acción que escribe tiene criterio de fallo (03 §3);
@@ -24,7 +26,8 @@ Una historia puede pasar a `Ready` cuando:
 - [ ] las pruebas holdout existen cuando el track es T3 (o el perfil las exige);
 - [ ] «Fuera de alcance» no está vacío;
 - [ ] las tareas están escritas, con superficie de cambio y criterios que dejan en verde, sin inventar requisitos;
-- [ ] cada tarea tiene su nota de diseño (10 §5), decidida a partir del catálogo de diseño y del resumen estructural.
+- [ ] cada tarea tiene su nota de diseño (10 §5), decidida a partir del catálogo de diseño y del resumen estructural;
+- [ ] la historia tiene **3 tareas como máximo** (04 §3); si no, se dividió.
 
 Si una casilla no aplica, se puede marcar `N/A` con justificación. No se debe forzar una historia a `Ready` por presión de planificación.
 
@@ -89,7 +92,8 @@ Una historia puede pasar a `Ready for Acceptance` cuando:
 - [ ] existe evidencia de la prueba manual agéntica cuando el track la exige (05 §11);
 - [ ] no quedan defectos Críticos ni bloqueantes conocidos;
 - [ ] cada hallazgo que no se corrigió está en el backlog como defecto, con severidad, historia de origen y criterio (02 §9);
-- [ ] documentación/ADRs afectados y el catálogo de diseño (10 §6) están actualizados;
+- [ ] documentación/ADRs afectados y el catálogo de diseño (10 §6) están actualizados con lo que el plan técnico tenía de valor futuro, y el plan técnico se eliminó (03 §1.2);
+- [ ] las vistas del backlog están regeneradas (02 §11);
 - [ ] el comportamiento existente relevante no sufrió regresiones;
 - [ ] el resultado puede probarse en un entorno apropiado.
 

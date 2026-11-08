@@ -18,11 +18,42 @@ Los defectos, chores y hallazgos que se dejan para después son **elementos de p
 
 ## 3. Historias de Usuario
 
-Una Historia de Usuario representa una necesidad/comportamiento con valor identificable para un usuario o actor. Formato recomendado:
+Una Historia de Usuario representa una necesidad/comportamiento con valor identificable para un usuario o actor. Su **título** MUST tener este formato:
 
 > Como [tipo de usuario], quiero [capacidad], para [beneficio].
 
-El formato no es obligatorio para trabajo puramente técnico; en ese caso se declara el resultado técnico y su justificación. Cada historia debe incluir criterios de aceptación verificables y límites de alcance.
+> Como usuario, quiero registrar un pago pendiente, para no olvidarme de él.
+
+Otros elementos tienen su propio formato, porque no tienen un usuario que los pida:
+
+| Tipo | Formato del título | Ejemplo |
+|---|---|---|
+| Enabler | Para [historia u objetivo], necesitamos [capacidad técnica] | Para que las historias de pagos se puedan probar de punta a punta, necesitamos la app arrancando con base de datos, API y web |
+| Defecto | [Comportamiento incorrecto, en una frase] | Un monto «abc» dice «obligatorio» en lugar de «inválido» |
+| Chore | [Cambio de mantenimiento] para [motivo] | Fijar las fuentes de paquetes para que la restauración no dependa de la máquina |
+
+Cada historia incluye criterios de aceptación verificables y límites de alcance, y declara con `Requiere:` los elementos que deben estar terminados antes (por ejemplo, `Requiere: US-001`).
+
+### 3.1 Historias atómicas
+
+Una historia MUST ser **atómica**: una sola capacidad del usuario que se puede demostrar por sí sola, y que no contiene otra capacidad que también se podría demostrar sola. No se mide por verbos: «crear tareas y verlas en mi lista» es una capacidad, porque crear sin ver no se puede comprobar; «registrarme y crear tareas» son dos.
+
+- Un «y» que une dos objetivos del usuario en el «quiero» es la señal de que hay que dividirla.
+- Las épicas y las funcionalidades grandes existen, pero solo como agrupación: se implementan como historias atómicas, nunca de una sola vez.
+- Motivo: una historia atómica se puede verificar, auditar, medir y depurar. Una historia que implica muchas funcionalidades a la vez es más difícil de depurar, hace que el agente pierda el control del contexto y alucine, y retrasa el momento de comprobar que lo construido sirve.
+
+Una historia puede ser atómica para el usuario y aun así grande por dentro. Dos señales objetivas obligan a dividirla:
+
+1. **Al estimar:** 8 puntos o más (§5).
+2. **Al diseñar:** si el orquestador no consigue dividirla en **3 tareas como máximo**, cada una dentro del presupuesto de diff de producción y dejando criterios en verde (04 §3). No se hacen tareas más grandes: se divide la historia (§10).
+
+### 3.2 Cortes verticales
+
+Cada historia es un **corte vertical completo**: la parte mínima de cada capa (datos, servidor, interfaz) para que la capacidad funcione de verdad y se pueda usar. No se construye una capa entera antes que la siguiente: «toda la base de datos, después todo el servidor, después toda la interfaz» tarda semanas en mostrar que algo no servía, y un corte vertical lo muestra el mismo día.
+
+- El esquema de datos crece historia a historia: cada historia trae la migración que necesita, y nada más.
+- El primer elemento del proyecto es un **esqueleto que camina** (*walking skeleton*): un enabler que deja la aplicación arrancando de punta a punta con un caso trivial (por ejemplo, una página que muestra el estado de la API, que a su vez lee la base de datos), con la CI ya en verde. Las historias siguientes engrosan ese esqueleto.
+- Dentro de una historia vale lo mismo: primero el camino más delgado de punta a punta, después las reglas y los casos límite.
 
 ## 4. Priorización
 
@@ -44,10 +75,10 @@ Guía orientativa:
 - **2:** pequeño, con pocas dependencias y comportamiento claro.
 - **3:** complejidad moderada, alcance conocido.
 - **5:** varias partes o escenarios, pero entendidos.
-- **8:** trabajo amplio o con incertidumbre/dependencias importantes; revisar si conviene dividir.
-- **13:** demasiado grande o incierto para planificar con confianza; normalmente debe dividirse o investigarse antes.
+- **8:** demasiado grande para una historia atómica: MUST dividirse antes de refinarse (§3.1, §10).
+- **13:** demasiado grande o incierto para planificar con confianza: se divide o se investiga con un Spike.
 
-Si una historia supera 13, no se asigna un número mayor: se divide en historias con valor verificable o se crea un Spike cuando la incertidumbre impide dividirla de forma responsable.
+Una historia de 8 o más no pasa a refinamiento: se divide en historias con valor verificable, o se crea un Spike cuando la incertidumbre impide dividirla de forma responsable.
 
 La estimación debe basarse en el alcance aprobado y en referencias históricas del proyecto. No se debe usar para comparar personas, modelos o equipos.
 
@@ -75,9 +106,14 @@ Heurísticas específicas para tareas ejecutadas por agentes (el perfil las ajus
 - el presupuesto se estima **por separado para código de producción y para pruebas**. El desvío que exige justificación es el de producción: un único número castiga probar bien (en el sandbox de AES, el 60 % de una tarea de 474 líneas eran pruebas unitarias);
 - la tarea SHOULD tocar una única superficie de cambio coherente (04 §2).
 
-## 7. Refinamiento continuo
+## 7. Refinamiento continuo: planificación en dos niveles
 
-El backlog es continuo. Solo las historias próximas necesitan cumplir completamente DoR. El resto puede permanecer como Epic, idea o historia preliminar. El refinamiento debe ocurrir antes de comprometer una historia para implementación y cuando aparece nueva información.
+La planificación tiene dos niveles, y el detalle llega tarde a propósito:
+
+1. **Al inicio del proyecto** (ligero): visión del producto, stack, y un **backlog completo pero superficial**: todas las historias que se conocen para llegar a la app completa, cada una con su título en formato, una línea de valor, `Requiere:` y una estimación aproximada. Nada de criterios detallados, diseño ni tareas.
+2. **Cuando le toca a cada historia** (detallado): criterios, decisiones, fuera de alcance, plan técnico y tareas. Solo entonces, porque es cuando se sabe lo que las historias anteriores enseñaron.
+
+El backlog inicial va a cambiar: reordenar, dividir, fusionar o descartar historias es parte del proceso, no un fallo de la planificación. Solo las historias próximas necesitan cumplir completamente la DoR.
 
 No se debe congelar un plan detallado de meses de trabajo si las historias posteriores dependen de descubrimientos aún no realizados.
 
@@ -143,3 +179,42 @@ Los defectos que cierran la compuerta se corrigen juntos en un **lote de estabil
 - Sigue el camino T1 (04 §10): un PR de especificación con los defectos, su severidad y su criterio; las comprobaciones de reproducción con RED; tareas agrupadas por superficie de cambio; verificación; cierre.
 - Las comprobaciones de reproducción del lote pasan a la regresión al cerrarlo, como las de una historia.
 - Un defecto que el lote no logra corregir sigue abierto y la compuerta sigue cerrada.
+
+## 10. Cómo dividir una historia
+
+Formas de dividir una historia grande, de la más habitual a la menos. Cada parte resultante sigue siendo atómica, vertical y con valor propio.
+
+| Forma | Cuándo | Ejemplo |
+|---|---|---|
+| **Camino feliz primero, reglas después** | La historia tiene validaciones, errores y casos límite | «Registrarme con email y contraseña y entrar con la sesión iniciada» primero; «ver un aviso si el email ya existe» después |
+| **Por variación de datos o de reglas** | La misma capacidad aplica a varios tipos, monedas, canales o roles | Un tipo de pago ahora, los demás después |
+| **Por pasos del flujo** | El usuario completa etapas por separado | «Agregar un pago» y «marcar un pago como hecho» |
+| **Por operación** | Crear, ver, editar y eliminar pueden demostrarse por separado | «Registrar un gasto» y «editar un gasto» |
+| **Lo no funcional después** | Rendimiento, caché, paginación, exportación | «Ver mis pagos» primero; «ver mis pagos paginados» cuando sean muchos |
+| **Spike** | Lo grande es la incertidumbre, no el trabajo | Averiguar cómo autenticar contra un proveedor antes de planificar el inicio de sesión |
+| **Enabler** | Una pieza técnica es inevitable y la necesitan varias historias | La infraestructura de autenticación, con un criterio verificable propio (un comando o un caso mínimo de punta a punta), nunca «toda la base de datos» |
+
+Una historia dividida conserva su orden con `Requiere:`. Si ninguna forma la deja en 3 tareas o menos, el problema suele ser de diseño o de incertidumbre: se pregunta al responsable humano o se abre un Spike.
+
+## 11. El backlog como archivo y sus vistas
+
+El backlog vive en **un archivo del repositorio** (por ejemplo, `docs/backlog.md`), que es la única fuente de verdad. No depende de ningún servicio, viaja con el código y pasa por PR, así que cada cambio lleva la firma del responsable humano. La CI lo lee (la compuerta de estabilización, 02 §9) y los agentes lo leen sin herramientas externas.
+
+El formato MUST ser una tabla con estas columnas, en cualquier orden:
+
+| Columna | Contenido |
+|---|---|
+| `ID` | `US-NNN`, `EN-NNN`, `BUG-NNN`, `CH-NNN`, `ST-NNN`, `SP-NNN`, `REL-NNN` |
+| `Tipo` | Historia, Enabler, Defecto, Chore, Lote, Spike, Release |
+| `Título` | En el formato de su tipo (§3) |
+| `Requiere` | IDs separados por coma, o `—` |
+| `Puntos` | Fibonacci (§5), o `—` |
+| `Prioridad` | Escala del perfil (§4) |
+| `Severidad` | Solo defectos (§9.1); el resto, `—` |
+| `Estado` | 00 §6 |
+
+Para el responsable humano, una tabla en un archivo no es la mejor forma de ver dónde va el proyecto. Las **vistas** (un tablero) se generan desde el archivo, en una sola dirección:
+
+- la implementación de referencia genera un tablero HTML autocontenido, sin ningún servicio;
+- adaptadores opcionales publican el mismo backlog en GitHub Projects, Trello, GitLab u otro tablero. Cambiar de herramienta es cambiar de adaptador, no de metodología;
+- lo que se mueve en una vista no vuelve solo al archivo: se le pide al orquestador y entra por PR.

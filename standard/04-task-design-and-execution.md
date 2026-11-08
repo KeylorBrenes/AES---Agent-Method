@@ -34,6 +34,8 @@ El estudio TDAD (Alonso, Yovine y Braberman, arXiv:2603.17973; tesis de maestrí
 
 Una tarea es suficientemente pequeña si un agente puede comprender su objetivo, implementarla, inspeccionar el diff y ejecutar su validación sin tener que aceptar varios resultados independientes como un bloque indivisible.
 
+Una historia tiene **3 tareas como máximo**. Si no cabe, la historia es demasiado grande y se divide (02 §3.1, §10), en lugar de hacer tareas más grandes.
+
 Las tareas se dividen **por criterios** (cortes verticales que dejan criterios en verde), no por capas técnicas. Una tarea «solo API» y otra «solo UI» no pueden quedar verdes por separado si la aceptación cruza ambas. Sin CI por criterio, toda historia termina en una sola tarea grande: en el sandbox de AES, las dos primeras historias acabaron en tareas únicas de 300 a 500 líneas.
 
 Señales para dividir:

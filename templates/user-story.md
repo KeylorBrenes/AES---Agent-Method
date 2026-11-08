@@ -1,79 +1,50 @@
-# US-[NNN] — [Título orientado al resultado]
+# US-[NNN] — Como [tipo de usuario], quiero [capacidad], para [beneficio]
 
-[También sirve para Enablers (EN-NNN). Para defectos, chores y lotes de estabilización usa `defect.md` y `stabilization-batch.md`.]
+[La historia es para el responsable humano y se conserva. Se escribe en lenguaje de cliente: qué se logra y cómo se comprueba, sin tablas, clases, endpoints ni patrones (03 §1). Lo técnico va en el plan técnico (`technical-plan.md`), que se elimina en el cierre.
+Para enablers, el título es «EN-[NNN] — Para [objetivo], necesitamos [capacidad técnica]». Para defectos, chores y lotes de estabilización usa `defect.md` y `stabilization-batch.md`.]
 
+- **Requiere:** US-[MMM] / —
 - **Epic:** EPIC-[NNN]
 - **Track:** T2 / T3
-- **Estado:** Draft / Ready / In Progress / In Review / Blocked / Ready for Acceptance / Accepted / Rejected / Deferred
+- **Estado:** Draft / Ready / In Progress / In Review / Blocked / Ready for Acceptance / Accepted / Released / Rejected / Deferred
 - **Prioridad:** P0 / P1 / P2 / P3
-- **Story Points:** 1 / 2 / 3 / 5 / 8 / 13
+- **Story Points:** 1 / 2 / 3 / 5 [8 o más: dividir antes de refinar, 02 §3.1]
 - **Riesgo:** Low / Medium / High / Critical
 - **Aprobador de producto:**
 
-## Historia
-Como [actor], quiero [capacidad], para [beneficio].
-
 ## Contexto y reglas
-
-## Alcance incluido
-
-## Fuera de alcance
-[Obligatorio y no vacío en T2/T3.]
+[En términos del negocio: por qué importa y qué reglas aplican.]
 
 ## Criterios de aceptación
-| ID | Dado | Cuando | Entonces | Verificación / prueba |
+[Dado / Cuando / Entonces, en lenguaje del usuario. Cada acción que guarda, edita, elimina o envía tiene un criterio de fallo: qué ve el usuario si no se pudo y qué lo quita (03 §3).]
+
+| ID | Dado | Cuando | Entonces | Se comprueba con |
 |---|---|---|---|---|
-| AC-01 | | | | Aceptación `@US-[NNN]-AC-01` |
-| AC-02 | | | | Regresión de US-[MMM] (caracterización: el comportamiento ya existe, 05 §2.4) |
+| AC-01 | que soy un visitante | me registro con un email válido y una contraseña de al menos 8 caracteres | mi cuenta queda creada y entro a la app con la sesión iniciada | Prueba de aceptación |
+| AC-02 | | | | Regresión de US-[MMM] (el comportamiento ya existe, 05 §2.4) |
 
-[Cada acción que escribe (guardar, editar, eliminar, enviar) tiene un criterio de fallo: qué ve el usuario si la respuesta no es exitosa y si la red falla, y qué lo limpia (03 §3).]
+## Fuera de alcance
+[Obligatorio y no vacío. Lo que alguien podría esperar de esta historia y no se hace aquí, con la historia que lo cubrirá si existe.]
 
-## Casos negativos y límites relevantes
+## Plan
+[Cómo se va a construir, contado como a un cliente: qué podrá hacer el usuario al terminar cada paso. Sin detalles técnicos.]
 
-## Contrato de interfaz
-[Punto de entrada observable contra el que se escriben las pruebas de aceptación. Omitir solo si la historia no toca ninguna frontera observable.]
-
-| Tipo | Definición |
-|---|---|
-| API / CLI / UI / librería | [p. ej. `GET /api/notifications` → 200 `{items:[{id, title, read, createdAt}]}`; 401 sin sesión] |
-
-## Dependencias y contratos
-
-## ADRs aplicables
+## Sugerencias del orquestador
+[Qué considera el mejor camino y por qué; qué alternativas descartó. En lenguaje de cliente.]
 
 ## Decisiones
 [Cada ambigüedad resuelta y cada supuesto de QA convertido en contrato (03 §8). Entra en el mismo PR que la usa. Ningún supuesto queda abierto al pasar a `Ready`.]
 
 | ID | Pregunta | Opciones | Decisión | Quién y fecha | Impacto |
 |---|---|---|---|---|---|
-| D-01 | | | | | AC nuevo/modificado, contrato, ADR o «ninguno» |
+| D-01 | | | | | Criterio nuevo/modificado, ADR o «ninguno» |
 
-## Supuestos e incertidumbres
-[Solo los que no afectan el producto (03 §5). Los que sí, van a «Decisiones».]
+## Riesgos
 
-## Estrategia de pruebas
-- Aceptación visible:
-- Aceptación holdout (obligatoria en T3):
-- RED confirmado (fecha/commit/artefacto):
-- Unitarias:
-- Integración:
-- E2E/regresión:
-- Prueba manual agéntica:
-- Seguridad/no funcionales:
-
-## Tareas
-[Divididas por criterios, no por capas. La última tarea no lleva lista de criterios: ejecuta la historia completa.]
-
-| ID | Resultado | Superficie | Criterios que deja en verde | Dependencias | Estado |
-|---|---|---|---|---|---|
-
-## Evidencia y revisión
-- CI y guardián:
-- Informe QA:
-- Informe verificador:
-- Revisión humana de código (T3):
-- Aceptación humana:
-- Defectos registrados en el cierre (ID, severidad):
+## Cierre
+- Aceptación humana (fecha):
+- Defectos registrados (ID y severidad):
+- Qué se consolidó del plan técnico (catálogo de diseño, ADR):
 
 ## Historial de cambios
 | Fecha | Cambio | Motivo | Aprobador |

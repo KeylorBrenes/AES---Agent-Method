@@ -22,7 +22,7 @@ Los escenarios de aceptación deben estar disponibles antes de declarar que la i
 QA no puede escribir pruebas útiles antes de que exista el código si no sabe por dónde entrar al sistema. Cuando la historia introduce o modifica una frontera observable, el orden es:
 
 1. criterios de aceptación aprobados;
-2. **contrato de interfaz** propuesto por el arquitecto/orquestador: el punto de entrada observable que usarán las pruebas. Por defecto, la frontera externa del sistema:
+2. **contrato de interfaz** propuesto por el arquitecto/orquestador, en el plan técnico de la historia (03 §1.2): el punto de entrada observable que usarán las pruebas. Por defecto, la frontera externa del sistema:
    - HTTP/API: método, ruta, payload, códigos y forma de la respuesta;
    - CLI: comando, argumentos, salida y código de salida;
    - UI: flujo y selectores estables acordados (por ejemplo, `data-testid`);

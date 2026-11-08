@@ -11,9 +11,11 @@ Antes de implementar funcionalidades, el orquestador DEBE ayudar a crear o local
 1. **Project Brief:** problema, usuarios, objetivos, alcance inicial, restricciones y criterios generales de éxito.
 2. **Project Profile:** stack, entorno, comandos, convenciones, controles de calidad, agentes y permisos.
 3. **Architecture Overview:** contexto, componentes principales, límites, datos e integraciones conocidas.
-4. **Backlog inicial:** Epics y riesgos/incertidumbres conocidos; no es necesario detallar todas las historias futuras.
+4. **Backlog inicial, completo pero superficial** (02 §7): todas las historias que se conocen para llegar al producto, cada una con su título en formato, una línea de valor, `Requiere:` y una estimación aproximada; Epics y riesgos conocidos. Sin criterios detallados, diseño ni tareas: eso llega cuando le toca a cada historia.
 5. **Quality Strategy:** niveles de prueba, CI y controles aplicables.
 6. **Copia local de las reglas que los agentes consultan:** como mínimo, las checklists de DoR y DoD (08) dentro del repositorio (por ejemplo, `docs/aes/`), con la versión de AES de la que salen. Un agente que solo tiene la referencia «AES 08» revisa la DoR de memoria.
+
+El primer elemento que se implementa es el **esqueleto que camina** (02 §3.2): un enabler que deja la aplicación arrancando de punta a punta, con la CI en verde, sobre el que crecen las historias. La arquitectura inicial describe lo suficiente para ese esqueleto y para las primeras historias; el resto se decide cuando haga falta.
 
 Si se trabaja sobre un proyecto existente, primero se inspecciona el repositorio y el comportamiento actual. No se asume que la documentación está actualizada ni que la arquitectura deseada coincide con la implementada.
 

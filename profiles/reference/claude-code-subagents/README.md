@@ -16,6 +16,7 @@ Es un punto de partida, no un perfil prescriptivo. Las partes del stack (.NET + 
 | `.claude/hooks/bash-guard.sh` | L2 | `PreToolUse` de terminal: escrituras evidentes a rutas prohibidas; los subagentes no publican ni cambian de rama | Probado |
 | `.claude/hooks/subagent-gate.sh` | L2 | `SubagentStop`: ningún rol termina con servidores vivos; programador y mecánico, además, con el guardián y `ci/validate.sh` en verde | Probado |
 | `.claude/scripts/with-servers.sh` | — | Arranca los servidores con datos temporales, ejecuta un comando y los detiene siempre; falla si el puerto está ocupado | Probado en Windows y Linux (la lectura de `.claude/aes.env`: simulación) |
+| `.claude/scripts/aes-board.mjs` | — | Vistas del backlog desde `docs/backlog.md`: tablero HTML autocontenido (`.aes/board.html`) o JSON para un adaptador (GitHub Projects, Trello, GitLab) | Simulación |
 | `.claude/scripts/aes-outline.sh` | — | Resumen estructural (archivos y firmas públicas, sin implementaciones) para que el orquestador decida el diseño con hechos | Simulación |
 | `.claude/scripts/aes-wt.sh` | — | Checkouts propios por rol (worktrees): `open`, `close`, `run`, `delegate`. El checkout principal se queda en `dev` | Simulación |
 | `.claude/hooks/worktree-create.sh`, `worktree-remove.sh` | L2 | El subagente con `isolation: worktree` trabaja en la rama de trabajo real (la que indicó el orquestador con `delegate`); sin indicación, no arranca | Simulación (falta confirmar en Claude Code el formato del evento) |
@@ -41,7 +42,7 @@ Es un punto de partida, no un perfil prescriptivo. Las partes del stack (.NET + 
 1. **Copia** estos archivos a la raíz de tu proyecto, respetando las rutas. Sustituye `@tu-usuario` en `CODEOWNERS`, los comandos de `.claude/aes.env`, `ci/validate.sh` y la sección `STACK` del workflow.
 2. **Añade a `.gitignore`:** `.aes/` (notas del orquestador), `.claude/settings.local.json` (credenciales) y `.claude/worktrees/` (checkouts de los roles).
 3. **Copia la DoR/DoD** de AES (`standard/08-definition-of-ready-and-done.md`) a `docs/aes/`, para que los agentes la tengan en el repo.
-4. **Backlog:** la tabla de `docs/backlog.md` debe tener las columnas `ID`, `Severidad` y `Estado`. La severidad (`Crítica`, `Alta`, `Media`, `Menor`) solo se rellena en los defectos; el resto lleva `—`. La compuerta lee esa tabla desde `main`.
+4. **Backlog:** `docs/backlog.md` con la plantilla `templates/backlog.md` de AES (columnas `ID`, `Tipo`, `Título`, `Requiere`, `Puntos`, `Prioridad`, `Severidad`, `Estado`; AES 02 §11). La severidad solo se rellena en los defectos; el resto lleva `—`. La compuerta lee esa tabla desde `dev`, y `aes-board.mjs` genera el tablero.
 5. **Regresión:** crea `specs/active-stories.txt` (un ID por línea; empieza vacío). El orquestador añade cada elemento en su cierre.
 6. **Identidad de los agentes: GitHub App** sin permiso de *Workflows*. Así ningún agente puede editar la CI para saltarse el guardián, y sus PR aparecen como `<app>[bot]`, que tú puedes aprobar.
    - Créala en *Settings → Developer settings → GitHub Apps* con permisos de *Contents* y *Pull requests* (lectura y escritura) y nada más. Instálala solo en el repositorio.

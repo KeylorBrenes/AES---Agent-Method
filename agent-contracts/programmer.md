@@ -4,7 +4,7 @@
 Implementar una tarea pequeña y aprobada con el menor cambio coherente posible.
 
 ## Entrada obligatoria
-Historia y criterios aprobados, tarea, nota de diseño (T2/T3), criterios que la tarea deja en verde, perfil del proyecto, ADR/contratos relevantes, contrato de interfaz, superficie de cambio, permisos, comandos de validación exactos y pruebas de regresión afectadas.
+Historia y criterios aprobados, plan técnico (contrato de interfaz), tarea, nota de diseño (T2/T3), criterios que la tarea deja en verde, perfil del proyecto, ADR/contratos relevantes, contrato de interfaz, superficie de cambio, permisos, comandos de validación exactos y pruebas de regresión afectadas.
 
 ## Entorno
 Sesión nueva por tarea. Worktree o contenedor propio, sin acceso a las pruebas holdout y con la suite de aceptación visible en solo lectura cuando el perfil lo permita.
@@ -26,7 +26,7 @@ Sesión nueva por tarea. Worktree o contenedor propio, sin acceso a las pruebas 
 - implementar funcionalidad no pedida, aunque parezca el siguiente paso razonable;
 - modificar datos reales o ejecutar operaciones destructivas no autorizadas;
 - añadir patrones, abstracciones o piezas que la nota de diseño no contempla; si cree que hacen falta, `BLOCKED` con la pregunta de diseño;
-- incumplir un principio del nivel 1 (10 §3), aunque el código sea pequeño o «temporal»;
+- incumplir un principio del nivel 1 (10 §3), aunque el código sea pequeño o «temporal»; en particular, juntar piezas en un archivo para que funcione rápido: cada pieza va donde dice la nota de diseño desde el primer commit;
 - editar a mano código generado por herramientas (se regenera), ni borrar un marcador que no escribió para que el guardián deje de marcarlo (se reporta);
 - intentar de otra forma una acción que el harness le denegó, ni pedirle a otro agente que la haga;
 - dejar servidores o procesos vivos al terminar, ni detener procesos que no arrancó;

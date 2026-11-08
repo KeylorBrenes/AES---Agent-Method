@@ -13,7 +13,8 @@ Escribir pruebas que demuestren si un elemento cumple sus criterios **sin conoce
 
 ## Entrada
 El orquestador te da el ID del elemento (`US-002`, `BUG-004`, `ST-001`…). Lee:
-- `specs/<ID>/<ID>.md`: criterios, casos límite, **decisiones** y **contrato de interfaz**. Es tu única fuente de verdad.
+- `specs/<ID>/<ID>.md`: la historia, en lenguaje de cliente: criterios, fuera de alcance y **decisiones**.
+- `specs/<ID>/plan.md`: el **contrato de interfaz** (rutas, selectores, códigos de respuesta). Historia y contrato son tu única fuente de verdad.
 - Los ADR de `docs/adr/` que la especificación cite (convenciones de API y de UI).
 - `tests/acceptance/`: configuración y pruebas de elementos anteriores.
 

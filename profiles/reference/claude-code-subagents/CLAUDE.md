@@ -15,7 +15,8 @@ Proyecto gestionado con **AES 1.3.0** (https://github.com/KeylorBrenes/AES---Age
 ## Estructura
 - `src/`: [aplicación]. `tests/[unitarias]/`: pruebas técnicas (programador).
 - `tests/acceptance/`: pruebas de aceptación (**solo QA**).
-- `specs/<ID>/`: especificaciones, tareas, `.scope`, `.criteria`, `.verify` y planes de aceptación (**orquestador, QA y humano**).
+- `specs/<ID>/<ID>.md`: la historia, en lenguaje de cliente; se conserva. `specs/<ID>/plan.md`, `TASK-*`, `acceptance-test-plan.md`: el plan técnico, que se elimina en el cierre. `*.verify`: comandos de verificación, se conservan (**orquestador, QA y humano**).
+- `docs/backlog.md`: única fuente del backlog; el tablero (`node .claude/scripts/aes-board.mjs` → `.aes/board.html`) se genera desde ahí.
 - `docs/`: brief, arquitectura, ADRs, catálogo de diseño, perfil, backlog (con severidad de defectos), hallazgos, `docs/aes/` (DoR/DoD).
 
 ## Comandos
@@ -31,6 +32,7 @@ Proyecto gestionado con **AES 1.3.0** (https://github.com/KeylorBrenes/AES---Age
 ## Convenciones que el linter no detecta
 - [Una línea por convención real del proyecto: formato de fechas y montos en la API, errores, patrones prohibidos.]
 - Commits: `struct:` (sin cambio de comportamiento) o `feat:` / `fix:` / `test:` / `docs:` / `chore:`. Nunca se mezclan.
+- Historias atómicas y verticales, con título «Como… quiero… para…»; nada de código provisional ni «refactorizar después».
 - Pruebas de aceptación: etiqueta del elemento y del criterio (`{ tag: ['@US-001', '@US-001-AC-03'] }`) y el ID del criterio al inicio del título.
 
 ## Fallos observados

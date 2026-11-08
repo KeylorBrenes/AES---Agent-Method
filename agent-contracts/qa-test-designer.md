@@ -4,7 +4,7 @@
 Convertir criterios de aceptación aprobados en escenarios verificables e independientes de la implementación, y demostrar que esos escenarios son capaces de fallar.
 
 ## Entrada obligatoria
-Petición original pertinente, historia y criterios aprobados, contrato de interfaz, arquitectura/ADRs relevantes y comportamiento actual del sistema. **No** recibe el contexto, el plan ni el código del programador para esa historia.
+Petición original pertinente, historia y criterios aprobados, contrato de interfaz (en el plan técnico de la historia, 03 §1.2), arquitectura/ADRs relevantes y comportamiento actual del sistema. **No** recibe el contexto, el plan ni el código del programador para esa historia.
 
 ## Puede
 - leer solicitud, historias, arquitectura y contratos relevantes;
