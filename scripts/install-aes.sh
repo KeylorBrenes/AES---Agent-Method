@@ -188,7 +188,7 @@ echo "$stamp → $target"
 echo "  archivos de AES: $copied copiados, $unchanged sin cambios"
 [[ ${#new_seeds[@]} -gt 0 ]] && printf '  semilla nueva (adáptala): %s\n' "${new_seeds[@]}"
 [[ ${#pending[@]} -gt 0 ]] && printf '  REVISA a mano y borra después: %s\n' "${pending[@]}"
-if [[ $mode == install ]]; then
+if [[ $mode == install && -z "${AES_QUIET_NEXT:-}" ]]; then
   cat <<EOF
 
 Falta (README de la referencia, «Puesta en marcha»):

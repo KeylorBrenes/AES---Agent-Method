@@ -126,6 +126,16 @@
 
 **Pendiente de probar en el sandbox nuevo:** la ronda de confirmación de `PRODUCT.md`, la página de decisión de la dirección visual desde Claude Code en Windows, `shape` dentro del refinamiento y el detector en Actions.
 
+## 8. Puesta en marcha de un repositorio con un comando — referencia
+
+**Problema.** Cada proyecto nuevo exigía una docena de pasos a mano en GitHub (crear `main` y `dev`, rama por defecto, rulesets, etiquetas, variables, acceso de la app, credenciales locales, CODEOWNERS). Es fácil olvidar uno, y uno olvidado (un ruleset con bypass) ya dejó integrar con la CI en rojo (FL-003).
+
+**Decisión del responsable humano (2026-11-08):** automatizar lo que se repite por proyecto y dejar un manual.
+
+**Cambio.** `scripts/setup-repo.sh` con `gh` (la API de GitHub; por SSH solo se mueve git, no se configuran rulesets ni variables). Lo que se hace una vez por cuenta (crear la GitHub App y `~/.aes/app.env`) queda manual. El script es idempotente y tiene `--dry-run`. Los rulesets pasan a ser tres (`ramas-ci` en las dos ramas, `aprobacion-dev` y `aprobacion-main`), para poder limitar `main` a merge commit sin afectar a `dev`.
+
+**Comprobado aquí:** con un `gh` simulado y un remoto local: creación, instalación con archify, CODEOWNERS, credenciales locales fuera de git, commit inicial, `dev`, y una segunda ejecución que no repite nada y actualiza los rulesets en lugar de duplicarlos. **Pendiente:** ejecutarlo contra GitHub de verdad (la API de rulesets con `allowed_merge_methods` y la llamada que da acceso a la app), en el to-do.
+
 ## Migración de un proyecto en 1.2.0
 
 1. `git push origin main:dev` y hacer `dev` la rama por defecto.
