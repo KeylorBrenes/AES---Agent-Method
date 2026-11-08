@@ -43,13 +43,84 @@ Hay dos partes: lo que se hace **una vez por cuenta de GitHub** (a mano, unos mi
 
 ### Una vez por cuenta
 
-1. **Herramientas:** git, [gh](https://cli.github.com) y `jq` (en Windows, dentro de Git Bash). Inicia sesión con `gh auth login` y asegúrate de que la sesión tiene los permisos `repo` y `workflow`: `gh auth refresh -s workflow`.
-2. **GitHub App de los agentes**, sin permiso de *Workflows*: así ningún agente puede editar la CI para saltarse el guardián, y sus PR aparecen como `<app>[bot]`, que tú apruebas.
-   - Créala en *Settings → Developer settings → GitHub Apps* con permisos de *Contents* y *Pull requests* (lectura y escritura) y nada más. Instálala en tu cuenta con *Only select repositories* (el script le añade cada proyecto).
-   - La llave se genera en ***Credentials → Key pairs → New key***. Guárdala fuera de cualquier repo, por ejemplo en `C:/Users/<tú>/.aes/aes-agent.pem`.
-   - No uses una cuenta bot ni un token personal *fine-grained*: las cuentas nuevas pueden quedar suspendidas por el antiabuso de GitHub, y los tokens *fine-grained* no acceden a repos de otra cuenta personal.
-3. **`~/.aes/app.env`**, a partir de `scripts/aes-app.env.example` del repo de AES: App ID, Installation ID, ruta de la llave, *slug* de la app y, opcionalmente, los aprobadores y las skills de terceros.
-4. **Skills de terceros** (opcional): clónalas en una versión fija, por ejemplo en `~/.aes/skills/`, y añade sus carpetas a `AES_VENDOR` en `app.env`. Para actualizarlas, cambias de versión ahí y ejecutas `install-aes.sh <proyecto> --upgrade --vendor <carpeta>` en cada proyecto.
+#### 1. Herramientas
+
+| Herramienta | Para qué |
+|---|---|
+| git | Todo |
+| bash, openssl, curl | Hooks y scripts de AES; el token de la app. En Windows vienen con Git for Windows (Git Bash) |
+| [gh](https://cli.github.com) | `setup-repo.sh` y los PR de los agentes |
+| jq | Hooks de AES y `setup-repo.sh` |
+| Node.js LTS | Tablero (`aes-board.mjs`), archify y las pruebas de aceptación |
+
+**Windows** (PowerShell; después, cierra y abre Git Bash para que tome el PATH nuevo):
+
+```powershell
+winget install --id Git.Git -e
+winget install --id GitHub.cli -e
+winget install --id jqlang.jq -e
+winget install --id OpenJS.NodeJS.LTS -e
+```
+
+Usa siempre **Git Bash** para los scripts de AES: Claude Code ejecuta los hooks con él.
+
+**Linux:**
+
+```bash
+# Fedora
+sudo dnf install git gh jq nodejs openssl curl
+# Debian / Ubuntu (gh, desde el repositorio oficial: https://github.com/cli/cli/blob/trunk/docs/install_linux.md)
+sudo apt install git jq nodejs npm openssl curl
+```
+
+**Comprueba:** `git --version && gh --version && jq --version && node --version && openssl version`
+
+**Sesión de gh** con los permisos que necesita `setup-repo.sh`:
+
+```bash
+gh auth login                 # GitHub.com → HTTPS → iniciar sesión en el navegador
+gh auth refresh -s workflow   # permiso para subir el workflow de la CI
+gh auth status                # en «Token scopes» deben aparecer repo y workflow
+```
+
+#### 2. GitHub App de los agentes
+
+Los agentes publican ramas y abren PR con la identidad de una GitHub App, no con la tuya. La app **no tiene permiso de *Workflows***: así ningún agente puede editar la CI para saltarse el guardián, y sus PR aparecen como `<slug>[bot]`, que tú apruebas. Se crea una vez y sirve para todos tus proyectos.
+
+1. En GitHub: tu foto → ***Settings → Developer settings → GitHub Apps → New GitHub App***.
+2. **Nombre:** uno único en GitHub, por ejemplo `aes-agent-<tu-usuario>`. El *slug* (el nombre en minúsculas y con guiones) aparece en la URL de la app, `github.com/apps/<slug>`.
+3. **Homepage URL:** cualquiera, por ejemplo la URL de tu perfil.
+4. **Webhook:** desmarca *Active*. AES no lo usa.
+5. **Permissions → Repository permissions:**
+   - *Contents*: **Read and write**;
+   - *Pull requests*: **Read and write**;
+   - *Metadata*: Read-only (GitHub lo marca solo);
+   - **nada más**. En particular, *Workflows* se queda en *No access*. Sin permisos de cuenta ni de organización.
+6. **Where can this GitHub App be installed?** *Only on this account*. Pulsa ***Create GitHub App***.
+7. En la página *General* de la app, anota el **App ID**.
+8. **Llave privada:** ***Credentials → Key pairs → New key*** (en la interfaz anterior, *Private keys → Generate a private key*). Se descarga un `.pem`. Muévelo fuera de cualquier repositorio:
+   - Windows: `C:/Users/<tú>/.aes/aes-agent.pem`;
+   - Linux: `~/.aes/aes-agent.pem`, con `chmod 600`.
+
+   Nunca la subas a git ni la pegues en un chat. Si se filtra, revócala en esa misma pantalla y genera otra.
+9. **Instala la app:** menú lateral ***Install App*** → tu cuenta → ***Only select repositories***. Elige uno cualquiera (por ejemplo, el sandbox); `setup-repo.sh` añade cada proyecto nuevo. El **Installation ID** es el número al final de la URL de la instalación: `github.com/settings/installations/<id>`.
+10. **`~/.aes/app.env`:** cópialo de `scripts/aes-app.env.example` del repo de AES y rellena `AES_APP_ID`, `AES_APP_INSTALLATION_ID`, `AES_APP_PRIVATE_KEY` (ruta con `/`) y `AES_BOT_SLUG`. El ID del usuario bot lo consulta el script (`gh api "users/<slug>%5Bbot%5D" --jq .id`).
+
+No uses una cuenta bot ni un token personal *fine-grained*: las cuentas nuevas pueden quedar suspendidas por el antiabuso de GitHub, y los tokens *fine-grained* no acceden a repos de otra cuenta personal.
+
+#### 3. Skills de terceros (opcional)
+
+Clónalas en una versión fija, por ejemplo en `~/.aes/skills/`, y añade sus carpetas a `AES_VENDOR` en `app.env`:
+
+```bash
+mkdir -p ~/.aes/skills && cd ~/.aes/skills
+git clone https://github.com/tt-a1i/archify.git && git -C archify checkout <tag>
+git clone https://github.com/pbakaus/impeccable.git && git -C impeccable checkout <tag>
+# en app.env:
+# AES_VENDOR="~/.aes/skills/archify;~/.aes/skills/impeccable/.claude/skills/impeccable"
+```
+
+Para actualizarlas, cambias de versión ahí y ejecutas `install-aes.sh <proyecto> --upgrade --vendor <carpeta>` en cada proyecto.
 
 ### Cada proyecto nuevo
 
