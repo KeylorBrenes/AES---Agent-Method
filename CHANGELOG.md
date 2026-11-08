@@ -1,8 +1,10 @@
 # Changelog
 
-## [1.3.0] — sin publicar (rama `release/1.3.0`)
+## [1.3.0] — 2026-11-08
 
-Se acumulan aquí los cambios que propone el responsable humano antes de retomar el sandbox. Justificación: [`docs/rfc/RFC-003-aes-1.3.0.md`](docs/rfc/RFC-003-aes-1.3.0.md).
+Mejoras propuestas por el responsable humano después de los cuatro elementos del sandbox de gastos, antes de un sandbox nuevo (una app de tareas) que empieza por la incepción. Cambio MINOR: los proyectos en 1.2.0 migran creando `dev` y reinstalando con `install-aes.sh --upgrade` (RFC-003, «Migración»). Justificación: [`docs/rfc/RFC-003-aes-1.3.0.md`](docs/rfc/RFC-003-aes-1.3.0.md).
+
+Lo que el RFC y el README de la referencia marcan como «simulación» se probó con repositorios y datos de prueba, pero todavía no en un ciclo real: worktrees por rol, la incepción, impeccable dentro del ciclo, el detector y el SAST en Actions, y `setup-repo.sh` contra GitHub.
 
 ### Añadido
 - **Ramas `main` y `dev` obligatorias** en todo proyecto (07 §7, principio 19): `main` es lo liberado, `dev` lo integrado y la base de todo el trabajo. Sin variante «solo `main`» ni *feature flags*.

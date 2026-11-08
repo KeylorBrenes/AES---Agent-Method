@@ -1,6 +1,6 @@
 # RFC-003 — AES 1.3.0
 
-**Estado:** En curso. Se van incorporando los cambios que propone el responsable humano; el sandbox queda pausado hasta publicarla.
+**Estado:** Aceptado y publicado en AES 1.3.0 (2026-11-08). Lo marcado como pendiente se comprueba en el sandbox nuevo (app de tareas).
 **Base:** AES 1.2.0
 **Tipo de cambio esperado:** MINOR. El modelo de ramas cambia el flujo de los proyectos existentes: migrarlos exige crear `dev` y ajustar la CI (ver «Migración»).
 
