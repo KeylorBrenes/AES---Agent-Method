@@ -1,6 +1,6 @@
 ---
 name: aes-cycle
-description: Procedimiento del orquestador AES 1.3.0 para llevar un elemento del backlog (historia US, enabler EN, defecto BUG, chore CH o lote de estabilización ST) desde la especificación hasta la aceptación, delegando en los subagentes qa, programmer, mechanic y verifier. Úsala cuando el usuario pida avanzar, iniciar o continuar un elemento del backlog.
+description: Procedimiento del orquestador AES 1.4.0 para llevar un elemento del backlog (historia US, enabler EN, defecto BUG, chore CH o lote de estabilización ST) desde la especificación hasta la aceptación, delegando en los roles qa, programmer, mechanic y verifier (subagentes de Claude Code u OpenCode, según el binding). Úsala cuando el usuario pida avanzar, iniciar o continuar un elemento del backlog.
 ---
 
 # Ciclo AES — orquestador
@@ -12,6 +12,7 @@ Eres el **orquestador** de AES 1.3.0 (`agent-contracts/orchestrator.md`). Coordi
 - **Checkouts** (AES 06 §10): el checkout principal se queda **siempre en `dev`**; nunca cambies de rama en él. Para trabajar tú en una rama: `p=$(bash .claude/scripts/aes-wt.sh open <rama>)` (la crea desde `origin/dev` si no existe; para un hotfix, `… open <rama> origin/main`), edita y haz commit dentro de `$p` (`git -C "$p" …`), publica y ciérralo con `aes-wt.sh close <rama>`. Comandos sueltos: `aes-wt.sh run <rama> -- <comando>`.
 - **Delegar** en una rama: créala si hace falta, asegúrate de que no está abierta, ejecuta `bash .claude/scripts/aes-wt.sh delegate <rama>` y luego llama al subagente **con `isolation: "worktree"`** (ya está en su definición; pásalo también en la llamada). El subagente trabaja en su propio worktree de esa rama, y al terminar el worktree se cierra; los commits quedan en la rama. Si el subagente no arranca porque «no hay rama indicada», te faltó el `delegate`.
 - El humano aprueba: criterios, pruebas de aceptación, cada PR, la severidad de los defectos y la aceptación final. Nunca lo das por hecho.
+- **Binding de roles** (AES 06 §12): `.claude/aes.env` dice dónde corre cada rol (`AES_BIND_QA`, `AES_BIND_PROGRAMMER`, `AES_BIND_MECHANIC`, `AES_BIND_VERIFIER`). Con `claude`, delegas como arriba, en el subagente. Con `opencode:<proveedor>/<modelo>`, **no uses el subagente ni `delegate`**: ejecuta `bash .claude/scripts/aes-oc.sh run <rol> <rama> -- "<plantilla Q1/P1/M1/R2 con sus datos>"` **en segundo plano** (puede tardar decenas de minutos) y espera su notificación. El script abre el worktree, ejecuta el rol en OpenCode con los mismos contratos y hooks, aplica la compuerta de fin de rol (con una reanudación), registra el costo y te devuelve el reporte del rol. Lo que sigue (comprobar commits, publicar, PR, CI, verificador) es idéntico. Código de salida: 0 = terminó y pasó la compuerta; 3 = compuerta en rojo o BLOCKED (trátalo como el reporte BLOCKED de un subagente); 4 = falló OpenCode o el proveedor (saldo, red): no lo reintentes con otro modelo sin preguntar al humano.
 - A cada subagente le das **solo** lo que dice su plantilla (sección «Plantillas»). Nada de tu razonamiento ni del reporte de otro rol.
 - La evidencia es la salida de comandos y de la CI. Un check verde no basta: confirma en el log **qué** se ejecutó (tipo de rama, elemento, etiquetas, número de pruebas, comandos de verificación).
 - Las etiquetas `aes:deps-approved`, `aes:markers-approved` y `aes:verified` las pone **el humano** (la CI comprueba quién). Tú solo le pides que las revise. Un commit nuevo las quita: hay que volver a ponerlas.
@@ -33,9 +34,10 @@ Eres el **orquestador** de AES 1.3.0 (`agent-contracts/orchestrator.md`). Coordi
 3. Identidad: `bash .claude/scripts/gh-app-token.sh | cut -c1-4` debe imprimir `ghs_`. Si falla, detente y muestra el error.
 4. Lee `docs/project-profile.md`, `docs/backlog.md`, `specs/<ID>/<ID>.md` si existe, `docs/aes/08-definition-of-ready-and-done.md` (DoR/DoD) y la última retrospectiva de `docs/retrospectives/`.
 5. **Modelo:** el orquestador corre en el modelo más capaz disponible (AES 06 §11), porque decide el diseño. Si esta sesión no lo usa, díselo al humano antes de seguir (`/model opus`).
-6. Anota el inicio con tu modelo real: `bash .claude/scripts/aes-note.sh finding "<ID> arranque / orquestador" "Inicio; modelo <modelo>" "Confirmación"`.
-7. **Compuerta de estabilización** (AES 02 §9): `BASE=origin/dev bash ci/defect-gate.sh start <ID>`. Si `<ID>` es una historia o enabler y la compuerta está cerrada, **no empieces**: muéstrale al humano los defectos abiertos y propón un lote `ST-NNN` con ellos (sección 5). Si hay un defecto Crítico, solo se trabaja en su corrección.
-8. **Track:** T2/T3 (US, EN) → secciones 1 a 4. T1 (BUG, CH, ST) → sección 5. T0 → sección 6. Si no es obvio, pregúntale al humano.
+6. **Binding:** `grep ^AES_BIND_ .claude/aes.env`. Si algún rol va a OpenCode, comprueba `opencode --version` y que el modelo responde: `opencode run -m <proveedor/modelo> "Responde OK"`. Si no, detente y díselo al humano (falta la clave, el saldo o la conexión).
+7. Anota el inicio con tu modelo real: `bash .claude/scripts/aes-note.sh finding "<ID> arranque / orquestador" "Inicio; modelo <modelo>" "Confirmación"`.
+8. **Compuerta de estabilización** (AES 02 §9): `BASE=origin/dev bash ci/defect-gate.sh start <ID>`. Si `<ID>` es una historia o enabler y la compuerta está cerrada, **no empieces**: muéstrale al humano los defectos abiertos y propón un lote `ST-NNN` con ellos (sección 5). Si hay un defecto Crítico, solo se trabaja en su corrección.
+9. **Track:** T2/T3 (US, EN) → secciones 1 a 4. T1 (BUG, CH, ST) → sección 5. T0 → sección 6. Si no es obvio, pregúntale al humano.
 
 ## 1. Refinamiento de una historia (rama `spec/<ID>`)
 1. **¿Es atómica y vertical?** (AES 02 §3.1–3.2). Una sola capacidad que se demuestra sola, construida de punta a punta, con menos de 8 puntos. Si el «quiero» une dos objetivos con «y», o son 8 puntos o más, **no la refines**: propónle al humano cómo dividirla (formas de AES 02 §10) y actualiza el backlog en este mismo PR.
@@ -97,6 +99,7 @@ Para cada tarea, en orden:
      - actualiza `docs/design-catalog.md` con lo que introdujeron las notas de diseño (patrones nuevos y lo que se decidió no usar), y propón un ADR para lo que el plan técnico tenga de convención para otras historias;
      - **elimina el plan técnico** (AES 03 §1.2): `git rm specs/<ID>/plan.md specs/<ID>/TASK-* specs/<ID>/acceptance-test-plan.md`. Se conservan `specs/<ID>/<ID>.md` y los `*.verify`; lo eliminado queda en el historial de git. Anota en «Cierre» de la historia qué consolidaste;
      - escribe tú `docs/retrospectives/<ID>.md`: **solo** patrones, un control por patrón y decisiones abiertas;
+     - si algún rol corrió en OpenCode, añade a la retrospectiva la salida de `bash .claude/scripts/aes-oc.sh report <ID>` (tokens y costo estimado por rol) y cuántas reanudaciones o BLOCKED hubo;
      - transcribe lo que quede en `.aes/decisions-pending.md` a «Decisiones» de la especificación;
      - registra cada defecto que el humano dejó para después en `docs/backlog.md` (fila con ID `BUG-NNN`, **Severidad** y Estado `Draft`) y su nota con criterio, historia de origen y reproducción (plantilla `templates/defect.md` de AES);
      - actualiza el estado del elemento y del backlog, y agrega `<ID>` a `specs/active-stories.txt`;

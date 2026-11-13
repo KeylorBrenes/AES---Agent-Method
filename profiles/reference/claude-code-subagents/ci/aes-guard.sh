@@ -21,7 +21,7 @@ ALLOW_MARKERS="${AES_ALLOW_MARKERS:-0}"
 ALLOW_DEPS="${AES_ALLOW_DEPS:-0}"
 
 # Rutas que el programador nunca puede tocar. Ajustar en el perfil del proyecto.
-PROTECTED_RE='^(tests/acceptance/|specs/|ci/|\.github/|\.claude/|docs/ci/|AGENTS\.md$|CLAUDE\.md$)'
+PROTECTED_RE='^(tests/acceptance/|specs/|ci/|\.github/|\.claude/|\.opencode/|docs/ci/|opencode\.json$|AGENTS\.md$|CLAUDE\.md$)'
 # Manifiestos, lockfiles, fuentes de paquetes y herramientas locales. Cambiar la fuente o una
 # herramienta es tan sensible como cambiar un paquete (FL de nuget.config y dotnet-tools.json).
 DEPS_RE='(^|/)(package\.json|package-lock\.json|pnpm-lock\.yaml|yarn\.lock|requirements[^/]*\.txt|poetry\.lock|pyproject\.toml|uv\.lock|Cargo\.toml|Cargo\.lock|go\.mod|go\.sum|[^/]*\.csproj|packages\.lock\.json|Directory\.Packages\.props|composer\.(json|lock)|Gemfile(\.lock)?|nuget\.config|NuGet\.Config|\.npmrc|\.yarnrc(\.yml)?|pip\.conf|global\.json|\.config/dotnet-tools\.json)$'

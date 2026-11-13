@@ -5,5 +5,7 @@
 /docs/ci/           @tu-usuario
 /.github/           @tu-usuario
 /.claude/           @tu-usuario
+/.opencode/         @tu-usuario
+/opencode.json      @tu-usuario
 /AGENTS.md          @tu-usuario
 /CLAUDE.md          @tu-usuario

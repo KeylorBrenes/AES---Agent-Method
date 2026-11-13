@@ -61,6 +61,7 @@ add_tree() { # $1 lista, $2 carpeta origen, $3 destino relativo
 }
 add_tree owned "$ref/.claude/hooks"   .claude/hooks
 add_tree owned "$ref/.claude/scripts" .claude/scripts
+add_tree owned "$ref/.opencode/plugin" .opencode/plugin
 for d in "$ref"/.claude/skills/*/; do
   n=$(basename "$d"); add_tree owned "$d" ".claude/skills/$n"
 done
@@ -73,7 +74,7 @@ owned+=("$aes_root/AES-CORE.md|docs/aes/AES-CORE.md")
 add_tree owned "$aes_root/templates" docs/aes/templates
 
 add_tree seeds "$ref/.claude/agents" .claude/agents
-for f in .claude/settings.json .claude/aes.env .github/workflows/aes.yml .github/CODEOWNERS ci/validate.sh CLAUDE.md; do
+for f in .claude/settings.json .claude/aes.env .github/workflows/aes.yml .github/CODEOWNERS ci/validate.sh CLAUDE.md opencode.json; do
   seeds+=("$ref/$f|$f")
 done
 

@@ -239,3 +239,17 @@ Cada rol que lee o escribe una rama de trabajo SHOULD hacerlo en un **checkout p
 ## 11. Modelo y harness por rol
 
 El perfil declara qué harness y qué modelo ocupa cada rol. El **orquestador** MUST correr en el modelo más capaz disponible: decide el diseño (10 §5), clasifica tracks, severidades y hallazgos, y es el único rol que ve el ciclo completo. Los demás roles pueden usar modelos más baratos porque reciben instrucciones desglosadas y su trabajo se verifica. La evidencia de cada elemento (09 §6) registra el modelo **real** de cada rol en esa ejecución, no el declarado: si cambian, las comparaciones de costo y calidad entre elementos no valen.
+
+## 12. Roles en otro harness
+
+Un rol MAY correr en un harness distinto al del orquestador (por ejemplo, el orquestador en Claude Code y el programador en OpenCode con otro proveedor), siempre que el perfil lo declare en su tabla de roles (§11) y se cumpla lo siguiente:
+
+1. **El mismo contrato.** El rol recibe las mismas instrucciones que en el harness principal, desde el mismo archivo; no hay una segunda versión que se desfase.
+2. **L1 equivalente** (§9): permisos del harness que niegan las rutas protegidas, la publicación (push, PR), la red que el rol no necesita y las preguntas interactivas. En una ejecución sin interfaz, una acción que pediría confirmación MUST rechazarse, nunca aprobarse sola.
+3. **L2 equivalente o hueco declarado:** las mismas comprobaciones que los hooks del harness principal, preferiblemente ejecutando los mismos scripts. Si el harness no permite alguna, el perfil la registra como hueco conocido.
+4. **L3 sin cambios:** la CI y la compuerta de fin de rol (servidores, guardián, validaciones) se aplican igual, porque no dependen del harness.
+5. **Sin credenciales de publicación** en el entorno del rol: publica el orquestador (§10).
+6. **Costo por delegación:** cada ejecución registra modelo, tokens (entrada, salida, razonamiento, caché) y costo estimado con el precio de lista del proveedor, incluidos los recargos por horario, aunque el modelo se use gratis. La retrospectiva del elemento resume el costo por rol (09 §6).
+7. **Datos fuera del proveedor principal:** el perfil registra a qué proveedor va el código y el contexto de cada rol, y sus condiciones de retención y entrenamiento. Un proyecto con datos sensibles no delega en un proveedor que retiene o entrena con ellos.
+
+El verificador SHOULD correr en una familia de modelos distinta a la del programador: un modelo que revisa su propio tipo de errores los detecta peor.

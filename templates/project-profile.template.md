@@ -10,13 +10,17 @@
 ## Roles: harness y modelo
 El modelo real de cada ejecución se registra en las métricas (09 §6); si difiere de esta tabla, se anota.
 
-| Rol | Harness | Modelo | Invocación | Identidad con la que publica |
-|---|---|---|---|---|
-| Orquestador (modelo más capaz disponible, 06 §11) | | | | |
-| QA | | | | |
-| Programador | | | | |
-| Mecánico (opcional) | | | | |
-| Verificador | | | | |
+| Rol | Harness | Modelo | Invocación | Identidad con la que publica | Proveedor y condiciones de datos (06 §12) |
+|---|---|---|---|---|---|
+| Orquestador (modelo más capaz disponible, 06 §11) | | | | | |
+| QA | | | | | |
+| Programador | | | | | |
+| Mecánico (opcional) | | | | | |
+| Verificador (otra familia de modelos que el programador, 06 §12) | | | | | |
+
+Ejemplo de la implementación de referencia: orquestador en Claude Code (Opus); QA, programador y mecánico en OpenCode con `deepseek/deepseek-flash`, delegados con `.claude/scripts/aes-oc.sh` (binding en `.claude/aes.env`); verificador como subagente de Claude Code (Sonnet).
+
+Huecos de control de los roles en otro harness (06 §12, punto 3):
 
 ## Producto y contexto
 - Objetivo:

@@ -1,6 +1,6 @@
 # Implementación de referencia — Claude Code con subagentes
 
-Implementación de AES 1.3.0 con **Claude Code** como único harness: la sesión principal es el orquestador (en el modelo más capaz disponible, porque también decide el diseño de cada tarea) y los roles `qa`, `programmer`, `mechanic` y `verifier` son subagentes con su propio contexto, modelo y permisos. GitHub aloja el repositorio, la CI y la protección de rama.
+Implementación de AES 1.4.0 con **Claude Code** como harness del orquestador: la sesión principal es el orquestador (en el modelo más capaz disponible, porque también decide el diseño de cada tarea) y los roles `qa`, `programmer`, `mechanic` y `verifier` son subagentes con su propio contexto, modelo y permisos, o, según el binding, corren en **OpenCode** con otro proveedor (sección «Roles en OpenCode»). GitHub aloja el repositorio, la CI y la protección de rama.
 
 Sale del experimento [aes-sandbox-gastos](https://github.com/KeylorBrenes/aes-sandbox-gastos), una app de control de gastos en .NET 10 + React donde se aplicó AES con agentes reales en cuatro elementos (EN-001, US-001, CH-001, US-002). Lo que dice «probado» se usó ahí; lo que dice «simulación» se probó con repositorios y datos de prueba al publicar esta versión, pero todavía no en un ciclo real.
 
@@ -36,6 +36,7 @@ Es un punto de partida, no un perfil prescriptivo. Las partes del stack (.NET + 
 | `.github/workflows/aes.yml` | L3 | Un único check `aes` en `dev` y `main` con todo lo anterior, más «main contenido en dev»; scripts siempre desde la rama destino | Versión de 1.1 probada; esta, en simulación |
 | `.github/CODEOWNERS` | L3 | Tu aprobación para rutas protegidas | Probado |
 | `CLAUDE.md` | — | Ejemplo de instrucciones persistentes breves | — |
+| `opencode.json`, `.opencode/plugin/aes-guard.js`, `.claude/scripts/aes-oc.sh` | L1, L2 | Roles en OpenCode (binding en `.claude/aes.env`): agentes con el mismo contrato, permisos, plugin que ejecuta los mismos hooks, delegación con compuerta y registro de costo | Simulación con modelo falso |
 
 ## Puesta en marcha
 
@@ -197,6 +198,59 @@ orquestador: publica la rama; para el verificador, otro delegate → worktree li
 - Los roles se ejecutan de uno en uno. En paralelo, dos worktrees arrancarían servidores en los mismos puertos.
 - Cada worktree necesita sus dependencias (`npm ci`, `dotnet restore`): la primera ejecución de cada rol es más lenta.
 - Si quieres más archivos locales en cada worktree (por ejemplo, un `.env`), añádelos a `AES_WT_LOCAL_FILES` en `aes-wt.sh`.
+
+## Roles en OpenCode (binding, AES 06 §12)
+
+El orquestador se queda en Claude Code; QA, el programador y el mecánico pueden correr en [OpenCode](https://opencode.ai) con otro proveedor (por ejemplo, DeepSeek). El verificador se queda en Claude: revisa mejor un modelo de otra familia. Todo es opcional: con el binding en `claude` (el valor por defecto), nada de esto se usa.
+
+### Puesta en marcha
+
+1. **OpenCode** 1.18.30 o posterior (`opencode --version`). No pide cuenta.
+2. **Proveedor.** Una de estas:
+   - **DeepSeek de pago:** crea una clave en platform.deepseek.com y recarga saldo (PayPal o tarjeta; es prepago, así que el saldo es tu tope). En OpenCode, `/connect` → `deepseek` → pega la clave, o define `DEEPSEEK_API_KEY` en el entorno. Modelo: `deepseek/deepseek-flash`.
+   - **Gratis por tiempo limitado:** OpenCode ofrece algunos modelos sin costo, sin cuenta. `opencode/deepseek-v4.1-flash-free` declara cero retención y sin entrenamiento; otros gratuitos (Big Pickle, MiMo, Nemotron…) sí guardan o entrenan con tus datos: no los uses con código que no quieras compartir. Revisa las condiciones en opencode.ai/docs/zen antes de elegir.
+3. **Binding** en `.claude/aes.env`, por rol:
+   ```bash
+   AES_BIND_QA="opencode:deepseek/deepseek-flash"
+   AES_BIND_PROGRAMMER="opencode:deepseek/deepseek-flash"
+   AES_BIND_MECHANIC="opencode:deepseek/deepseek-flash"
+   AES_BIND_VERIFIER="claude"
+   ```
+   Y el precio de lista para estimar el costo (`AES_OC_LIST_PRICE`, `AES_OC_PEAK_UTC`): ya viene con los de `deepseek-flash`.
+4. **Prueba:** `opencode run -m deepseek/deepseek-flash "Responde OK"`. El orquestador hace la misma comprobación al arrancar cada sesión.
+
+### Cómo delega el orquestador
+
+`bash .claude/scripts/aes-oc.sh run <rol> <rama> -- "<plantilla con sus datos>"`, en segundo plano. El script:
+
+1. abre el worktree de la rama y lo marca como activo;
+2. ejecuta `opencode run --agent <rol> -m <modelo>` ahí, **sin** las credenciales de la GitHub App ni de `gh` en el entorno;
+3. aplica la compuerta de fin de rol (`subagent-gate.sh`: servidores, guardián, `ci/validate.sh`, cambios sin commit); si falla, reanuda la sesión **una** vez con el motivo, como un hook `SubagentStop`;
+4. guarda los eventos y la sesión en `.aes/runs/<rama>/` y una fila en `.aes/costs.csv`;
+5. imprime el estado, los commits, los archivos, el costo y el reporte del rol; cierra el worktree si quedó limpio.
+
+`bash .claude/scripts/aes-oc.sh report [<ID>]` resume tokens y costo por elemento y rol.
+
+### Controles
+
+| Capa | Claude Code (subagente) | OpenCode |
+|---|---|---|
+| Contrato | `.claude/agents/<rol>.md` | El mismo archivo, cargado con `{file:…}` en `opencode.json` |
+| L1 | `permissions` de `settings.json` | `permission` por agente en `opencode.json`: rutas protegidas, `git push`/`gh`, red, preguntas y subagentes en `deny`; skills solo las del rol. En `opencode run`, lo que quedaría en *ask* se rechaza solo |
+| L2 | Hooks `role-guard.sh`, `bash-guard.sh` | `.opencode/plugin/aes-guard.js`, que ejecuta **los mismos** hooks (`AES_ROLE` lo pone el script) y quita credenciales del entorno de la terminal |
+| Fin de rol | Hook `SubagentStop` | `aes-oc.sh` ejecuta `subagent-gate.sh` y reanuda una vez |
+| L3 | CI | La misma CI |
+| Fuera del repo | Sin sandbox en Windows nativo (FL-002) | OpenCode rechaza por defecto leer o escribir fuera del proyecto (`external_directory`) |
+
+Comprobado con un modelo simulado (un servidor compatible con la API de OpenAI que pide herramientas programadas): escritura en `tests/acceptance/`, redirección de la terminal a una ruta protegida, escritura fuera de la superficie y `git push` quedan bloqueados con el mensaje del hook, y el modelo lo recibe y sigue; la compuerta reanuda la sesión y el arreglo pasa; el costo coincide con el precio de lista y se duplica en horario caro.
+
+### Límites conocidos
+
+- **Costo estimado, no facturado.** OpenCode conoce solo el precio barato de DeepSeek; el script aplica el recargo por horario (`AES_OC_PEAK_UTC`). La cifra que manda es la de la página *Billing* del proveedor.
+- **Primera ejecución en cada worktree:** OpenCode instala la dependencia de plugins en `.opencode/` (la ignora él solo en git). Tarda más la primera vez.
+- **Windows:** el plugin ejecuta `bash`; si OpenCode no lo encuentra en el PATH, define `AES_BASH` con la ruta de Git Bash (`C:/Program Files/Git/bin/bash.exe`).
+- **Skills personales:** OpenCode también ve las skills de tu usuario (`~/.claude/skills/`); `opencode.json` las niega todas salvo las del rol.
+- **Paralelo:** como con los subagentes, un rol a la vez hasta que el perfil resuelva puertos y datos por checkout (06 §10).
 
 ## Grafo de código con Graphify (opcional, en piloto)
 

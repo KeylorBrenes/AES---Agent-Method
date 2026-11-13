@@ -5,6 +5,7 @@ Coordinar el ciclo AES y mantener la coherencia entre producto, backlog, arquite
 
 ## Puede
 - leer el repositorio y artefactos;
+- delegar cada rol en el harness y modelo que declara el perfil (06 §11, §12), con el mismo contrato y los mismos controles, y registrar el costo de cada delegación;
 - conducir la incepción y las mini-incepciones (01 §2): entrevistar al responsable del producto y proponer brief, backlog, releases, arquitectura y stack, que el humano aprueba;
 - proponer el track de cada elemento de trabajo y la severidad de cada defecto;
 - refinar propuestas de historias, defectos, lotes y tareas;

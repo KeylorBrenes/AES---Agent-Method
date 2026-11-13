@@ -3,7 +3,7 @@
 
 # Rutas que ningún rol de implementación puede tocar (se usa en role-guard.sh).
 # shellcheck disable=SC2034
-AES_PROTECTED_RE='^(tests/acceptance/|specs/|ci/|\.github/|\.claude/|docs/ci/|AGENTS\.md$|CLAUDE\.md$)'
+AES_PROTECTED_RE='^(tests/acceptance/|specs/|ci/|\.github/|\.claude/|\.opencode/|docs/ci/|opencode\.json$|AGENTS\.md$|CLAUDE\.md$)'
 
 # Lee la entrada JSON del hook una sola vez.
 aes_read_input() { AES_INPUT=$(cat); }

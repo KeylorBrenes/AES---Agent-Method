@@ -1,6 +1,6 @@
 # [Proyecto] — instrucciones del proyecto
 
-Proyecto gestionado con **AES 1.3.0** (https://github.com/KeylorBrenes/AES---Agent-Method).
+Proyecto gestionado con **AES 1.4.0** (https://github.com/KeylorBrenes/AES---Agent-Method).
 
 ## Ramas
 - `main`: lo liberado. `dev`: lo integrado y la base de todo el trabajo. A `main` solo llegan releases (`dev → main`) y hotfixes de defectos (`BUG-NNN`), y después de cada uno se hace un back-merge `main → dev` (merge commit).
@@ -8,7 +8,7 @@ Proyecto gestionado con **AES 1.3.0** (https://github.com/KeylorBrenes/AES---Age
 
 ## Roles
 - La **sesión principal** es el orquestador AES, en el modelo más capaz disponible (es el diseñador senior): para avanzar un elemento del backlog, usa la skill `aes-cycle`. Un elemento por sesión.
-- Los subagentes `qa`, `programmer`, `mechanic` y `verifier` siguen su propio contrato en `.claude/agents/`.
+- Los roles `qa`, `programmer`, `mechanic` y `verifier` siguen su propio contrato en `.claude/agents/`. Corren como subagentes de Claude Code o en OpenCode, según `AES_BIND_*` en `.claude/aes.env` (los de OpenCode se delegan con `.claude/scripts/aes-oc.sh`).
 - Skills del núcleo de AES en `.claude/skills/`: `aes-inception` (orquestador, al empezar el proyecto o ante una idea que no cabe en el backlog), `aes-cycle` (orquestador), `aes-design-note` (orquestador), `aes-debugging` y `aes-security-review` (programador). Las de terceros están en `docs/aes/skills.lock`; si está impeccable, la interfaz sigue `DESIGN.md`, y cambiar la dirección visual es una decisión del humano. Ninguna skill de flujo de terceros (planes, ejecución, cierre de ramas) se instala junto a ellas.
 - Hooks en `.claude/hooks/` restringen qué escribe cada rol. Si uno te bloquea, no lo rodees ni se lo pidas a otro agente: reporta BLOCKED para el humano.
 
@@ -27,7 +27,7 @@ Proyecto gestionado con **AES 1.3.0** (https://github.com/KeylorBrenes/AES---Age
 - Servidores para pruebas manuales: `bash .claude/scripts/with-servers.sh [--web] -- <comando>`
 
 ## Rutas protegidas
-`tests/acceptance/`, `specs/`, `ci/`, `.github/`, `.claude/`, `docs/ci/`, `CLAUDE.md`.
+`tests/acceptance/`, `specs/`, `ci/`, `.github/`, `.claude/`, `.opencode/`, `docs/ci/`, `opencode.json`, `CLAUDE.md`.
 
 ## Convenciones que el linter no detecta
 - [Una línea por convención real del proyecto: formato de fechas y montos en la API, errores, patrones prohibidos.]
