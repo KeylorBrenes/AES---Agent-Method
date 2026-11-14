@@ -109,37 +109,36 @@ Estas palabras describen la fuerza de la regla, no una herramienta particular.
 
 ## Empezar un proyecto nuevo
 
-Con la implementación de referencia (Claude Code + GitHub, y opcionalmente OpenCode para los roles más baratos).
+Con un solo script, `aes-new`, que pregunta lo necesario en la terminal y hace el resto. No hace falta clonar este repositorio: el script baja la versión de AES que elijas a `~/.aes/versions/` y no toca nada más. Tu clon de AES (si tienes uno) queda solo para trabajar en la metodología.
 
-### Una sola vez, en tu PC
-
-Paso a paso en el [README de la referencia](profiles/reference/claude-code-subagents/README.md#una-vez-por-cuenta):
-
-- [ ] git, gh, jq y Node.js instalados (en Windows, usa Git Bash); `gh auth login` y `gh auth refresh -s workflow`.
-- [ ] La GitHub App de los agentes creada e instalada en tu cuenta.
-- [ ] `~/.aes/app.env` creado a partir de [`scripts/aes-app.env.example`](scripts/aes-app.env.example).
-- [ ] Opcional: OpenCode instalado y `AES_OPENCODE_MODEL` en `app.env`, para que QA, el programador y el mecánico corran ahí ([roles en OpenCode](profiles/reference/claude-code-subagents/README.md#roles-en-opencode-binding-aes-06-12)).
-- [ ] Opcional: skills de terceros (archify, impeccable) en `AES_VENDOR`.
-
-### Cada proyecto: tres pasos
+**Una vez:** descarga el script (en Windows, en Git Bash):
 
 ```bash
-# 1. AES al día (desde tu clon del repo de AES)
-git pull
-
-# 2. Repositorio listo: crea el repo, instala AES, ramas, rulesets, etiquetas, acceso de la app y roles
-./scripts/setup-repo.sh <tu-usuario>/<proyecto> --create public
-#    (añade --opencode <proveedor/modelo> si no lo tienes en app.env; queda en ../<proyecto>)
-
-# 3. Abrir el proyecto con el orquestador
-cd ../<proyecto> && claude
+mkdir -p ~/.aes && curl -fsSL https://raw.githubusercontent.com/KeylorBrenes/AES---Agent-Method/main/scripts/aes-new.sh -o ~/.aes/aes-new.sh
 ```
 
-En Claude Code: `/model opus` y cuéntale la idea, por ejemplo: *«Quiero empezar el proyecto: una app de tareas para mí.»* El orquestador hace la incepción (entrevista, backlog, arquitectura, stack) y abre un PR para que lo apruebes en GitHub. Después, cada sesión es un elemento del backlog: *«Avanza EN-001»*, *«Avanza US-001»*… Tú respondes preguntas, apruebas PR y aceptas historias.
+**Cada proyecto:**
+
+```bash
+bash ~/.aes/aes-new.sh
+```
+
+El script:
+
+1. comprueba git, gh, jq, node y Claude Code, y la sesión de gh (si falta el permiso `workflow`, te ofrece añadirlo);
+2. comprueba la GitHub App de los agentes: si todavía no la creaste, te manda a [la sección del README](profiles/reference/claude-code-subagents/README.md#2-github-app-de-los-agentes) y sale; si existe y falta `~/.aes/app.env`, te pide sus datos y lo crea;
+3. pregunta la versión de AES (por defecto, la última publicada), el nombre, el dueño, la visibilidad y la carpeta del proyecto;
+4. pregunta dónde trabajan QA, el programador y el mecánico: Claude Code u OpenCode (con DeepSeek gratis, de pago u otro modelo). El orquestador y el verificador son siempre Claude;
+5. ofrece las skills de terceros (archify, impeccable) y las baja en su última versión publicada, que queda fija;
+6. crea el repositorio, instala AES, hace el commit inicial, crea `main` y `dev`, aplica rulesets, etiquetas y variables, da acceso a la app y configura los roles.
+
+Recuerda tus respuestas para la próxima vez (`~/.aes/defaults.env`). Al terminar: `cd <proyecto> && claude`, `/model opus`, y cuéntale la idea (*«Quiero empezar el proyecto: una app de tareas para mí»*). El orquestador hace la incepción y abre un PR; después, una sesión por elemento: *«Avanza EN-001»*, *«Avanza US-001»*…
 
 - Tablero del backlog: `node .claude/scripts/aes-board.mjs` → `.aes/board.html`.
 - Costo de los roles en OpenCode: `bash .claude/scripts/aes-oc.sh report`.
-- Para repetir algún paso o corregirlo, vuelve a ejecutar `setup-repo.sh`: se salta lo que ya está hecho.
+- Si algo falla a medias, vuelve a ejecutar `aes-new` con las mismas respuestas: cada paso se salta lo que ya está hecho.
+
+Sin preguntas, para automatizar: `scripts/setup-repo.sh <dueño/repo> [--create public|private] [--opencode <proveedor/modelo>]` desde una copia de AES. Para un proyecto que ya existe: `scripts/install-aes.sh <proyecto>` (con `--upgrade` actualiza y con `--check` comprueba). Herramientas y GitHub App, paso a paso: [README de la referencia](profiles/reference/claude-code-subagents/README.md#una-vez-por-cuenta).
 
 ### Qué hace AES en cada elemento
 

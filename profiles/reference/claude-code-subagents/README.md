@@ -125,7 +125,7 @@ Para actualizarlas, cambias de versión ahí y ejecutas `install-aes.sh <proyect
 
 ### Cada proyecto nuevo
 
-Desde el repo de AES, en la versión (tag) que quieres usar:
+Lo más simple es `aes-new` (README principal de AES, «Empezar un proyecto nuevo»): pregunta en la terminal y llama a `setup-repo.sh` de la versión que elijas. Sin preguntas, desde una copia de AES en la versión (tag) que quieres usar:
 
 ```bash
 ./scripts/setup-repo.sh <tu-usuario>/<repo> --create private   # o public; sin --create si ya existe

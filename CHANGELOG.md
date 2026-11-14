@@ -14,7 +14,8 @@ Roles en otro harness, para el sandbox de la app de tareas: el orquestador en Cl
   - `aes-cycle` delega según el binding, comprueba el modelo al arrancar y resume el costo en la retrospectiva.
 - `.opencode/` y `opencode.json` son rutas protegidas (hooks, guardián de la CI, CODEOWNERS). El instalador los copia.
 - `setup-repo.sh --opencode <proveedor/modelo>` (o `AES_OPENCODE_MODEL` en `app.env`): deja QA, programador y mecánico en OpenCode y comprueba que el modelo responde. Si se ejecuta desde dentro del repo de AES, el proyecto se crea al lado, no adentro.
-- README: «Empezar un proyecto nuevo», con la lista de lo que se hace una vez y los tres pasos de cada proyecto.
+- **`scripts/aes-new.sh`**: un solo archivo que se descarga una vez y crea cada proyecto preguntando en la terminal (herramientas y sesión de gh, GitHub App y `~/.aes/app.env`, versión de AES, nombre, dueño, visibilidad, carpeta, harness de los roles y modelo, skills de terceros). Baja AES a `~/.aes/versions/<versión>` y las skills de terceros a `~/.aes/skills/` en su última versión publicada (detecta la carpeta de cada skill aunque el tercero reorganice su repo), recuerda las respuestas en `~/.aes/defaults.env` y llama a `setup-repo.sh`. No hace falta clonar AES para crear proyectos.
+- README: «Empezar un proyecto nuevo», alrededor de `aes-new`.
 - Plantilla de perfil: proveedor y condiciones de datos por rol, y huecos de control de los roles en otro harness.
 
 ### Cambiado

@@ -73,8 +73,11 @@ me=$(gh api user --jq .login)
 ok "gh como $me"
 
 [[ -f "$config" ]] || die "No existe $config. Créalo una vez a partir de scripts/aes-app.env.example."
+# AES_VENDOR del entorno (aunque sea vacío) manda sobre el de app.env: así lo pasa aes-new.
+vendor_from_env=${AES_VENDOR+set}; vendor_env=${AES_VENDOR:-}
 # shellcheck source=/dev/null
 source "$config"
+[[ -n "$vendor_from_env" ]] && AES_VENDOR=$vendor_env
 for v in AES_APP_ID AES_APP_INSTALLATION_ID AES_APP_PRIVATE_KEY AES_BOT_SLUG; do
   [[ -n "${!v:-}" ]] || die "Falta $v en $config."
 done
