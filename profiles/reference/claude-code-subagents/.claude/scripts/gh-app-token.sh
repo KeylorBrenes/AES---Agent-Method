@@ -42,7 +42,8 @@ now=$(date +%s)
 if [[ -s "$cache" ]]; then
   expires_at=$(jq -r '.expires_at // empty' "$cache" 2>/dev/null || true)
   if [[ -n "$expires_at" ]]; then
-    exp_epoch=$(date -d "$expires_at" +%s 2>/dev/null || echo 0)
+    # jq en lugar de date -d: funciona igual en Linux, macOS y Git Bash.
+    exp_epoch=$(jq -rn --arg t "$expires_at" '$t | sub("\\.[0-9]+Z$"; "Z") | fromdateiso8601' 2>/dev/null || echo 0)
     if (( exp_epoch - now > 300 )); then
       jq -r '.token' "$cache"
       exit 0

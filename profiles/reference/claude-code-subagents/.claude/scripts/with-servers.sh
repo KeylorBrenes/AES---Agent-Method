@@ -100,7 +100,7 @@ start() {  # start <nombre> <comando> <url>
   pids+=("$!")
   for ((i = 0; i < wait_s; i++)); do
     up "$url" && { echo "AES: $name lista en $url"; return 0; }
-    kill -0 "${pids[-1]}" 2>/dev/null || break
+    kill -0 "${pids[${#pids[@]}-1]}" 2>/dev/null || break
     sleep 1
   done
   echo "AES: $name no arrancó. Últimas líneas de su salida:" >&2

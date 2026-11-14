@@ -53,6 +53,27 @@ Probado aquí con OpenCode 1.19.5 y un modelo simulado (un servidor compatible c
 - Si 120 pasos por ejecución alcanzan, y si una reanudación de la compuerta basta.
 - La calidad de QA en DeepSeek: ¿pruebas que no conocen la implementación y RED confirmado?
 
+## 4. Proyecto nuevo sin preparación: `aes-new` — referencia
+
+**Problema.** Empezar un proyecto exigía clonar AES, preparar `~/.aes/app.env` a mano y ejecutar `setup-repo.sh` con opciones. Para un tercero, o en otra máquina, es demasiado; y el clon de AES se mezclaba con los proyectos.
+
+**Decisiones del responsable humano (2026-11-13):**
+
+| Tema | Decisión |
+|---|---|
+| Uso | Plug and play: crear la carpeta del proyecto, bajar ahí el script y ejecutarlo; en macOS, Linux y Windows |
+| Preguntas | Si el proyecto va en esa carpeta, nombre del repo (el de la carpeta), público (por defecto) o privado, harness y modelo; al final, «Empezar» |
+| Repo de AES | Solo metodología y scripts; los proyectos no lo tocan ni necesitan un clon |
+| Bot | Opcional: con GitHub App o en modo personal (recomendación del orquestador, aprobada) |
+| El script después de usarse | Se aparta a `.aes/aes-new.sh`, fuera de git, para retomar (aprobado) |
+| Empezar | En la misma terminal (aprobado) |
+| macOS | Compatibilidad en este cambio (aprobado) |
+| Incepción | Claude sabe que, sin planeamiento, primero pregunta por la idea |
+
+**Decisiones del orquestador:** el script es un único archivo en `main`, no una rama aparte: una rama solo con el script tendría historia propia y no se versionaría con la metodología. Fuera del proyecto solo queda la configuración de la cuenta, en `~/.config/aes/` (la llave de la app no puede vivir en el repo).
+
+**Comprobado aquí** (con un `gh` simulado y un remoto local): carpeta con solo el script, modo personal y OpenCode; el script no entra en el repo; reglas sin aprobación en modo personal; reejecución desde `.aes/aes-new.sh` después de un push fallido; «Empezar» lanza `claude --model opus` con el primer mensaje. **Pendiente:** GitHub real, macOS real.
+
 ## Migración desde 1.3.0
 
 1. `./scripts/install-aes.sh <proyecto> --upgrade`: copia `.opencode/plugin/` y `aes-oc.sh`, y deja `opencode.json` y el nuevo `.claude/aes.env` como `.aes-new` si ya existían.

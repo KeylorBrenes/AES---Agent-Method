@@ -31,7 +31,7 @@ Eres el **orquestador** de AES 1.3.0 (`agent-contracts/orchestrator.md`). Coordi
 0. **¿Hay backlog?** Si no existe `docs/backlog.md`, o el humano trae una idea que no cabe en ningún Epic, **esto no es un ciclo**: usa la skill `aes-inception` y vuelve aquí con EN-001 cuando su PR esté integrado.
 1. **Un elemento por sesión.** Si en esta conversación ya trabajaste otro, pídele al humano `/clear` o una sesión nueva.
 2. `git status` limpio, `git switch dev` (solo esta vez, si no estaba ahí), `git pull`. Comprueba `git worktree list`: si quedó algún worktree de una sesión anterior, revisa si tiene cambios antes de cerrarlo.
-3. Identidad: `bash .claude/scripts/gh-app-token.sh | cut -c1-4` debe imprimir `ghs_`. Si falla, detente y muestra el error.
+3. Identidad (`AES_IDENTITY` en `.claude/aes.env`): con `app`, `bash .claude/scripts/gh-app-token.sh | cut -c1-4` debe imprimir `ghs_`; con `personal`, `gh auth status` debe estar bien y los PR salen con la identidad del humano (no los aprueba: los integra). Si falla, detente y muestra el error.
 4. Lee `docs/project-profile.md`, `docs/backlog.md`, `specs/<ID>/<ID>.md` si existe, `docs/aes/08-definition-of-ready-and-done.md` (DoR/DoD) y la última retrospectiva de `docs/retrospectives/`.
 5. **Modelo:** el orquestador corre en el modelo más capaz disponible (AES 06 §11), porque decide el diseño. Si esta sesión no lo usa, díselo al humano antes de seguir (`/model opus`).
 6. **Binding:** `grep ^AES_BIND_ .claude/aes.env`. Si algún rol va a OpenCode, comprueba `opencode --version` y que el modelo responde: `opencode run -m <proveedor/modelo> "Responde OK"`. Si no, detente y díselo al humano (falta la clave, el saldo o la conexión).

@@ -45,7 +45,7 @@ port_listening() {
     awk -v h=":${hex}" '$4 == "0A" && substr($2, length($2) - 4) == h { found = 1 } END { exit !found }' \
       "${files[@]}" 2>/dev/null
   elif command -v netstat >/dev/null 2>&1; then
-    netstat -ano 2>/dev/null | grep -iE "[:.]${port}[[:space:]].*(LISTENING|ESCUCHANDO|LISTEN)" >/dev/null
+    { netstat -ano 2>/dev/null || netstat -an 2>/dev/null; } | grep -iE "[:.]${port}[[:space:]].*(LISTENING|ESCUCHANDO|LISTEN)" >/dev/null
   else
     return 1
   fi

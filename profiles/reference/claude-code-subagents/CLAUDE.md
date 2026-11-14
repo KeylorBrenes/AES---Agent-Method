@@ -2,6 +2,10 @@
 
 Proyecto gestionado con **AES 1.4.0** (https://github.com/KeylorBrenes/AES---Agent-Method).
 
+## Al empezar cada sesión
+- **Si no existe `docs/backlog.md`, el proyecto todavía no tiene planeamiento:** antes de cualquier otra cosa, usa la skill `aes-inception` y pregúntale al humano por la idea (por bloques de preguntas concretas). No escribas código ni crees historias sin eso.
+- Si existe, sigue con lo que pida el humano; para avanzar un elemento del backlog, la skill `aes-cycle`.
+
 ## Ramas
 - `main`: lo liberado. `dev`: lo integrado y la base de todo el trabajo. A `main` solo llegan releases (`dev → main`) y hotfixes de defectos (`BUG-NNN`), y después de cada uno se hace un back-merge `main → dev` (merge commit).
 - El checkout principal se queda en `dev`; cada rol trabaja en su propio worktree (`.claude/scripts/aes-wt.sh`).

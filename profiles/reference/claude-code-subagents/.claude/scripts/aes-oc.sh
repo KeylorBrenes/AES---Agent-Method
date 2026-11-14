@@ -125,11 +125,19 @@ prompt="Eres el rol $role de AES. Elemento: $task. Ya estás en tu propio checko
 Sigue tu contrato (está en tus instrucciones) y lee los archivos de specs/$item/ que indica. Termina con tu reporte final en el formato del contrato, empezando por el estado propuesto."
 [[ -n "$extra" ]] && prompt+=$'\n\nInstrucciones del orquestador:\n'"$extra"
 
+# timeout no existe en macOS: gtimeout (coreutils) o perl, que sí viene.
+with_timeout() {
+  local s=$1; shift
+  if command -v timeout >/dev/null; then timeout "$s" "$@"
+  elif command -v gtimeout >/dev/null; then gtimeout "$s" "$@"
+  else perl -e 'alarm shift; exec @ARGV or die "exec: $!"' "$s" "$@"; fi
+}
+
 # Sin credenciales de la app ni de GitHub: publicar es del orquestador (06 §10).
 oc() {
   env -u AES_APP_ID -u AES_APP_INSTALLATION_ID -u AES_APP_PRIVATE_KEY -u GH_TOKEN -u GITHUB_TOKEN \
       AES_ROLE="$role" \
-      timeout "${AES_OC_TIMEOUT:-3600}" opencode run --agent "$role" -m "$model" --dir "$wt" --format json "$@"
+      with_timeout "${AES_OC_TIMEOUT:-3600}" opencode run --agent "$role" -m "$model" --dir "$wt" --format json "$@"
 }
 
 echo "aes-oc: $role en $branch con $model (worktree $wt)" >&2

@@ -100,32 +100,32 @@ Los agentes publican ramas y abren PR con la identidad de una GitHub App, no con
 6. **Where can this GitHub App be installed?** *Only on this account*. Pulsa ***Create GitHub App***.
 7. En la página *General* de la app, anota el **App ID**.
 8. **Llave privada:** ***Credentials → Key pairs → New key*** (en la interfaz anterior, *Private keys → Generate a private key*). Se descarga un `.pem`. Muévelo fuera de cualquier repositorio:
-   - Windows: `C:/Users/<tú>/.aes/aes-agent.pem`;
-   - Linux: `~/.aes/aes-agent.pem`, con `chmod 600`.
+   - Windows: `C:/Users/<tú>/.config/aes/aes-agent.pem`;
+   - macOS y Linux: `~/.config/aes/aes-agent.pem`, con `chmod 600`.
 
    Nunca la subas a git ni la pegues en un chat. Si se filtra, revócala en esa misma pantalla y genera otra.
 9. **Instala la app:** menú lateral ***Install App*** → tu cuenta → ***Only select repositories***. Elige uno cualquiera (por ejemplo, el sandbox); `setup-repo.sh` añade cada proyecto nuevo. El **Installation ID** es el número al final de la URL de la instalación: `github.com/settings/installations/<id>`.
-10. **`~/.aes/app.env`:** cópialo de `scripts/aes-app.env.example` del repo de AES y rellena `AES_APP_ID`, `AES_APP_INSTALLATION_ID`, `AES_APP_PRIVATE_KEY` (ruta con `/`) y `AES_BOT_SLUG`. El ID del usuario bot lo consulta el script (`gh api "users/<slug>%5Bbot%5D" --jq .id`).
+10. **Datos de la app:** `aes-new` te los pide la primera vez y los guarda en `~/.config/aes/app.env`. A mano: cópialo de `scripts/aes-app.env.example` del repo de AES y rellena `AES_APP_ID`, `AES_APP_INSTALLATION_ID`, `AES_APP_PRIVATE_KEY` (ruta con `/`) y `AES_BOT_SLUG`. El ID del usuario bot lo consulta el script (`gh api "users/<slug>%5Bbot%5D" --jq .id`).
 
 No uses una cuenta bot ni un token personal *fine-grained*: las cuentas nuevas pueden quedar suspendidas por el antiabuso de GitHub, y los tokens *fine-grained* no acceden a repos de otra cuenta personal.
 
 #### 3. Skills de terceros (opcional)
 
-Clónalas en una versión fija, por ejemplo en `~/.aes/skills/`, y añade sus carpetas a `AES_VENDOR` en `app.env`:
+`aes-new` las ofrece y las baja solo, en su última versión publicada. Para `setup-repo.sh`, clónalas en una versión fija, por ejemplo en `~/.config/aes/skills/`, y añade sus carpetas a `AES_VENDOR` en `app.env`:
 
 ```bash
-mkdir -p ~/.aes/skills && cd ~/.aes/skills
+mkdir -p ~/.config/aes/skills && cd ~/.config/aes/skills
 git clone https://github.com/tt-a1i/archify.git && git -C archify checkout <tag>
 git clone https://github.com/pbakaus/impeccable.git && git -C impeccable checkout <tag>
 # en app.env:
-# AES_VENDOR="~/.aes/skills/archify;~/.aes/skills/impeccable/.claude/skills/impeccable"
+# AES_VENDOR="~/.config/aes/skills/archify/archify;~/.config/aes/skills/impeccable/.claude/skills/impeccable"
 ```
 
 Para actualizarlas, cambias de versión ahí y ejecutas `install-aes.sh <proyecto> --upgrade --vendor <carpeta>` en cada proyecto.
 
 ### Cada proyecto nuevo
 
-Lo más simple es `aes-new` (README principal de AES, «Empezar un proyecto nuevo»): pregunta en la terminal y llama a `setup-repo.sh` de la versión que elijas. Sin preguntas, desde una copia de AES en la versión (tag) que quieres usar:
+Lo más simple es `aes-new` (README principal de AES, «Empezar un proyecto nuevo»): lo bajas a la carpeta del proyecto, pregunta en la terminal y llama a `setup-repo.sh`. Sin la GitHub App, usa el modo personal (`--personal`). Sin preguntas, desde una copia de AES en la versión (tag) que quieres usar:
 
 ```bash
 ./scripts/setup-repo.sh <tu-usuario>/<repo> --create private   # o public; sin --create si ya existe
@@ -143,7 +143,7 @@ Al terminar, abre Claude Code en la carpeta del proyecto con el modelo más capa
 
 Es también el manual para hacerlo a mano.
 
-1. **Comprueba** git, gh (con `repo` y `workflow`), jq y `~/.aes/app.env`.
+1. **Comprueba** git, gh (con `repo` y `workflow`), jq y `~/.config/aes/app.env` (salvo en modo personal).
 2. **Crea y clona** el repositorio.
 3. **Instala AES** con `./scripts/install-aes.sh <carpeta> --vendor <skill>…`. Copia estos archivos, las skills del núcleo, la DoR/DoD, `AES-CORE.md` y las plantillas en `docs/aes/`, crea `specs/active-stories.txt` y añade a `.gitignore` `.aes/`, `.claude/settings.local.json` y `.claude/worktrees/`.
    - Los **archivos de AES** (hooks, scripts, skills del núcleo, scripts de la CI, `docs/aes/`) no se editan en el proyecto: `--upgrade` los sobrescribe y `--check` comprueba que coinciden con la versión.

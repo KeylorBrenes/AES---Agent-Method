@@ -9,9 +9,11 @@
 #   --opencode <prov/modelo>  QA, programador y mecánico en OpenCode con ese modelo (06 §12); el
 #                             verificador sigue en Claude. Por defecto, AES_OPENCODE_MODEL de app.env;
 #                             --opencode claude los deja todos en Claude
-#   --dir <carpeta>           checkout local (por defecto <repo>, al lado del repo de AES si lo
+#   --personal                sin GitHub App: los agentes publican con tu sesión de gh y las reglas
+#                             exigen PR y CI en verde, sin aprobación (integrar es tu aprobación)
+#   --dir <carpeta>           checkout local; si existe y no es un repo git, se inicializa ahí (por defecto <repo>, al lado del repo de AES si lo
 #                             ejecutas desde dentro de él; si no, en la carpeta actual)
-#   --config <archivo>        configuración de la cuenta (por defecto ~/.aes/app.env)
+#   --config <archivo>        configuración de la cuenta (por defecto ~/.config/aes/app.env)
 #   --dry-run                 muestra lo que haría, sin cambiar nada (las lecturas sí se hacen)
 #
 # Qué hace (cada paso comprueba antes y se salta si ya está hecho; se puede repetir sin miedo):
@@ -26,18 +28,21 @@
 #   8. etiquetas aes:* y la variable AES_APPROVERS;
 #   9. da acceso a la GitHub App de los agentes y comprueba su token.
 #
-# Lo único manual es, una vez por cuenta, crear la GitHub App y ~/.aes/app.env
+# Lo único manual es, una vez por cuenta, crear la GitHub App (o usar --personal); aes-new crea ~/.config/aes/app.env.
 # (ver scripts/aes-app.env.example y el README de la implementación de referencia).
 set -euo pipefail
 
 aes_root=$(cd "$(dirname "$0")/.." && pwd)
-repo=""; create=""; dir=""; config="${HOME}/.aes/app.env"; dry=0; oc_model=""
+repo=""; create=""; dir=""; dry=0; oc_model=""; personal=0
+config="${XDG_CONFIG_HOME:-$HOME/.config}/aes/app.env"
+[[ -f "$config" || ! -f "$HOME/.aes/app.env" ]] || config="$HOME/.aes/app.env"   # ubicación de 1.3.0
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --create)  create=${2:?--create necesita private o public}; shift ;;
     --dir)     dir=${2:?--dir necesita una carpeta}; shift ;;
     --opencode) oc_model=${2:?--opencode necesita proveedor/modelo o claude}; shift ;;
     --config)  config=${2:?--config necesita un archivo}; shift ;;
+    --personal) personal=1 ;;
     --dry-run) dry=1 ;;
     -h|--help) sed -n '2,26p' "$0"; exit 0 ;;
     -*) echo "Opción desconocida: $1" >&2; exit 2 ;;
@@ -72,28 +77,31 @@ fi
 me=$(gh api user --jq .login)
 ok "gh como $me"
 
-[[ -f "$config" ]] || die "No existe $config. Créalo una vez a partir de scripts/aes-app.env.example."
+[[ $personal -eq 1 || -f "$config" ]] || die "No existe $config. Créalo con aes-new o a partir de scripts/aes-app.env.example, o usa --personal."
 # AES_VENDOR del entorno (aunque sea vacío) manda sobre el de app.env: así lo pasa aes-new.
 vendor_from_env=${AES_VENDOR+set}; vendor_env=${AES_VENDOR:-}
 # shellcheck source=/dev/null
-source "$config"
+[[ -f "$config" ]] && source "$config"
 [[ -n "$vendor_from_env" ]] && AES_VENDOR=$vendor_env
-for v in AES_APP_ID AES_APP_INSTALLATION_ID AES_APP_PRIVATE_KEY AES_BOT_SLUG; do
-  [[ -n "${!v:-}" ]] || die "Falta $v en $config."
-done
-[[ -f "${AES_APP_PRIVATE_KEY/#\~/$HOME}" ]] || warn "No encuentro la llave en $AES_APP_PRIVATE_KEY (desde este shell). Si la ruta es de Windows y estás en otro sistema, ignóralo."
 approvers=${AES_APPROVERS:-$me}
 owner_login=${approvers%%,*}
-if [[ -z "${AES_BOT_ID:-}" ]]; then
-  AES_BOT_ID=$(gh api "users/${AES_BOT_SLUG}%5Bbot%5D" --jq .id 2>/dev/null || true)
-  [[ -n "$AES_BOT_ID" ]] || die "No encuentro el usuario ${AES_BOT_SLUG}[bot]; revisa AES_BOT_SLUG o define AES_BOT_ID."
+if [[ $personal -eq 0 ]]; then
+  for v in AES_APP_ID AES_APP_INSTALLATION_ID AES_APP_PRIVATE_KEY AES_BOT_SLUG; do
+    [[ -n "${!v:-}" ]] || die "Falta $v en $config."
+  done
+  [[ -f "${AES_APP_PRIVATE_KEY/#\~/$HOME}" ]] || warn "No encuentro la llave en $AES_APP_PRIVATE_KEY (desde este shell). Si la ruta es de Windows y estás en otro sistema, ignóralo."
+  if [[ -z "${AES_BOT_ID:-}" ]]; then
+    AES_BOT_ID=$(gh api "users/${AES_BOT_SLUG}%5Bbot%5D" --jq .id 2>/dev/null || true)
+    [[ -n "$AES_BOT_ID" ]] || die "No encuentro el usuario ${AES_BOT_SLUG}[bot]; revisa AES_BOT_SLUG o define AES_BOT_ID."
+  fi
 fi
 oc_model=${oc_model:-${AES_OPENCODE_MODEL:-claude}}
 if [[ "$oc_model" != claude ]]; then
   command -v opencode >/dev/null || die "Pediste roles en OpenCode ($oc_model), pero opencode no está en el PATH."
   [[ "$oc_model" == */* ]] || die "--opencode espera proveedor/modelo (p. ej. opencode/deepseek-v4.1-flash-free) o claude."
 fi
-ok "configuración de la cuenta: app $AES_APP_ID, bot ${AES_BOT_SLUG}[bot] ($AES_BOT_ID), aprobadores $approvers"
+if [[ $personal -eq 1 ]]; then ok "modo personal: los agentes publican como $me; aprobadores $approvers"
+else ok "configuración de la cuenta: app $AES_APP_ID, bot ${AES_BOT_SLUG}[bot] ($AES_BOT_ID), aprobadores $approvers"; fi
 
 # --- 2. Repositorio y checkout -------------------------------------------------------------------
 step "2. Repositorio"
@@ -109,6 +117,17 @@ if [[ -d "$dir/.git" ]]; then
   url=$(git -C "$dir" config --get remote.origin.url || true)
   [[ "$url" == *"$repo"* || "$url" == *"$repo.git" ]] || die "$dir ya es un repositorio, pero su origin ($url) no es $repo."
   ok "checkout en $dir"
+elif [[ -d "$dir" ]]; then
+  # Carpeta existente (p. ej. la que creaste para el proyecto, con aes-new dentro): se inicializa ahí.
+  run git -C "$dir" init -q
+  run git -C "$dir" remote add origin "https://github.com/$repo.git"
+  if git ls-remote --exit-code --heads "https://github.com/$repo.git" main >/dev/null 2>&1; then
+    run git -C "$dir" fetch -q origin
+    run git -C "$dir" checkout -q -B main origin/main || die "No pude traer main a $dir: hay archivos que chocan con los del repo."
+  else
+    run git -C "$dir" checkout -q -B main
+  fi
+  ok "repositorio inicializado en $dir"
 else
   run gh repo clone "$repo" "$dir" -- -q
   ok "clonado en $dir"
@@ -136,6 +155,9 @@ if [[ -n "$dir" && -f "$dir/.claude/aes.env" ]]; then
   done
   run rm -f "$dir/.claude/aes.env.bak"
   ok "QA, programador y mecánico: $bind; verificador: claude"
+  if [[ $personal -eq 1 ]]; then ident=personal; else ident=app; fi
+  run sed -i.bak "s#^AES_IDENTITY=.*#AES_IDENTITY=\"${ident}\"#" "$dir/.claude/aes.env"; run rm -f "$dir/.claude/aes.env.bak"
+  ok "identidad de los agentes: $ident"
   if [[ "$oc_model" != claude && $dry -eq 0 ]]; then
     if (cd "$dir" && timeout 120 opencode run -m "$oc_model" "Responde solo: OK" 2>/dev/null | grep -q OK); then
       ok "OpenCode responde con $oc_model"
@@ -154,7 +176,9 @@ if [[ -n "$dir" && -f "$dir/.github/CODEOWNERS" ]]; then
   else ok "CODEOWNERS ya tiene dueño"; fi
 fi
 local_settings="$dir/.claude/settings.local.json"
-if [[ -n "$dir" && ! -f "$local_settings" && -f "$dir/.claude/settings.local.example.json" ]]; then
+if [[ $personal -eq 1 ]]; then
+  ok "modo personal: sin credenciales de app (los agentes usan tu sesión de gh)"
+elif [[ -n "$dir" && ! -f "$local_settings" && -f "$dir/.claude/settings.local.example.json" ]]; then
   mail="${AES_BOT_ID}+${AES_BOT_SLUG}[bot]@users.noreply.github.com"
   if [[ $dry -eq 1 ]]; then printf '  [dry-run] escribir %s\n' "$local_settings"; else
     jq --arg id "$AES_APP_ID" --arg inst "$AES_APP_INSTALLATION_ID" --arg key "$AES_APP_PRIVATE_KEY" \
@@ -181,7 +205,10 @@ if [[ -n "$dir" ]]; then
     ver=$(cat "$dir/docs/aes/VERSION" 2>/dev/null || echo AES)
     run git -C "$dir" checkout -q -B main
     run git -C "$dir" add -A
-    run git -C "$dir" commit -q -m "chore: instalar ${ver%% (*}"
+    # Si una ejecución anterior ya hizo el commit (y falló el push), no hay nada que commitear.
+    if [[ $dry -eq 1 ]] || ! git -C "$dir" diff --cached --quiet || ! git -C "$dir" rev-parse -q --verify HEAD >/dev/null; then
+      run git -C "$dir" commit -q -m "chore: instalar ${ver%% (*}"
+    fi
     run git -C "$dir" push -q -u origin main
     ok "commit inicial en main"
   fi
@@ -207,26 +234,35 @@ ruleset() { # $1 nombre, $2 ramas (JSON), $3 bypass (JSON), $4 reglas (JSON)
   if [[ -n "$id" ]]; then gh api -X PUT "repos/$repo/rulesets/$id" --input - --silent <<< "$body"
   else gh api -X POST "repos/$repo/rulesets" --input - --silent <<< "$body"; fi
 }
+# Con app: 1 aprobación de CODEOWNERS (tú apruebas los PR del bot). En modo personal, los PR son tuyos
+# y GitHub no deja aprobar los propios: PR obligatorio, sin aprobación; integrar es tu aprobación.
+if [[ $personal -eq 1 ]]; then approvals=0; codeowners=false; else approvals=1; codeowners=true; fi
 pr_rule() { # $1 métodos permitidos (JSON) o vacío
-  jq -n --argjson m "${1:-null}" '[{type:"pull_request", parameters:({
-      required_approving_review_count:1, require_code_owner_review:true,
+  jq -n --argjson m "${1:-null}" --argjson n "$approvals" --argjson co "$codeowners" '[{type:"pull_request", parameters:({
+      required_approving_review_count:$n, require_code_owner_review:$co,
       dismiss_stale_reviews_on_push:true, require_last_push_approval:false,
       required_review_thread_resolution:false} + (if $m then {allowed_merge_methods:$m} else {} end))}]'
 }
 ci_rules='[{"type":"deletion"},{"type":"non_fast_forward"},
   {"type":"required_status_checks","parameters":{"strict_required_status_checks_policy":true,
    "required_status_checks":[{"context":"aes"}]}}]'
-ruleset ramas-ci '["refs/heads/main","refs/heads/dev"]' '[]' "$ci_rules" \
-  || die "No se pudo crear el ruleset ramas-ci. En repos privados, los rulesets necesitan GitHub Pro o Team."
-ok "ramas-ci: sin borrar, sin force push, check aes obligatorio y al día (sin excepciones)"
-if ! ruleset aprobacion-dev '["refs/heads/dev"]' "$admin_bypass" "$(pr_rule '["squash","merge"]')" 2>/dev/null \
+if ! ruleset ramas-ci '["refs/heads/main","refs/heads/dev"]' '[]' "$ci_rules"; then
+  warn "GitHub no aceptó los rulesets: en repos privados necesitan GitHub Pro o Team."
+  warn "La CI correrá igual, pero nada impedirá integrar con la CI en rojo. Haz público el repo o mejora el plan, y vuelve a ejecutar."
+  no_rulesets=1
+else
+  ok "ramas-ci: sin borrar, sin force push, check aes obligatorio y al día (sin excepciones)"
+fi
+if [[ -n "${no_rulesets:-}" ]]; then :
+elif ! ruleset aprobacion-dev '["refs/heads/dev"]' "$admin_bypass" "$(pr_rule '["squash","merge"]')" 2>/dev/null \
    || ! ruleset aprobacion-main '["refs/heads/main"]' "$admin_bypass" "$(pr_rule '["merge"]')" 2>/dev/null; then
   warn "GitHub no aceptó limitar los métodos de integración por ruleset; se crean sin ese límite."
   warn "En main integra SIEMPRE con merge commit (releases y hotfixes)."
   ruleset aprobacion-dev '["refs/heads/dev"]' "$admin_bypass" "$(pr_rule)"
   ruleset aprobacion-main '["refs/heads/main"]' "$admin_bypass" "$(pr_rule)"
 fi
-ok "aprobacion-dev y aprobacion-main: PR con 1 aprobación de CODEOWNERS, aprobaciones viejas se descartan; tú puedes integrar tus PR"
+if [[ -z "${no_rulesets:-}" && $personal -eq 1 ]]; then ok "aprobacion-dev y aprobacion-main: PR obligatorio (sin aprobación: integrar es tu aprobación)"
+elif [[ -z "${no_rulesets:-}" ]]; then ok "aprobacion-dev y aprobacion-main: PR con 1 aprobación de CODEOWNERS, aprobaciones viejas se descartan; tú puedes integrar tus PR"; fi
 
 # --- 8. Etiquetas y variables --------------------------------------------------------------------
 step "8. Etiquetas y variables"
@@ -240,6 +276,10 @@ ok "AES_APPROVERS=$approvers"
 # --- 9. GitHub App -------------------------------------------------------------------------------
 step "9. Acceso de los agentes"
 repo_id=$(gh api "repos/$repo" --jq .id 2>/dev/null || true)
+if [[ $personal -eq 1 ]]; then
+  ok "modo personal: los agentes publican con tu sesión de gh (bash .claude/scripts/agent-gh.sh la usa)"
+  repo_id=""; dir_check=0
+else dir_check=1; fi
 if [[ -n "$repo_id" ]]; then
   if run gh api -X PUT "user/installations/$AES_APP_INSTALLATION_ID/repositories/$repo_id" --silent 2>/dev/null; then
     ok "la app tiene acceso a $repo"
@@ -247,7 +287,7 @@ if [[ -n "$repo_id" ]]; then
     warn "No pude dar acceso a la app desde aquí. Hazlo en https://github.com/settings/installations/$AES_APP_INSTALLATION_ID (Repository access → $repo)."
   fi
 fi
-if [[ -n "$dir" && $dry -eq 0 ]]; then
+if [[ -n "$dir" && $dry -eq 0 && $dir_check -eq 1 ]]; then
   if tok=$(cd "$dir" && bash .claude/scripts/gh-app-token.sh 2>/dev/null) && [[ "$tok" == ghs_* ]]; then
     if GH_TOKEN=$tok gh api "repos/$repo" --silent 2>/dev/null; then ok "token de la app válido y con acceso al repo"
     else warn "el token de la app es válido, pero todavía no ve $repo (revisa el paso anterior)"; fi

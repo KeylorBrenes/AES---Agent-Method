@@ -79,6 +79,8 @@ for f in .claude/settings.json .claude/aes.env .github/workflows/aes.yml .github
 done
 
 same() { [[ -f "$2" ]] && cmp -s "$1" "$2"; }
+# sha256sum no existe en macOS; shasum sí.
+sha256() { if command -v sha256sum >/dev/null; then sha256sum "$@"; else shasum -a 256 "$@"; fi; }
 
 # --- Comprobación --------------------------------------------------------------------------------
 if [[ $mode == check ]]; then
@@ -116,7 +118,7 @@ done
 seedsums="$target/docs/aes/seeds.sha256"; touch "$seedsums"; newsums=""
 for p in "${seeds[@]}"; do
   src=${p%%|*}; rel=${p#*|}; dst="$target/$rel"
-  sum=$(sha256sum < "$src" | cut -c1-64)
+  sum=$(sha256 < "$src" | cut -c1-64)
   if [[ ! -f "$dst" ]]; then put "$src" "$dst"; new_seeds+=("$rel")
   elif ! same "$src" "$dst" && ! grep -qxF "$sum $rel" "$seedsums"; then
     put "$src" "$dst.aes-new"; pending+=("$rel.aes-new")
@@ -136,7 +138,7 @@ done
 
 # --- Skills de terceros --------------------------------------------------------------------------
 lock="$target/docs/aes/skills.lock"
-hash_tree() { (cd "$1" && find . -type f ! -path './.git/*' ! -path './node_modules/*' | LC_ALL=C sort | while IFS= read -r f; do sha256sum "$f"; done) | sha256sum | cut -c1-16; }
+hash_tree() { (cd "$1" && find . -type f ! -path './.git/*' ! -path './node_modules/*' | LC_ALL=C sort | while IFS= read -r f; do sha256 "$f"; done) | sha256 | cut -c1-16; }
 for v in "${vendors[@]}"; do
   [[ -f "$v/SKILL.md" ]] || { echo "Sin SKILL.md en $v: no es una skill." >&2; exit 1; }
   v=$(cd "$v" && pwd); name=$(basename "$v")
