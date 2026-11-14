@@ -6,14 +6,19 @@
 #
 # Opciones:
 #   --create private|public   crea el repositorio si no existe
-#   --dir <carpeta>           checkout local (por defecto ./<repo>, junto a donde lo ejecutas)
+#   --opencode <prov/modelo>  QA, programador y mecánico en OpenCode con ese modelo (06 §12); el
+#                             verificador sigue en Claude. Por defecto, AES_OPENCODE_MODEL de app.env;
+#                             --opencode claude los deja todos en Claude
+#   --dir <carpeta>           checkout local (por defecto <repo>, al lado del repo de AES si lo
+#                             ejecutas desde dentro de él; si no, en la carpeta actual)
 #   --config <archivo>        configuración de la cuenta (por defecto ~/.aes/app.env)
 #   --dry-run                 muestra lo que haría, sin cambiar nada (las lecturas sí se hacen)
 #
 # Qué hace (cada paso comprueba antes y se salta si ya está hecho; se puede repetir sin miedo):
 #   1. comprueba git, gh (con permisos repo y workflow), jq y la configuración de la cuenta;
 #   2. crea el repositorio (con --create) y lo clona;
-#   3. instala AES con install-aes.sh (y las skills de terceros de AES_VENDOR);
+#   3. instala AES con install-aes.sh (y las skills de terceros de AES_VENDOR) y fija qué roles
+#      corren en OpenCode;
 #   4. rellena CODEOWNERS y .claude/settings.local.json (este último NO va a git);
 #   5. commit inicial en main (solo si main todavía no existe en GitHub) y crea dev;
 #   6. dev como rama por defecto; merge commit y squash permitidos, rebase no;
@@ -26,11 +31,12 @@
 set -euo pipefail
 
 aes_root=$(cd "$(dirname "$0")/.." && pwd)
-repo=""; create=""; dir=""; config="${HOME}/.aes/app.env"; dry=0
+repo=""; create=""; dir=""; config="${HOME}/.aes/app.env"; dry=0; oc_model=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --create)  create=${2:?--create necesita private o public}; shift ;;
     --dir)     dir=${2:?--dir necesita una carpeta}; shift ;;
+    --opencode) oc_model=${2:?--opencode necesita proveedor/modelo o claude}; shift ;;
     --config)  config=${2:?--config necesita un archivo}; shift ;;
     --dry-run) dry=1 ;;
     -h|--help) sed -n '2,26p' "$0"; exit 0 ;;
@@ -42,7 +48,10 @@ done
 [[ "$repo" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]] || { echo "Uso: $0 <dueño/repo> [--create private|public] [--dir <carpeta>] [--dry-run]" >&2; exit 2; }
 [[ -z "$create" || "$create" == private || "$create" == public ]] || { echo "--create: private o public" >&2; exit 2; }
 name=${repo#*/}
-dir=${dir:-$PWD/$name}
+if [[ -z "$dir" ]]; then
+  # Nunca dentro del repo de AES: si se ejecuta desde ahí, el proyecto va al lado.
+  case "$PWD/" in "$aes_root"/*) dir="$(dirname "$aes_root")/$name" ;; *) dir="$PWD/$name" ;; esac
+fi
 
 ok()   { printf '  ✓ %s\n' "$*"; }
 step() { printf '\n%s\n' "$*"; }
@@ -75,6 +84,11 @@ owner_login=${approvers%%,*}
 if [[ -z "${AES_BOT_ID:-}" ]]; then
   AES_BOT_ID=$(gh api "users/${AES_BOT_SLUG}%5Bbot%5D" --jq .id 2>/dev/null || true)
   [[ -n "$AES_BOT_ID" ]] || die "No encuentro el usuario ${AES_BOT_SLUG}[bot]; revisa AES_BOT_SLUG o define AES_BOT_ID."
+fi
+oc_model=${oc_model:-${AES_OPENCODE_MODEL:-claude}}
+if [[ "$oc_model" != claude ]]; then
+  command -v opencode >/dev/null || die "Pediste roles en OpenCode ($oc_model), pero opencode no está en el PATH."
+  [[ "$oc_model" == */* ]] || die "--opencode espera proveedor/modelo (p. ej. opencode/deepseek-v4.1-flash-free) o claude."
 fi
 ok "configuración de la cuenta: app $AES_APP_ID, bot ${AES_BOT_SLUG}[bot] ($AES_BOT_ID), aprobadores $approvers"
 
@@ -109,6 +123,22 @@ if [[ -n "$dir" ]]; then
   else
     run env AES_QUIET_NEXT=1 "$aes_root/scripts/install-aes.sh" "$dir" "${vendor_args[@]}"
     ok "instalado"
+  fi
+fi
+
+if [[ -n "$dir" && -f "$dir/.claude/aes.env" ]]; then
+  if [[ "$oc_model" == claude ]]; then bind=claude; else bind="opencode:$oc_model"; fi
+  for role in QA PROGRAMMER MECHANIC; do
+    run sed -i.bak "s#^AES_BIND_${role}=.*#AES_BIND_${role}=\"${bind}\"#" "$dir/.claude/aes.env"
+  done
+  run rm -f "$dir/.claude/aes.env.bak"
+  ok "QA, programador y mecánico: $bind; verificador: claude"
+  if [[ "$oc_model" != claude && $dry -eq 0 ]]; then
+    if (cd "$dir" && timeout 120 opencode run -m "$oc_model" "Responde solo: OK" 2>/dev/null | grep -q OK); then
+      ok "OpenCode responde con $oc_model"
+    else
+      warn "OpenCode no respondió con $oc_model. Revisa la conexión, la clave (/connect) o el saldo antes de delegar."
+    fi
   fi
 fi
 
@@ -229,4 +259,5 @@ Siguiente:
   - Adapta las semillas cuando haya stack (aes.env, ci/validate.sh, sección STACK del workflow): lo hace EN-001.
   - Abre Claude Code en $dir con el modelo más capaz (/model opus) y pide empezar el proyecto:
     el orquestador usará la skill aes-inception.
+  - Costo de los roles en OpenCode: bash .claude/scripts/aes-oc.sh report
 EOF

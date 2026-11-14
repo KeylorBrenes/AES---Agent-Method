@@ -13,6 +13,8 @@ Roles en otro harness, para el sandbox de la app de tareas: el orquestador en Cl
   - binding por rol en `.claude/aes.env` (`AES_BIND_*`, precio de lista y franjas caras); el entorno tiene prioridad para una corrida;
   - `aes-cycle` delega según el binding, comprueba el modelo al arrancar y resume el costo en la retrospectiva.
 - `.opencode/` y `opencode.json` son rutas protegidas (hooks, guardián de la CI, CODEOWNERS). El instalador los copia.
+- `setup-repo.sh --opencode <proveedor/modelo>` (o `AES_OPENCODE_MODEL` en `app.env`): deja QA, programador y mecánico en OpenCode y comprueba que el modelo responde. Si se ejecuta desde dentro del repo de AES, el proyecto se crea al lado, no adentro.
+- README: «Empezar un proyecto nuevo», con la lista de lo que se hace una vez y los tres pasos de cada proyecto.
 - Plantilla de perfil: proveedor y condiciones de datos por rol, y huecos de control de los roles en otro harness.
 
 ### Cambiado

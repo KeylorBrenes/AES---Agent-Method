@@ -107,18 +107,48 @@ AES no es un generador automático de requisitos ni una metodología de cascada.
 
 Estas palabras describen la fuerza de la regla, no una herramienta particular.
 
-## Inicio rápido
+## Empezar un proyecto nuevo
 
-1. Instalar AES en el proyecto desde una versión fija (tag `vX.Y.Z`): `./scripts/install-aes.sh <proyecto>` copia la implementación de referencia de Claude Code + GitHub (`profiles/reference/claude-code-subagents/`), las skills del núcleo, la DoR/DoD y las plantillas, y anota la versión en `docs/aes/VERSION`. Con `--vendor <carpeta>` copia además una skill de terceros en su versión (por ejemplo, archify); con `--upgrade` actualiza, y con `--check` comprueba. Si el programador es OpenCode, toma de `claude-code-opencode/` la parte de OpenCode.
-2. En GitHub, con la implementación de referencia: una vez por cuenta (herramientas para Windows o Linux, sesión de `gh` y GitHub App de los agentes, paso a paso en [su README](profiles/reference/claude-code-subagents/README.md#una-vez-por-cuenta)), crear la GitHub App de los agentes y `~/.aes/app.env`; después, cada proyecto nuevo se pone en marcha con `./scripts/setup-repo.sh <dueño/repo> --create private`, que crea el repositorio, instala AES (paso 1), crea `main` y `dev`, aplica rulesets, etiquetas y variables, y da acceso a la app (README de la referencia, «Puesta en marcha»).
-3. **Incepción** (01 §2): el orquestador entrevista al responsable del producto por temas, con preguntas concretas, y produce el brief, el backlog completo pero superficial con Epics y releases, la arquitectura inicial, el ADR del stack y EN-001, en un PR que el humano aprueba (skill `aes-inception`).
-4. Implementar EN-001, el esqueleto que camina.
-5. Ir release a release. Refinar solo las Historias de Usuario próximas.
-6. Mantener `project-profile.md` al día con lo que se decide en cada historia.
-7. Para cada historia: aprobar criterios, definir el contrato de interfaz, aprobar las pruebas de aceptación con RED confirmado.
-8. Dividir en tareas pequeñas con superficie de cambio y ejecutar el ciclo.
-9. No cerrar la historia hasta cumplir la Definition of Done, registrar la aceptación y ejecutar la retrospectiva compuesta.
-10. Antes de la historia siguiente, corregir en un lote de estabilización los defectos Críticos, Altos y Medios.
+Con la implementación de referencia (Claude Code + GitHub, y opcionalmente OpenCode para los roles más baratos).
+
+### Una sola vez, en tu PC
+
+Paso a paso en el [README de la referencia](profiles/reference/claude-code-subagents/README.md#una-vez-por-cuenta):
+
+- [ ] git, gh, jq y Node.js instalados (en Windows, usa Git Bash); `gh auth login` y `gh auth refresh -s workflow`.
+- [ ] La GitHub App de los agentes creada e instalada en tu cuenta.
+- [ ] `~/.aes/app.env` creado a partir de [`scripts/aes-app.env.example`](scripts/aes-app.env.example).
+- [ ] Opcional: OpenCode instalado y `AES_OPENCODE_MODEL` en `app.env`, para que QA, el programador y el mecánico corran ahí ([roles en OpenCode](profiles/reference/claude-code-subagents/README.md#roles-en-opencode-binding-aes-06-12)).
+- [ ] Opcional: skills de terceros (archify, impeccable) en `AES_VENDOR`.
+
+### Cada proyecto: tres pasos
+
+```bash
+# 1. AES al día (desde tu clon del repo de AES)
+git pull
+
+# 2. Repositorio listo: crea el repo, instala AES, ramas, rulesets, etiquetas, acceso de la app y roles
+./scripts/setup-repo.sh <tu-usuario>/<proyecto> --create public
+#    (añade --opencode <proveedor/modelo> si no lo tienes en app.env; queda en ../<proyecto>)
+
+# 3. Abrir el proyecto con el orquestador
+cd ../<proyecto> && claude
+```
+
+En Claude Code: `/model opus` y cuéntale la idea, por ejemplo: *«Quiero empezar el proyecto: una app de tareas para mí.»* El orquestador hace la incepción (entrevista, backlog, arquitectura, stack) y abre un PR para que lo apruebes en GitHub. Después, cada sesión es un elemento del backlog: *«Avanza EN-001»*, *«Avanza US-001»*… Tú respondes preguntas, apruebas PR y aceptas historias.
+
+- Tablero del backlog: `node .claude/scripts/aes-board.mjs` → `.aes/board.html`.
+- Costo de los roles en OpenCode: `bash .claude/scripts/aes-oc.sh report`.
+- Para repetir algún paso o corregirlo, vuelve a ejecutar `setup-repo.sh`: se salta lo que ya está hecho.
+
+### Qué hace AES en cada elemento
+
+1. **Incepción** (01 §2), una vez: brief, backlog completo pero superficial con Epics y releases, arquitectura inicial, ADR del stack, dirección visual si hay interfaz y EN-001.
+2. **EN-001**, el esqueleto que camina; después, release a release, refinando solo las historias próximas.
+3. Para cada historia: criterios aprobados, contrato de interfaz, pruebas de aceptación con RED confirmado, tareas pequeñas con superficie de cambio, CI, verificación independiente y aceptación humana.
+4. Cierre con la Definition of Done, retrospectiva y, antes de la historia siguiente, un lote de estabilización con los defectos Críticos, Altos y Medios.
+
+Instalar AES en un proyecto que ya existe, sin `setup-repo.sh`: `./scripts/install-aes.sh <proyecto>` (con `--upgrade` actualiza y con `--check` comprueba).
 
 ## Versionado
 

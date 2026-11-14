@@ -129,6 +129,7 @@ Desde el repo de AES, en la versión (tag) que quieres usar:
 
 ```bash
 ./scripts/setup-repo.sh <tu-usuario>/<repo> --create private   # o public; sin --create si ya existe
+# con roles en OpenCode: --opencode opencode/deepseek-v4.1-flash-free (o AES_OPENCODE_MODEL en app.env)
 ```
 
 Al terminar, abre Claude Code en la carpeta del proyecto con el modelo más capaz (`/model opus`) y pide empezar el proyecto: el orquestador usa la skill `aes-inception` (entrevista, backlog con releases, arquitectura, ADR del stack, dirección visual y EN-001, en un PR a `dev` que apruebas tú). Después, EN-001 con `aes-cycle`.
