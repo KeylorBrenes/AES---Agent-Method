@@ -45,6 +45,17 @@ ask() { # $1 pregunta, $2 valor por defecto → $REPLY
   if [[ -n "${2:-}" ]]; then read -r -p "  $1 [$2]: " REPLY || true; REPLY=${REPLY:-$2}
   else read -r -p "  $1: " REPLY || true; fi
 }
+# Ruta tal como la escriba o la pegue la persona: sin comillas (Windows «Copiar como ruta» las añade),
+# con ~ expandido y, en Git Bash, en formato C:/… (lo entienden bash, node y openssl).
+norm_path() {
+  local p=$1
+  p="${p#"${p%%[![:space:]]*}"}"; p="${p%"${p##*[![:space:]]}"}"
+  p=${p#\"}; p=${p%\"}; p=${p#\'}; p=${p%\'}
+  # shellcheck disable=SC2088  # se compara el texto «~» que escribió la persona
+  case "$p" in "~"|"~/"*) p="$HOME${p#\~}" ;; esac
+  if command -v cygpath >/dev/null 2>&1; then p=$(cygpath -m "$p"); else p=${p//\\//}; fi
+  printf '%s' "$p"
+}
 ask_req() { while :; do ask "$@"; [[ -n "$REPLY" ]] && return 0; warn "Hace falta un valor."; done; }
 yes_no() { # $1 pregunta, $2 s|n por defecto
   while :; do
@@ -100,7 +111,7 @@ step "2. Proyecto"
 here=$(pwd)
 if yes_no "¿El proyecto va en esta carpeta? ($here)" s; then dir=$here
 else
-  ask_req "Carpeta del proyecto (se crea si no existe)"; dir=${REPLY/#\~/$HOME}
+  ask_req "Carpeta del proyecto (se crea si no existe)"; dir=$(norm_path "$REPLY")
   mkdir -p "$dir"; dir=$(cd "$dir" && pwd)
 fi
 if [[ ! -d "$dir/.git" ]]; then
@@ -169,7 +180,7 @@ else
       ask_req "Installation ID (número final de github.com/settings/installations/<id>)"; inst=$REPLY
       ask_req "Slug (github.com/apps/<slug>)"; slug=$REPLY
       while :; do
-        ask_req "Ruta de la llave .pem (fuera de cualquier repositorio)" "$conf_dir/aes-agent.pem"; key=${REPLY/#\~/$HOME}
+        ask_req "Ruta de la llave .pem (fuera de cualquier repositorio; puedes pegarla tal cual)" "$conf_dir/aes-agent.pem"; key=$(norm_path "$REPLY")
         [[ -f "$key" ]] && break; warn "No existe $key."
       done
       ask "Aprobadores (logins separados por coma)" "$me"; approvers=$REPLY

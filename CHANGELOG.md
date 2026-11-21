@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.4.1] — sin publicar
+
+### Corregido
+- `aes-new`: las rutas que se pegan (llave `.pem`, carpeta del proyecto) se aceptan tal como las copia Windows, con comillas y barras invertidas, y se guardan como `C:/…`. Antes, «Copiar como ruta» hacía que la llave no se encontrara aunque existiera.
+
 ## [1.4.0] — 2026-11-21
 
 Roles en otro harness (el orquestador en Claude Code; QA, programador y mecánico en OpenCode con otro proveedor, como DeepSeek; el verificador en Claude) y proyectos nuevos con un solo script (`aes-new`). Cambio MINOR: con el binding en `claude`, un proyecto funciona como en 1.3.0. Justificación: [`docs/rfc/RFC-004-aes-1.4.0.md`](docs/rfc/RFC-004-aes-1.4.0.md).
