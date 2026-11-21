@@ -125,23 +125,38 @@ prompt="Eres el rol $role de AES. Elemento: $task. Ya estás en tu propio checko
 Sigue tu contrato (está en tus instrucciones) y lee los archivos de specs/$item/ que indica. Termina con tu reporte final en el formato del contrato, empezando por el estado propuesto."
 [[ -n "$extra" ]] && prompt+=$'\n\nInstrucciones del orquestador:\n'"$extra"
 
-# timeout no existe en macOS: gtimeout (coreutils) o perl, que sí viene.
-with_timeout() {
-  local s=$1; shift
-  if command -v timeout >/dev/null; then timeout "$s" "$@"
-  elif command -v gtimeout >/dev/null; then gtimeout "$s" "$@"
-  else perl -e 'alarm shift; exec @ARGV or die "exec: $!"' "$s" "$@"; fi
-}
-
-# Sin credenciales de la app ni de GitHub: publicar es del orquestador (06 §10).
-oc() {
-  env -u AES_APP_ID -u AES_APP_INSTALLATION_ID -u AES_APP_PRIVATE_KEY -u GH_TOKEN -u GITHUB_TOKEN \
-      AES_ROLE="$role" \
-      with_timeout "${AES_OC_TIMEOUT:-3600}" opencode run --agent "$role" -m "$model" --dir "$wt" --format json "$@"
+# Ejecuta OpenCode con un vigilante (portátil: no depende de `timeout`, que macOS no trae):
+#   - si el último evento es el cierre final del modelo (step_finish con reason "stop") y no llega
+#     nada nuevo en AES_OC_IDLE segundos, da la ejecución por terminada y cierra OpenCode (se ha visto
+#     a `opencode run` quedarse vivo después de terminar);
+#   - si pasa AES_OC_TIMEOUT segundos en total, lo corta (código 124).
+# Sin credenciales de la app ni de GitHub en su entorno: publicar es del orquestador (06 §10).
+oc() { # $1 archivo de eventos, $2 archivo de errores, resto: argumentos de opencode run
+  local out=$1 err=$2; shift 2
+  (
+    unset AES_APP_ID AES_APP_INSTALLATION_ID AES_APP_PRIVATE_KEY GH_TOKEN GITHUB_TOKEN
+    export AES_ROLE="$role"
+    cd "$wt" && exec opencode run --agent "$role" -m "$model" --dir "$wt" --format json "$@"
+  ) > "$out" 2>> "$err" &
+  local pid=$! limit=${AES_OC_TIMEOUT:-3600} idle_max=${AES_OC_IDLE:-30} t=0 idle=0 size=-1 now
+  while kill -0 "$pid" 2>/dev/null; do
+    sleep 2; t=$((t + 2))
+    now=$(wc -c < "$out" | tr -d ' ')
+    if [[ "$now" == "$size" ]]; then idle=$((idle + 2)); else idle=0; size=$now; fi
+    if (( idle >= idle_max )) && tail -n 1 "$out" | grep -q '"type":"step_finish"' \
+       && tail -n 1 "$out" | grep -q '"reason":"stop"'; then
+      kill "$pid" 2>/dev/null || true; wait "$pid" 2>/dev/null || true; return 0
+    fi
+    if (( t >= limit )); then
+      kill "$pid" 2>/dev/null || true; wait "$pid" 2>/dev/null || true
+      echo "aes-oc: OpenCode superó AES_OC_TIMEOUT (${limit}s)." >> "$err"; return 124
+    fi
+  done
+  wait "$pid"
 }
 
 echo "aes-oc: $role en $branch con $model (worktree $wt)" >&2
-rc=0; (cd "$wt" && oc --title "$branch" "$prompt") > "$ev1" 2> "$runs/$stamp.err" || rc=$?
+rc=0; : > "$runs/$stamp.err"; oc "$ev1" "$runs/$stamp.err" --title "$branch" "$prompt" || rc=$?
 session=$(jq -r 'select(.sessionID != null) | .sessionID' "$ev1" | head -n1)
 if [[ $rc -ne 0 || -z "$session" ]] || jq -e 'select(.type == "error")' "$ev1" >/dev/null; then
   echo "aes-oc: OpenCode falló (código $rc)." >&2
@@ -160,7 +175,7 @@ if ! gate "$gatelog"; then
   retry_msg="La comprobación de fin de rol de AES falló:
 $(cat "$gatelog")
 Corrige sin tocar pruebas protegidas ni salir de la superficie y vuelve a dar tu reporte final, o termina con BLOCKED y la causa."
-  (cd "$wt" && oc --session "$session" "$retry_msg") > "$ev2" 2>> "$runs/$stamp.err" || true
+  oc "$ev2" "$runs/$stamp.err" --session "$session" "$retry_msg" || true
   files+=("$ev2")
   gate "$gatelog.2" || { status=gate-failed; gatelog="$gatelog.2"; }
 fi

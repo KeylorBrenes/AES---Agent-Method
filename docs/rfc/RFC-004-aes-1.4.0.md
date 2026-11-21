@@ -1,6 +1,6 @@
 # RFC-004 — AES 1.4.0
 
-**Estado:** En curso, rama `release/1.4.0`. Se prueba en el sandbox de la app de tareas.
+**Estado:** Aceptado y publicado en AES 1.4.0 (2026-11-21). Lo pendiente se comprueba en el sandbox de la app de tareas.
 **Base:** AES 1.3.0
 **Tipo de cambio esperado:** MINOR. Todo es opcional: con el binding en `claude`, un proyecto funciona como en 1.3.0.
 

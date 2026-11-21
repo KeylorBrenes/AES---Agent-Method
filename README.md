@@ -1,6 +1,6 @@
 # Agentic Engineering Standard (AES)
 
-**Versión:** 1.4.0 (en preparación, rama `release/1.4.0`)  
+**Versión:** 1.4.0  
 **Estado:** Estándar en uso  
 **Idioma normativo:** Español  
 **Propósito:** establecer un proceso de ingeniería consistente para desarrollar y mantener software con agentes de IA, sin depender de un proveedor, modelo, harness o stack específico.

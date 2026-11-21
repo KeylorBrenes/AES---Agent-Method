@@ -249,7 +249,7 @@ Comprobado con un modelo simulado (un servidor compatible con la API de OpenAI q
 
 - **Costo estimado, no facturado.** OpenCode conoce solo el precio barato de DeepSeek; el script aplica el recargo por horario (`AES_OC_PEAK_UTC`). La cifra que manda es la de la página *Billing* del proveedor.
 - **Primera ejecución en cada worktree:** OpenCode instala la dependencia de plugins en `.opencode/` (la ignora él solo en git). Tarda más la primera vez.
-- **Windows:** el plugin ejecuta `bash`; si OpenCode no lo encuentra en el PATH, define `AES_BASH` con la ruta de Git Bash (`C:/Program Files/Git/bin/bash.exe`).
+- **Windows:** el plugin ejecuta los hooks con el mismo bash que corre `aes-oc.sh` (Git Bash, convertido a ruta de Windows), no con el `bash` del PATH, que con WSL instalado puede ser el de WSL. Para usar otro, define `AES_BASH`.
 - **Skills personales:** OpenCode también ve las skills de tu usuario (`~/.claude/skills/`); `opencode.json` las niega todas salvo las del rol.
 - **Paralelo:** como con los subagentes, un rol a la vez hasta que el perfil resuelva puertos y datos por checkout (06 §10).
 

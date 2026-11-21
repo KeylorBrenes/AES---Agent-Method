@@ -1,15 +1,17 @@
 # Changelog
 
-## [1.4.0] — sin publicar (rama `release/1.4.0`)
+## [1.4.0] — 2026-11-21
 
-Roles en otro harness, para el sandbox de la app de tareas: el orquestador en Claude Code (Opus) y QA, programador y mecánico en OpenCode con DeepSeek; el verificador sigue en Claude. Justificación: [`docs/rfc/RFC-004-aes-1.4.0.md`](docs/rfc/RFC-004-aes-1.4.0.md).
+Roles en otro harness (el orquestador en Claude Code; QA, programador y mecánico en OpenCode con otro proveedor, como DeepSeek; el verificador en Claude) y proyectos nuevos con un solo script (`aes-new`). Cambio MINOR: con el binding en `claude`, un proyecto funciona como en 1.3.0. Justificación: [`docs/rfc/RFC-004-aes-1.4.0.md`](docs/rfc/RFC-004-aes-1.4.0.md).
+
+Lo que el RFC marca como pendiente se probó con un modelo simulado, un `gh` simulado y remotos locales, pero todavía no con un modelo real, GitHub real ni macOS: el sandbox de la app de tareas es la primera prueba.
 
 ### Añadido
 - **06 §12, roles en otro harness:** mismo contrato, L1 y L2 equivalentes (o hueco declarado), L3 sin cambios, ejecución sin interfaz que rechaza lo que pediría confirmación, sin credenciales de publicación, costo por delegación con precio de lista y recargo por horario aunque el modelo sea gratis, y registro del proveedor y sus condiciones de datos. El verificador, en otra familia de modelos que el programador.
 - **Implementación de referencia:**
   - `opencode.json` con los agentes `programmer`, `mechanic` y `qa`, que cargan el mismo contrato de `.claude/agents/` (`{file:…}`), permisos por rol, skills limitadas al rol, sin red, sin preguntas ni subagentes, y tope de pasos;
   - `.opencode/plugin/aes-guard.js`: L2 que ejecuta los mismos `role-guard.sh` y `bash-guard.sh` y quita credenciales del entorno de la terminal;
-  - `.claude/scripts/aes-oc.sh`: delegación (`run <rol> <rama>`) con worktree, compuerta de fin de rol con una reanudación, eventos y sesión en `.aes/runs/`, costo en `.aes/costs.csv`, y `report [<ID>]`;
+  - `.claude/scripts/aes-oc.sh`: delegación (`run <rol> <rama>`) con worktree, compuerta de fin de rol con una reanudación, eventos y sesión en `.aes/runs/`, costo en `.aes/costs.csv`, y `report [<ID>]`. Un vigilante cierra OpenCode si, tras el cierre final del modelo, no llega nada en `AES_OC_IDLE` segundos (se vio a `opencode run` quedarse vivo después de terminar) y aplica `AES_OC_TIMEOUT` sin depender de `timeout`. En Windows, el plugin ejecuta los hooks con el mismo Git Bash que corre el script (`AES_BASH`), no con el `bash` del PATH, que con WSL puede ser otro;
   - binding por rol en `.claude/aes.env` (`AES_BIND_*`, precio de lista y franjas caras); el entorno tiene prioridad para una corrida;
   - `aes-cycle` delega según el binding, comprueba el modelo al arrancar y resume el costo en la retrospectiva.
 - `.opencode/` y `opencode.json` son rutas protegidas (hooks, guardián de la CI, CODEOWNERS). El instalador los copia.

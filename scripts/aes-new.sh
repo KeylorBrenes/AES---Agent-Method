@@ -22,7 +22,7 @@
 set -euo pipefail
 
 # Versión de AES por defecto. "latest" = la última etiqueta publicada.
-AES_DEFAULT_REF="release/1.4.0"
+AES_DEFAULT_REF="latest"
 AES_REPO_URL=${AES_REPO_URL:-https://github.com/KeylorBrenes/AES---Agent-Method.git}
 AES_WEB=https://github.com/KeylorBrenes/AES---Agent-Method
 README_APP="$AES_WEB/blob/main/profiles/reference/claude-code-subagents/README.md#2-github-app-de-los-agentes"
