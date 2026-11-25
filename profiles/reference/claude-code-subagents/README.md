@@ -1,63 +1,65 @@
-# Implementación de referencia — Claude Code con subagentes
+# Reference implementation — Claude Code with subagents
 
-Implementación de AES 1.4.0 con **Claude Code** como harness del orquestador: la sesión principal es el orquestador (en el modelo más capaz disponible, porque también decide el diseño de cada tarea) y los roles `qa`, `programmer`, `mechanic` y `verifier` son subagentes con su propio contexto, modelo y permisos, o, según el binding, corren en **OpenCode** con otro proveedor (sección «Roles en OpenCode»). GitHub aloja el repositorio, la CI y la protección de rama.
+An implementation of AES 2.0.0 with **Claude Code** as the orchestrator's harness: the main session is the orchestrator (on the most capable model available, because it also decides each task's design) and the `qa`, `programmer`, `mechanic` and `verifier` roles are subagents with their own context, model and permissions, or, according to the binding, they run in **OpenCode** with another provider (section "Roles in OpenCode"). GitHub hosts the repository, the CI and the branch protection.
 
-Sale del experimento [aes-sandbox-gastos](https://github.com/KeylorBrenes/aes-sandbox-gastos), una app de control de gastos en .NET 10 + React donde se aplicó AES con agentes reales en cuatro elementos (EN-001, US-001, CH-001, US-002). Lo que dice «probado» se usó ahí; lo que dice «simulación» se probó con repositorios y datos de prueba al publicar esta versión, pero todavía no en un ciclo real.
+It comes out of the [aes-sandbox-gastos](https://github.com/KeylorBrenes/aes-sandbox-gastos) experiment, an expense-tracking app in .NET 10 + React where AES was applied with real agents on four items (EN-001, US-001, CH-001, US-002), and was hardened in [aes-todo](https://github.com/KeylorBrenes/aes-todo) (Rust + React). What says "tested" was used there; what says "simulation" was tested with test repositories and data when publishing a version, but not yet in a real cycle.
 
-Es un punto de partida, no un perfil prescriptivo. Las partes del stack (.NET + React) están marcadas.
+It is a starting point, not a prescriptive profile. The stack-specific parts (.NET + React) are marked.
 
-## Contenido
+**Language.** AES and this implementation are written in English. The project's artifacts (stories, plans, reports, backlog, board) are written in the project language, `AES_LANG` in `.claude/aes.env` (`en` or `es`). The scripts read backlogs, task files and reports in either language.
 
-| Archivo | Capa | Función | Estado |
+## Contents
+
+| File | Layer | Function | Status |
 |---|---|---|---|
-| `.claude/agents/{qa,programmer,mechanic,verifier}.md` | L1 | Subagentes: herramientas, modelo y contrato de cada rol | Probado |
-| `.claude/settings.json` | L1 + L2 | Denegaciones y registro de hooks | Probado |
-| `.claude/hooks/role-guard.sh` | L2 | `PreToolUse` de edición: qué puede escribir cada rol (orquestador sin código; QA solo pruebas, plan y `.verify`; programador y mecánico solo su superficie; verificador nada) | Probado |
-| `.claude/hooks/bash-guard.sh` | L2 | `PreToolUse` de terminal: escrituras evidentes a rutas prohibidas; los subagentes no publican ni cambian de rama | Probado |
-| `.claude/hooks/subagent-gate.sh` | L2 | `SubagentStop`: ningún rol termina con servidores vivos; programador y mecánico, además, con el guardián y `ci/validate.sh` en verde | Probado |
-| `.claude/scripts/with-servers.sh` | — | Arranca los servidores con datos temporales, ejecuta un comando y los detiene siempre; falla si el puerto está ocupado | Probado en Windows y Linux (la lectura de `.claude/aes.env`: simulación) |
-| `.claude/scripts/aes-board.mjs`, `aes-board.html` | — | Vistas del backlog desde `docs/backlog.md`: tablero HTML autocontenido (`.aes/board.html`: letrero «Siguiente» con la frase para el orquestador, compuerta, dependencias, releases, métricas y guía de nomenclatura) o JSON para un adaptador (GitHub Projects, Trello, GitLab) | Simulación |
-| `.claude/scripts/aes-outline.sh` | — | Resumen estructural (archivos y firmas públicas, sin implementaciones) para que el orquestador decida el diseño con hechos | Simulación |
-| `.claude/scripts/aes-wt.sh` | — | Checkouts propios por rol (worktrees): `open`, `close`, `run`, `delegate`. El checkout principal se queda en `dev` | Simulación |
-| `.claude/hooks/worktree-create.sh`, `worktree-remove.sh` | L2 | El subagente con `isolation: worktree` trabaja en la rama de trabajo real (la que indicó el orquestador con `delegate`); sin indicación, no arranca | Simulación (falta confirmar en Claude Code el formato del evento) |
-| `.claude/scripts/aes-note.sh` | — | Notas del orquestador con la hora real; `clear` las vacía tras el cierre | Probado (`clear`: simulación) |
-| `.claude/scripts/gh-app-token.sh`, `git-credential-aes-app.sh`, `agent-gh.sh` | L3 | Identidad de los agentes: GitHub App sin permiso de workflows | Probado |
-| `.claude/scripts/aes-workflow.sh` | L3 | Lo ejecuta el humano: aplica en una rama el workflow que el orquestador preparó en `docs/ci/`, con su identidad | Simulación |
-| `.claude/scripts/aes-bind.sh` | — | Binding efectivo de un rol para una tarea: el «Nivel de modelo» de su especificación (`estándar`, `alto`, o un binding concreto) resuelto con `AES_BIND_<ROL>_<NIVEL>` de `aes.env` | Simulación |
-| `.claude/scripts/aes-doctor.sh` | — | Chequeo del entorno antes de delegar: herramientas, permisos de la app, OpenCode (versión, opciones, que el modelo responde) y el stack (`AES_DOCTOR_CHECKS`, con compilaciones mínimas) | Simulación |
-| `.claude/skills/aes-cycle/SKILL.md` | — | Procedimiento del orquestador, con plantillas de delegación | Probado (caminos T1 y lote: simulación) |
-| `.claude/skills/aes-{inception,debugging,security-review,design-note}/` | — | Skills del núcleo de AES, copiadas de `skills/` en la raíz del repo de AES (no se editan aquí) | Pendiente de uso real |
-| `.claude/aes.env` | — | Puertos y comandos de servidores del proyecto | — |
-| `ci/aes-guard.sh` | L3 | Guardián: rutas protegidas, superficie, dependencias, pruebas borradas, marcadores | Probado |
-| `ci/red-check.mjs` | L3 | RED confirmado (todas ejecutadas y fallando) y trazabilidad criterio → prueba | RED probado; trazabilidad: simulación |
-| `ci/aes-ctx.sh` | L3 | Qué ejecuta la CI según la rama y el destino: rutas válidas a `dev` y `main`, criterios de la tarea, regresión, comandos de verificación, release y back-merge | Por criterio: probado; lo demás: simulación |
-| `ci/defect-gate.sh` | L3 | Compuerta de estabilización: lee la severidad de los defectos del backlog de la rama destino; fase `release` para liberar | Simulación |
-| `ci/run-verify.sh` | L3 | Comandos de verificación: RED en la especificación, verde en tareas, cierre y regresión | Simulación |
-| `ci/label-approver.sh` | L3 | Quién puso cada etiqueta de aprobación (no la identidad de los agentes) | Simulación |
-| Paso SAST del workflow | L3 | Semgrep con reglas OWASP sobre lo nuevo de cada tarea: `ERROR` falla la tarea; el resto se registra como defectos | `--baseline-commit` (solo hallazgos nuevos) y `--error` por severidad: probados con Semgrep 1.184 en local; el workflow, en simulación |
-| `ci/validate.sh` | — | Validaciones del stack (ejemplo .NET + React) | Probado |
-| `.github/workflows/aes.yml` | L3 | Un único check `aes` en `dev` y `main` con todo lo anterior, más «main contenido en dev»; scripts siempre desde la rama destino | Versión de 1.1 probada; esta, en simulación |
-| `.github/CODEOWNERS` | L3 | Tu aprobación para rutas protegidas | Probado |
-| `CLAUDE.md` | — | Ejemplo de instrucciones persistentes breves | — |
-| `opencode.json`, `.opencode/plugin/aes-guard.js`, `.claude/scripts/aes-oc.sh` | L1, L2 | Roles en OpenCode (binding en `.claude/aes.env`): agentes con el mismo contrato, permisos, plugin que ejecuta los mismos hooks, delegación con compuerta y registro de costo | Simulación con modelo falso |
+| `.claude/agents/{qa,programmer,mechanic,verifier}.md` | L1 | Subagents: tools, model and contract of each role | Tested |
+| `.claude/settings.json` | L1 + L2 | Denials and hook registration | Tested |
+| `.claude/hooks/role-guard.sh` | L2 | Edit `PreToolUse`: what each role can write (orchestrator without code; QA only tests, plan and `.verify`; programmer and mechanic only their surface; verifier nothing) | Tested |
+| `.claude/hooks/bash-guard.sh` | L2 | Terminal `PreToolUse`: obvious writes to forbidden paths; subagents do not publish or switch branches | Tested |
+| `.claude/hooks/subagent-gate.sh` | L2 | `SubagentStop`: no role finishes with servers alive; programmer and mechanic, also, with the guard and `ci/validate.sh` green | Tested |
+| `.claude/scripts/with-servers.sh` | — | Starts the servers with temporary data, runs a command and always stops them; fails if the port is taken | Tested on Windows and Linux (reading `.claude/aes.env`: simulation) |
+| `.claude/scripts/aes-board.mjs`, `aes-board.html` | — | Backlog views from `docs/backlog.md`: a self-contained HTML board (`.aes/board.html`: a "Next" sign with the phrase for the orchestrator, gate, dependencies, releases, metrics and a naming guide) or JSON for an adapter (GitHub Projects, Trello, GitLab) | Tested |
+| `.claude/scripts/aes-outline.sh` | — | Structural outline (files and public signatures, without implementations) so the orchestrator decides the design with facts | Simulation |
+| `.claude/scripts/aes-wt.sh` | — | Each role's own checkout (worktrees): `open`, `close`, `run`, `delegate`. The main checkout stays on `dev` | Tested |
+| `.claude/hooks/worktree-create.sh`, `worktree-remove.sh` | L2 | The subagent with `isolation: worktree` works on the real work branch (the one the orchestrator named with `delegate`); with no branch named, it does not start | Tested |
+| `.claude/scripts/aes-note.sh` | — | The orchestrator's notes with the real time; `clear` empties them after the close | Tested (`clear`: simulation) |
+| `.claude/scripts/gh-app-token.sh`, `git-credential-aes-app.sh`, `agent-gh.sh` | L3 | The agents' identity: a GitHub App without the workflows permission | Tested |
+| `.claude/scripts/aes-workflow.sh` | L3 | The human runs it: applies on a branch the workflow the orchestrator prepared in `docs/ci/`, with the human's identity | Tested |
+| `.claude/scripts/aes-bind.sh` | — | A role's effective binding for a task: the "Model level" of its specification (`standard`, `high`, or a concrete binding) resolved with `AES_BIND_<ROLE>_<LEVEL>` from `aes.env` | Simulation |
+| `.claude/scripts/aes-doctor.sh` | — | Environment check before delegating: tools, the app's permissions, OpenCode (version, options, that the model answers) and the stack (`AES_DOCTOR_CHECKS`, with minimal builds) | Tested |
+| `.claude/skills/aes-cycle/SKILL.md` | — | The orchestrator's procedure, with delegation templates | Tested (T1 and batch paths: simulation) |
+| `.claude/skills/aes-{inception,debugging,security-review,design-note}/` | — | AES core skills, copied from `skills/` at the root of the AES repo (not edited here) | Inception and design note: tested |
+| `.claude/aes.env` | — | The project language, ports and server commands, role bindings, environment checks | — |
+| `ci/aes-guard.sh` | L3 | Guard: protected paths, surface, dependencies, deleted tests, markers | Tested |
+| `ci/red-check.mjs` | L3 | Confirmed RED (all run and failing) and criterion → test traceability | Tested |
+| `ci/aes-ctx.sh` | L3 | What CI runs by branch and target: valid routes to `dev` and `main`, the task's criteria, regression, verification commands, release and back-merge | Per criterion: tested; the rest: simulation |
+| `ci/defect-gate.sh` | L3 | Stabilization gate: reads the defects' severity from the target branch's backlog; `release` phase to release | Tested |
+| `ci/run-verify.sh` | L3 | Verification commands: RED in the specification, green in tasks, close and regression | Simulation |
+| `ci/label-approver.sh` | L3 | Who put on each approval label (not the agents' identity) | Simulation |
+| The workflow's SAST step | L3 | Semgrep with OWASP rules on what each task adds: `ERROR` fails the task; the rest is recorded as defects | `--baseline-commit` (only new findings) and `--error` by severity: tested with Semgrep 1.184 locally; the workflow step, in simulation |
+| `ci/validate.sh` | — | The stack's validations (.NET + React example) | Tested |
+| `.github/workflows/aes.yml` | L3 | A single `aes` check on `dev` and `main` with all of the above, plus "main contained in dev"; scripts always from the target branch | Used in aes-todo; release and back-merge paths: simulation |
+| `.github/CODEOWNERS` | L3 | Your approval for protected paths | Tested |
+| `CLAUDE.md` | — | An example of brief persistent instructions | — |
+| `opencode.json`, `.opencode/plugin/aes-guard.js`, `.claude/scripts/aes-oc.sh` | L1, L2 | Roles in OpenCode (binding in `.claude/aes.env`): agents with the same contract, permissions, a plugin that runs the same hooks, delegation with a gate and cost recording | Tested with DeepSeek |
 
-## Puesta en marcha
+## Getting started
 
-Hay dos partes: lo que se hace **una vez por cuenta de GitHub** (a mano, unos minutos) y lo que se hace **en cada proyecto** (un comando).
+There are two parts: what is done **once per GitHub account** (by hand, a few minutes) and what is done **in each project** (one command).
 
-### Una vez por cuenta
+### Once per account
 
-#### 1. Herramientas
+#### 1. Tools
 
-| Herramienta | Para qué |
+| Tool | What for |
 |---|---|
-| git | Todo |
-| bash, openssl, curl | Hooks y scripts de AES; el token de la app. En Windows vienen con Git for Windows (Git Bash) |
-| [gh](https://cli.github.com) | `setup-repo.sh` y los PR de los agentes |
-| jq | Hooks de AES y `setup-repo.sh` |
-| Node.js LTS | Tablero (`aes-board.mjs`), archify y las pruebas de aceptación |
+| git | Everything |
+| bash, openssl, curl | AES hooks and scripts; the app's token. On Windows they come with Git for Windows (Git Bash) |
+| [gh](https://cli.github.com) | `setup-repo.sh` and the agents' PRs |
+| jq | AES hooks and `setup-repo.sh` |
+| Node.js LTS | The board (`aes-board.mjs`), archify and the acceptance tests |
 
-**Windows** (PowerShell; después, cierra y abre Git Bash para que tome el PATH nuevo):
+**Windows** (PowerShell; afterwards, close and reopen Git Bash so it picks up the new PATH):
 
 ```powershell
 winget install --id Git.Git -e
@@ -66,256 +68,258 @@ winget install --id jqlang.jq -e
 winget install --id OpenJS.NodeJS.LTS -e
 ```
 
-Usa siempre **Git Bash** para los scripts de AES: Claude Code ejecuta los hooks con él.
+Always use **Git Bash** for the AES scripts: Claude Code runs the hooks with it.
 
 **Linux:**
 
 ```bash
 # Fedora
 sudo dnf install git gh jq nodejs openssl curl
-# Debian / Ubuntu (gh, desde el repositorio oficial: https://github.com/cli/cli/blob/trunk/docs/install_linux.md)
+# Debian / Ubuntu (gh, from the official repository: https://github.com/cli/cli/blob/trunk/docs/install_linux.md)
 sudo apt install git jq nodejs npm openssl curl
 ```
 
-**Comprueba:** `git --version && gh --version && jq --version && node --version && openssl version`
+**Check:** `git --version && gh --version && jq --version && node --version && openssl version`
 
-**Sesión de gh** con los permisos que necesita `setup-repo.sh`:
+**gh session** with the permissions `setup-repo.sh` needs:
 
 ```bash
-gh auth login                 # GitHub.com → HTTPS → iniciar sesión en el navegador
-gh auth refresh -s workflow   # permiso para subir el workflow de la CI
-gh auth status                # en «Token scopes» deben aparecer repo y workflow
+gh auth login                 # GitHub.com → HTTPS → sign in with the browser
+gh auth refresh -s workflow   # permission to push the CI workflow
+gh auth status                # "Token scopes" must include repo and workflow
 ```
 
-#### 2. GitHub App de los agentes
+#### 2. The agents' GitHub App
 
-Los agentes publican ramas y abren PR con la identidad de una GitHub App, no con la tuya. La app **no tiene permiso de *Workflows***: así ningún agente puede editar la CI para saltarse el guardián, y sus PR aparecen como `<slug>[bot]`, que tú apruebas. Se crea una vez y sirve para todos tus proyectos.
+The agents publish branches and open PRs with the identity of a GitHub App, not yours. The app **has no *Workflows* permission**: that way no agent can edit the CI to get past the guard, and their PRs appear as `<slug>[bot]`, which you approve. It is created once and serves all your projects.
 
-1. En GitHub: tu foto → ***Settings → Developer settings → GitHub Apps → New GitHub App***.
-2. **Nombre:** uno único en GitHub, por ejemplo `aes-agent-<tu-usuario>`. El *slug* (el nombre en minúsculas y con guiones) aparece en la URL de la app, `github.com/apps/<slug>`.
-3. **Homepage URL:** cualquiera, por ejemplo la URL de tu perfil.
-4. **Webhook:** desmarca *Active*. AES no lo usa.
+1. On GitHub: your picture → ***Settings → Developer settings → GitHub Apps → New GitHub App***.
+2. **Name:** one that is unique on GitHub, for example `aes-agent-<your-user>`. The *slug* (the name in lowercase and with hyphens) appears in the app's URL, `github.com/apps/<slug>`.
+3. **Homepage URL:** any, for example your profile's URL.
+4. **Webhook:** uncheck *Active*. AES does not use it.
 5. **Permissions → Repository permissions:**
    - *Contents*: **Read and write**;
    - *Pull requests*: **Read and write**;
-   - *Metadata*: Read-only (GitHub lo marca solo);
-   - **nada más**. En particular, *Workflows* se queda en *No access*. Sin permisos de cuenta ni de organización.
-     Cuando un elemento necesita cambiar un workflow (por ejemplo, la sección STACK en EN-001), el orquestador deja el archivo nuevo en `docs/ci/` de una rama y tú lo aplicas desde tu terminal con `bash .claude/scripts/aes-workflow.sh <rama>`: muestra el diff, hace el commit con tu identidad y lo publica. Si le diste *Workflows* a la app, `aes-doctor.sh` y `setup-repo.sh` lo avisan.
-6. **Where can this GitHub App be installed?** *Only on this account*. Pulsa ***Create GitHub App***.
-7. En la página *General* de la app, anota el **App ID**.
-8. **Llave privada:** ***Credentials → Key pairs → New key*** (en la interfaz anterior, *Private keys → Generate a private key*). Se descarga un `.pem`. Muévelo fuera de cualquier repositorio:
-   - Windows: `C:/Users/<tú>/.config/aes/aes-agent.pem`;
-   - macOS y Linux: `~/.config/aes/aes-agent.pem`, con `chmod 600`.
+   - *Metadata*: Read-only (GitHub sets it by itself);
+   - **nothing else**. In particular, *Workflows* stays at *No access*. No account or organization permissions.
+     When an item needs to change a workflow (for example, the STACK section in EN-001), the orchestrator leaves the new file in `docs/ci/` on a branch and you apply it from your terminal with `bash .claude/scripts/aes-workflow.sh <branch>`: it shows the diff, commits with your identity and publishes it. If you gave the app *Workflows*, `aes-doctor.sh` and `setup-repo.sh` warn about it.
+6. **Where can this GitHub App be installed?** *Only on this account*. Press ***Create GitHub App***.
+7. On the app's *General* page, note the **App ID**.
+8. **Private key:** ***Credentials → Key pairs → New key*** (in the older interface, *Private keys → Generate a private key*). A `.pem` is downloaded. Move it out of any repository:
+   - Windows: `C:/Users/<you>/.config/aes/aes-agent.pem`;
+   - macOS and Linux: `~/.config/aes/aes-agent.pem`, with `chmod 600`.
 
-   Nunca la subas a git ni la pegues en un chat. Si se filtra, revócala en esa misma pantalla y genera otra.
-9. **Instala la app:** menú lateral ***Install App*** → tu cuenta → ***Only select repositories***. Elige uno cualquiera (por ejemplo, el sandbox); `setup-repo.sh` añade cada proyecto nuevo. El **Installation ID** es el número al final de la URL de la instalación: `github.com/settings/installations/<id>`.
-10. **Datos de la app:** `aes-new` te los pide la primera vez y los guarda en `~/.config/aes/app.env`. A mano: cópialo de `scripts/aes-app.env.example` del repo de AES y rellena `AES_APP_ID`, `AES_APP_INSTALLATION_ID`, `AES_APP_PRIVATE_KEY` (ruta con `/`) y `AES_BOT_SLUG`. El ID del usuario bot lo consulta el script (`gh api "users/<slug>%5Bbot%5D" --jq .id`).
+   Never push it to git or paste it into a chat. If it leaks, revoke it on that same screen and generate another one.
+9. **Install the app:** side menu ***Install App*** → your account → ***Only select repositories***. Choose any one (for example, the sandbox); `setup-repo.sh` adds each new project. The **Installation ID** is the number at the end of the installation's URL: `github.com/settings/installations/<id>`.
+10. **The app's data:** `aes-new` asks you for it the first time and stores it in `~/.config/aes/app.env`. By hand: copy it from `scripts/aes-app.env.example` in the AES repo and fill in `AES_APP_ID`, `AES_APP_INSTALLATION_ID`, `AES_APP_PRIVATE_KEY` (path with `/`) and `AES_BOT_SLUG`. The script looks up the bot user's ID (`gh api "users/<slug>%5Bbot%5D" --jq .id`).
 
-No uses una cuenta bot ni un token personal *fine-grained*: las cuentas nuevas pueden quedar suspendidas por el antiabuso de GitHub, y los tokens *fine-grained* no acceden a repos de otra cuenta personal.
+Do not use a bot account or a *fine-grained* personal token: new accounts can be suspended by GitHub's anti-abuse systems, and *fine-grained* tokens cannot access repos of another personal account.
 
-#### 3. Skills de terceros (opcional)
+#### 3. Third-party skills (optional)
 
-`aes-new` las ofrece y las baja solo, en su última versión publicada. Para `setup-repo.sh`, clónalas en una versión fija, por ejemplo en `~/.config/aes/skills/`, y añade sus carpetas a `AES_VENDOR` en `app.env`:
+`aes-new` offers them and downloads them by itself, at their latest published version. For `setup-repo.sh`, clone them at a fixed version, for example in `~/.config/aes/skills/`, and add their folders to `AES_VENDOR` in `app.env`:
 
 ```bash
 mkdir -p ~/.config/aes/skills && cd ~/.config/aes/skills
 git clone https://github.com/tt-a1i/archify.git && git -C archify checkout <tag>
 git clone https://github.com/pbakaus/impeccable.git && git -C impeccable checkout <tag>
-# en app.env:
+# in app.env:
 # AES_VENDOR="~/.config/aes/skills/archify/archify;~/.config/aes/skills/impeccable/.claude/skills/impeccable"
 ```
 
-Para actualizarlas, cambias de versión ahí y ejecutas `install-aes.sh <proyecto> --upgrade --vendor <carpeta>` en cada proyecto.
+To update them, change the version there and run `install-aes.sh <project> --upgrade --vendor <folder>` in each project.
 
-### Cada proyecto nuevo
+### Each new project
 
-Lo más simple es `aes-new` (README principal de AES, «Empezar un proyecto nuevo»): lo bajas a la carpeta del proyecto, pregunta en la terminal y llama a `setup-repo.sh`. Sin la GitHub App, usa el modo personal (`--personal`). Sin preguntas, desde una copia de AES en la versión (tag) que quieres usar:
+The simplest way is `aes-new` (the main AES README, "Start a new project"): you download it into the project's folder, it asks in the terminal and calls `setup-repo.sh`. Without the GitHub App, use personal mode (`--personal`). Without questions, from a copy of AES at the version (tag) you want to use:
 
 ```bash
-./scripts/setup-repo.sh <tu-usuario>/<repo> --create private   # o public; sin --create si ya existe
-# con roles en OpenCode: --opencode opencode/deepseek-v4.1-flash-free (o AES_OPENCODE_MODEL en app.env)
+./scripts/setup-repo.sh <your-user>/<repo> --create private --lang en   # or public; without --create if it already exists
+# with roles in OpenCode: --opencode deepseek/deepseek-flash (or AES_OPENCODE_MODEL in app.env)
 ```
 
-Al terminar, abre Claude Code en la carpeta del proyecto con el modelo más capaz (`/model opus`) y pide empezar el proyecto: el orquestador usa la skill `aes-inception` (entrevista, backlog con releases, arquitectura, ADR del stack, dirección visual y EN-001, en un PR a `dev` que apruebas tú). Después, EN-001 con `aes-cycle`.
+When it finishes, open Claude Code in the project's folder with the most capable model (`/model opus`) and ask to start the project: the orchestrator uses the `aes-inception` skill (interview, backlog with releases, architecture, stack ADR, visual direction and EN-001, in a PR into `dev` that you approve). Then, EN-001 with `aes-cycle`.
 
-- `--dry-run` muestra lo que haría sin cambiar nada.
-- Se puede repetir: cada paso comprueba antes y se salta si ya está hecho. Si algo falló a medias (por ejemplo, la app sin acceso), lo arreglas y lo vuelves a ejecutar.
-- En repos **privados**, los rulesets necesitan GitHub Pro o Team. Con GitHub Free, usa un repo público.
-- Las semillas que dependen del stack (`.claude/aes.env`, `ci/validate.sh`, la sección `STACK` del workflow) se adaptan en EN-001.
+- `--dry-run` shows what it would do without changing anything.
+- It can be repeated: each step checks first and is skipped if it is already done. If something failed halfway (for example, the app without access), you fix it and run it again.
+- In **private** repos, rulesets need GitHub Pro or Team. With GitHub Free, use a public repo.
+- The stack-dependent seeds (`.claude/aes.env`, `ci/validate.sh`, the workflow's `STACK` section) are adapted in EN-001.
 
-### Qué hace el script, paso a paso
+### What the script does, step by step
 
-Es también el manual para hacerlo a mano.
+It is also the manual for doing it by hand.
 
-1. **Comprueba** git, gh (con `repo` y `workflow`), jq y `~/.config/aes/app.env` (salvo en modo personal).
-2. **Crea y clona** el repositorio.
-3. **Instala AES** con `./scripts/install-aes.sh <carpeta> --vendor <skill>…`. Copia estos archivos, las skills del núcleo, la DoR/DoD, `AES-CORE.md` y las plantillas en `docs/aes/`, crea `specs/active-stories.txt` y añade a `.gitignore` `.aes/`, `.claude/settings.local.json` y `.claude/worktrees/`.
-   - Los **archivos de AES** (hooks, scripts, skills del núcleo, scripts de la CI, `docs/aes/`) no se editan en el proyecto: `--upgrade` los sobrescribe y `--check` comprueba que coinciden con la versión.
-   - Los **archivos semilla** (subagentes, `settings.json`, `aes.env`, el workflow, `CODEOWNERS`, `ci/validate.sh`, `CLAUDE.md`) son del proyecto. Al actualizar, si AES cambió una semilla, la nueva queda al lado como `<archivo>.aes-new` para que la compares.
-4. **Rellena** `CODEOWNERS` con tu usuario y crea `.claude/settings.local.json` (credenciales de la app y autoría de los commits como `<slug>[bot]`; no va a git). Comprobación manual del token: `bash .claude/scripts/gh-app-token.sh | cut -c1-4` debe imprimir `ghs_`.
-5. **Commit inicial en `main`** con lo instalado (solo si `main` todavía no existe en GitHub) y **crea `dev`** desde `main` (`git push origin main:dev`). El workflow entra en ese commit: la app no puede tocar `.github/workflows/`, así que cualquier cambio posterior en él lo subes tú.
-6. **Ajustes del repositorio:** `dev` como rama por defecto (los PR apuntan a `dev` sin pensarlo), *merge commit* y *squash* permitidos, *rebase* no, y borrado de las ramas integradas.
-7. **Tres rulesets.** GitHub exige cumplir todos los que aplican, y el bypass de uno no salta otro:
-   - **`ramas-ci`** (`main` y `dev`), **sin bypass para nadie:** *Restrict deletions*, *Block force pushes*, *Require status checks to pass* (`aes`) con *Require branches to be up to date*.
-   - **`aprobacion-dev`** y **`aprobacion-main`:** *Require a pull request before merging* con 1 aprobación, *Require review from Code Owners* y *Dismiss stale approvals*. Bypass: *Repository admin* en modo **For pull requests only**, para que puedas integrar tus propios PR. Métodos permitidos: en `main`, solo *merge commit* (releases y hotfixes); en `dev`, *squash* (ramas de trabajo) y *merge commit* (back-merges). Si tu plan no permite limitar los métodos, el script lo avisa: elige bien en cada PR, porque un back-merge integrado con *squash* rompe la comprobación «main contenido en dev» del siguiente release.
+1. **Checks** git, gh (with `repo` and `workflow`), jq and `~/.config/aes/app.env` (except in personal mode).
+2. **Creates and clones** the repository.
+3. **Installs AES** with `./scripts/install-aes.sh <folder> --vendor <skill>…`. It copies these files, the core skills, the DoR/DoD, `AES-CORE.md`, the templates and the license in `docs/aes/`, creates `specs/active-stories.txt` and adds `.aes/`, `.claude/settings.local.json` and `.claude/worktrees/` to `.gitignore`. It sets `AES_LANG` in `.claude/aes.env`.
+   - The **AES files** (hooks, scripts, core skills, CI scripts, `docs/aes/`) are not edited in the project: `--upgrade` overwrites them and `--check` checks that they match the version.
+   - The **seed files** (subagents, `settings.json`, `aes.env`, the workflow, `CODEOWNERS`, `ci/validate.sh`, `CLAUDE.md`) belong to the project. When upgrading, if AES changed a seed the project had adapted, the new one is left beside it as `<file>.aes-new` for you to compare.
+4. **Fills in** `CODEOWNERS` with your user and creates `.claude/settings.local.json` (the app's credentials and commit authorship as `<slug>[bot]`; it does not go to git). Manual check of the token: `bash .claude/scripts/gh-app-token.sh | cut -c1-4` must print `ghs_`.
+5. **Initial commit on `main`** with what was installed (only if `main` does not exist on GitHub yet) and **creates `dev`** from `main` (`git push origin main:dev`). The workflow goes into that commit: the app cannot touch `.github/workflows/`, so you push any later change to it yourself.
+6. **Repository settings:** `dev` as the default branch (PRs target `dev` without thinking about it), *merge commit* and *squash* allowed, *rebase* not, and deletion of merged branches.
+7. **Three rulesets.** GitHub requires meeting every one that applies, and the bypass of one does not skip another:
+   - **`ci-branches`** (`main` and `dev`), **with no bypass for anyone:** *Restrict deletions*, *Block force pushes*, *Require status checks to pass* (`aes`) with *Require branches to be up to date*.
+   - **`approval-dev`** and **`approval-main`:** *Require a pull request before merging* with 1 approval, *Require review from Code Owners* and *Dismiss stale approvals*. Bypass: *Repository admin* in **For pull requests only** mode, so you can merge your own PRs. Allowed methods: on `main`, only *merge commit* (releases and hotfixes); on `dev`, *squash* (work branches) and *merge commit* (back-merges). If your plan does not allow limiting the methods, the script warns about it: choose carefully in each PR, because a back-merge merged with *squash* breaks the "main contained in dev" check of the next release.
+   - Repositories set up before 2.0.0 have the same rulesets under their Spanish names (`ramas-ci`, `aprobacion-dev`, `aprobacion-main`); the script recognizes them and does not duplicate them.
 
-   Un único ruleset con bypass permite integrar con la CI en rojo: el bypass salta todas sus reglas. Pasó en el sandbox (FL-003).
-8. **Etiquetas** `aes:deps-approved`, `aes:markers-approved` y `aes:verified` (solo tú las pones) y la **variable** `AES_APPROVERS`. Las demás variables son opcionales (*Settings → Secrets and variables → Actions → Variables*):
-   - `AES_APPROVERS`: los logins autorizados, separados por coma. La CI acepta una etiqueta solo si la última vez la puso una de estas personas, nunca un `[bot]`.
-   - `AES_MINOR_LIMIT` (por defecto 5): defectos Menores abiertos permitidos.
-   - `AES_REQUIRE_VERIFIED` (por defecto `1`): exige `aes:verified` en las tareas.
-   - `AES_SAST` (`0` lo desactiva) y `AES_SAST_CONFIG` (por defecto `p/owasp-top-ten`): el paso de SAST.
-   - `AES_UI_DETECT`: el detector de interfaz, si impeccable está instalada. Por defecto solo anota en el PR; `block` hace que los hallazgos fallen la tarea; `0` lo desactiva.
-9. **Acceso de la app** al repositorio (`PUT /user/installations/<id>/repositories/<repo>`; a mano: *Settings → Applications → tu app → Configure → Repository access*) y comprobación de su token.
+   A single ruleset with a bypass allows merging with CI red: the bypass skips all its rules. It happened in the sandbox (FL-003).
+8. **Labels** `aes:deps-approved`, `aes:markers-approved` and `aes:verified` (only you put them on) and the **variable** `AES_APPROVERS`. The other variables are optional (*Settings → Secrets and variables → Actions → Variables*):
+   - `AES_APPROVERS`: the authorized logins, comma-separated. CI accepts a label only if the last time it was put on by one of these people, never by a `[bot]`.
+   - `AES_MINOR_LIMIT` (5 by default): open Minor defects allowed.
+   - `AES_REQUIRE_VERIFIED` (`1` by default): requires `aes:verified` on tasks.
+   - `AES_SAST` (`0` turns it off) and `AES_SAST_CONFIG` (`p/owasp-top-ten` by default): the SAST step.
+   - `AES_UI_DETECT`: the interface detector, if impeccable is installed. By default it only annotates the PR; `block` makes findings fail the task; `0` turns it off.
+9. **The app's access** to the repository (`PUT /user/installations/<id>/repositories/<repo>`; by hand: *Settings → Applications → your app → Configure → Repository access*) and a check of its token.
 
-## Convención de ramas
+## Branch convention
 
-Las ramas de trabajo nacen de `dev` y van a `dev`. Las de un hotfix (`BUG-NNN`) nacen de `main` y van a `main`. La CI rechaza cualquier otra ruta hacia `main`.
+Work branches start from `dev` and go to `dev`. A hotfix's (`BUG-NNN`) start from `main` and go to `main`. CI rejects any other route to `main`.
 
-| Rama | Quién | Qué ejecuta la CI |
+| Branch | Who | What CI runs |
 |---|---|---|
-| `spec/<ID>` | orquestador | build/test, RED de los comandos de verificación nuevos, regresión |
-| `qa/<ID>` | orquestador + QA | compuerta (inicio), build/test, RED y trazabilidad de las pruebas de `<ID>`, RED de los comandos nuevos |
-| `task/<ID>/<TASK>` | programador o mecánico | compuerta (solo Crítica), guardián, build/test, criterios de la tarea (`<TASK>.criteria`; sin él, el elemento completo), comandos de verificación, regresión, `aes:verified` |
-| `spec/<ID>-close` | orquestador + mecánico | build/test, el elemento completo (debe ejecutarse y pasar), regresión |
-| `dev` → `main` (release) | orquestador abre, tú integras con merge commit | compuerta (sin exenciones), «main contenido en dev», regresión completa |
-| `main` → `dev` (back-merge) | orquestador abre, tú integras con merge commit | regresión completa |
-| push a `dev` o `main` | — | build/test, regresión, informe de la compuerta; en `dev`, aviso si falta un back-merge |
+| `spec/<ID>` | orchestrator | build/test, RED of the new verification commands, regression |
+| `qa/<ID>` | orchestrator + QA | gate (start), build/test, RED and traceability of the tests of `<ID>`, RED of the new commands |
+| `task/<ID>/<TASK>` | programmer or mechanic | gate (Critical only), guard, build/test, the task's criteria (`<TASK>.criteria`; without it, the whole item), verification commands, regression, `aes:verified` |
+| `spec/<ID>-close` | orchestrator + mechanic | build/test, the whole item (it must run and pass), regression |
+| `dev` → `main` (release) | the orchestrator opens it, you merge with a merge commit | gate (no exemptions), "main contained in dev", full regression |
+| `main` → `dev` (back-merge) | the orchestrator opens it, you merge with a merge commit | full regression |
+| push to `dev` or `main` | — | build/test, regression, gate report; on `dev`, a warning if a back-merge is missing |
 
-`<ID>` es el elemento del backlog: `US-`, `EN-` (pasan por la compuerta), `BUG-`, `CH-`, `ST-`, `SP-` (no pasan: corrigen o mantienen).
+`<ID>` is the backlog item: `US-`, `EN-` (they go through the gate), `BUG-`, `CH-`, `ST-`, `SP-` (they do not: they fix or maintain).
 
-## Checkouts por rol (worktrees)
+## Checkouts per role (worktrees)
 
-El checkout principal se queda en `dev`. Cada rol trabaja en su propio worktree de la rama de trabajo, en `.claude/worktrees/`:
+The main checkout stays on `dev`. Each role works in its own worktree of the work branch, in `.claude/worktrees/`:
 
 ```
-orquestador: git branch --no-track task/US-005/TASK-014 origin/dev
-             bash .claude/scripts/aes-wt.sh delegate task/US-005/TASK-014
-             → llama al subagente programmer (isolation: worktree)
-hook WorktreeCreate: abre .claude/worktrees/task-US-005-TASK-014 en esa rama
-                     y copia .claude/settings.local.json (la identidad de la app)
-programmer: trabaja y hace commit en su worktree
-hook WorktreeRemove: cierra el worktree si está limpio; los commits quedan en la rama
-orquestador: publica la rama; para el verificador, otro delegate → worktree limpio
+orchestrator: git branch --no-track task/US-005/TASK-014 origin/dev
+              bash .claude/scripts/aes-wt.sh delegate task/US-005/TASK-014
+              → calls the programmer subagent (isolation: worktree)
+WorktreeCreate hook: opens .claude/worktrees/task-US-005-TASK-014 on that branch
+                     and copies .claude/settings.local.json (the app's identity)
+programmer: works and commits in its worktree
+WorktreeRemove hook: closes the worktree if it is clean; the commits stay on the branch
+orchestrator: publishes the branch; for the verifier, another delegate → a clean worktree
 ```
 
-- Una rama solo puede estar en un worktree a la vez (regla de git): el orquestador cierra el suyo (`aes-wt.sh close`) antes de delegar en la misma rama.
-- Los roles se ejecutan de uno en uno. En paralelo, dos worktrees arrancarían servidores en los mismos puertos.
-- Cada worktree necesita sus dependencias (`npm ci`, `dotnet restore`): la primera ejecución de cada rol es más lenta.
-- Si quieres más archivos locales en cada worktree (por ejemplo, un `.env`), añádelos a `AES_WT_LOCAL_FILES` en `aes-wt.sh`.
+- A branch can only be in one worktree at a time (a git rule): the orchestrator closes its own (`aes-wt.sh close`) before delegating on the same branch.
+- The roles run one at a time. In parallel, two worktrees would start servers on the same ports.
+- Each worktree needs its dependencies (`npm ci`, `dotnet restore`): each role's first run is slower.
+- If you want more local files in each worktree (for example, an `.env`), add them to `AES_WT_LOCAL_FILES` in `aes-wt.sh`.
 
-## Roles en OpenCode (binding, AES 06 §12)
+## Roles in OpenCode (binding, AES 06 §12)
 
-El orquestador se queda en Claude Code; QA, el programador y el mecánico pueden correr en [OpenCode](https://opencode.ai) con otro proveedor (por ejemplo, DeepSeek). El verificador se queda en Claude: revisa mejor un modelo de otra familia. Todo es opcional: con el binding en `claude` (el valor por defecto), nada de esto se usa.
+The orchestrator stays in Claude Code; QA, the programmer and the mechanic can run in [OpenCode](https://opencode.ai) with another provider (for example, DeepSeek). The verifier stays in Claude: a model from another family reviews better. All of it is optional: with the binding at `claude` (the default value), none of this is used.
 
-### Puesta en marcha
+### Getting started
 
-1. **OpenCode** 1.18.30 o posterior (`opencode --version`). No pide cuenta.
-2. **Proveedor.** Una de estas:
-   - **DeepSeek de pago:** crea una clave en platform.deepseek.com y recarga saldo (PayPal o tarjeta; es prepago, así que el saldo es tu tope). En OpenCode, `/connect` → `deepseek` → pega la clave, o define `DEEPSEEK_API_KEY` en el entorno. Modelo: `deepseek/deepseek-flash`.
-   - **Gratis por tiempo limitado:** OpenCode ofrece algunos modelos sin costo, sin cuenta. `opencode/deepseek-v4.1-flash-free` declara cero retención y sin entrenamiento; otros gratuitos (Big Pickle, MiMo, Nemotron…) sí guardan o entrenan con tus datos: no los uses con código que no quieras compartir. Revisa las condiciones en opencode.ai/docs/zen antes de elegir.
-3. **Binding** en `.claude/aes.env`, por rol:
+1. **OpenCode** 1.18.30 or later (`opencode --version`). It asks for no account.
+2. **Provider.** One of these:
+   - **Paid DeepSeek:** create a key at platform.deepseek.com and top up the balance (PayPal or card; it is prepaid, so the balance is your cap). In OpenCode, `/connect` → `deepseek` → paste the key, or define `DEEPSEEK_API_KEY` in the environment. Model: `deepseek/deepseek-flash`.
+   - **Free for a limited time:** OpenCode offers some models at no cost, with no account. `opencode/deepseek-v4.1-flash-free` declares zero retention and no training; other free ones (Big Pickle, MiMo, Nemotron…) do store or train on your data: do not use them with code you do not want to share. Check the terms at opencode.ai/docs/zen before choosing. The free plan cuts long sessions off at its usage limit: use it only for trying things out.
+3. **Binding** in `.claude/aes.env`, per role:
    ```bash
    AES_BIND_QA="opencode:deepseek/deepseek-flash"
    AES_BIND_PROGRAMMER="opencode:deepseek/deepseek-flash"
    AES_BIND_MECHANIC="opencode:deepseek/deepseek-flash"
    AES_BIND_VERIFIER="claude"
    ```
-   Y el precio de lista para estimar el costo (`AES_OC_LIST_PRICE`, `AES_OC_PEAK_UTC`): ya viene con los de `deepseek-flash`.
-4. **Prueba:** `opencode run -m deepseek/deepseek-flash "Responde OK"`. El orquestador hace la misma comprobación al arrancar cada sesión.
+   And the list price to estimate the cost (`AES_OC_LIST_PRICE`, `AES_OC_PEAK_UTC`): it already comes with `deepseek-flash`'s.
+4. **Model levels** (06 §12.1): a task can ask for `**Model level:** high — <reason>`, which resolves to `AES_BIND_<ROLE>_HIGH` (for example `claude:sonnet` for the programmer and `claude:opus` for the verifier). The human approves the level with the tasks.
+5. **Check:** `bash .claude/scripts/aes-doctor.sh`. It checks OpenCode's version and options and that each bound model answers.
 
-### Cómo delega el orquestador
+### How the orchestrator delegates
 
-`bash .claude/scripts/aes-oc.sh run <rol> <rama> -- "<plantilla con sus datos>"`, en segundo plano. El script:
+`bash .claude/scripts/aes-oc.sh run <role> <branch> -- "<template with its data>"`, in the background. The script:
 
-1. abre el worktree de la rama y lo marca como activo;
-2. ejecuta `opencode run --agent <rol> -m <modelo>` ahí, **sin** las credenciales de la GitHub App ni de `gh` en el entorno;
-3. aplica la compuerta de fin de rol (`subagent-gate.sh`: servidores, guardián, `ci/validate.sh`, cambios sin commit); si falla, reanuda la sesión **una** vez con el motivo, como un hook `SubagentStop`;
-4. guarda los eventos y la sesión en `.aes/runs/<rama>/` y una fila en `.aes/costs.csv`;
-5. imprime el estado, los commits, los archivos, el costo y el reporte del rol; cierra el worktree si quedó limpio.
+1. opens the branch's worktree and marks it as active;
+2. runs `opencode run --agent <role> -m <model>` there, **without** the GitHub App's or `gh`'s credentials in the environment, with the project language in the prompt;
+3. applies the end-of-role gate (`subagent-gate.sh`: servers, guard, `ci/validate.sh`, uncommitted changes); if it fails, it resumes the session **once** with the reason, like a `SubagentStop` hook;
+4. stores the events and the session in `.aes/runs/<branch>/` and a row in `.aes/costs.csv`;
+5. prints the status, the commits, the files, the cost and the role's report; it closes the worktree if it is clean.
 
-`bash .claude/scripts/aes-oc.sh report [<ID>]` resume tokens y costo por elemento y rol.
+`bash .claude/scripts/aes-oc.sh report [<ID>]` summarizes tokens and cost per item and role.
 
-### Controles
+### Controls
 
-| Capa | Claude Code (subagente) | OpenCode |
+| Layer | Claude Code (subagent) | OpenCode |
 |---|---|---|
-| Contrato | `.claude/agents/<rol>.md` | El mismo archivo, cargado con `{file:…}` en `opencode.json` |
-| L1 | `permissions` de `settings.json` | `permission` por agente en `opencode.json`: rutas protegidas, `git push`/`gh`, red, preguntas y subagentes en `deny`; skills solo las del rol. En `opencode run`, lo que quedaría en *ask* se rechaza solo |
-| L2 | Hooks `role-guard.sh`, `bash-guard.sh` | `.opencode/plugin/aes-guard.js`, que ejecuta **los mismos** hooks (`AES_ROLE` lo pone el script) y quita credenciales del entorno de la terminal |
-| Fin de rol | Hook `SubagentStop` | `aes-oc.sh` ejecuta `subagent-gate.sh` y reanuda una vez |
-| L3 | CI | La misma CI |
-| Fuera del repo | Sin sandbox en Windows nativo (FL-002) | OpenCode rechaza por defecto leer o escribir fuera del proyecto (`external_directory`) |
+| Contract | `.claude/agents/<role>.md` | The same file, loaded with `{file:…}` in `opencode.json` |
+| L1 | `permissions` in `settings.json` | `permission` per agent in `opencode.json`: protected paths, `git push`/`gh`, network, questions and subagents at `deny`; only the role's skills. In `opencode run`, whatever would be *ask* is rejected by itself |
+| L2 | Hooks `role-guard.sh`, `bash-guard.sh` | `.opencode/plugin/aes-guard.js`, which runs **the same** hooks (`AES_ROLE` is set by the script) and removes credentials from the terminal's environment |
+| End of role | `SubagentStop` hook | `aes-oc.sh` runs `subagent-gate.sh` and resumes once |
+| L3 | CI | The same CI |
+| Outside the repo | No sandbox on native Windows (FL-002) | OpenCode rejects reading or writing outside the project by default (`external_directory`) |
 
-Comprobado con un modelo simulado (un servidor compatible con la API de OpenAI que pide herramientas programadas): escritura en `tests/acceptance/`, redirección de la terminal a una ruta protegida, escritura fuera de la superficie y `git push` quedan bloqueados con el mensaje del hook, y el modelo lo recibe y sigue; la compuerta reanuda la sesión y el arreglo pasa; el costo coincide con el precio de lista y se duplica en horario caro.
+Tested first with a simulated model (an OpenAI-compatible server that requests scripted tools): writing in `tests/acceptance/`, redirecting the terminal to a protected path, writing outside the surface and `git push` are blocked with the hook's message, and the model receives it and continues; the gate resumes the session and the fix passes; the cost matches the list price and doubles in the expensive slot. Then in aes-todo with `deepseek/deepseek-flash` (see `docs/case-study.md` in the AES repo).
 
-### Límites conocidos
+### Known limits
 
-- **Costo estimado, no facturado.** OpenCode conoce solo el precio barato de DeepSeek; el script aplica el recargo por horario (`AES_OC_PEAK_UTC`). La cifra que manda es la de la página *Billing* del proveedor.
-- **Primera ejecución en cada worktree:** OpenCode instala la dependencia de plugins en `.opencode/` (la ignora él solo en git). Tarda más la primera vez.
-- **Windows:** el plugin ejecuta los hooks con el mismo bash que corre `aes-oc.sh` (Git Bash, convertido a ruta de Windows), no con el `bash` del PATH, que con WSL instalado puede ser el de WSL. Para usar otro, define `AES_BASH`.
-- **Skills personales:** OpenCode también ve las skills de tu usuario (`~/.claude/skills/`); `opencode.json` las niega todas salvo las del rol.
-- **Paralelo:** como con los subagentes, un rol a la vez hasta que el perfil resuelva puertos y datos por checkout (06 §10).
+- **Estimated cost, not billed.** OpenCode only knows DeepSeek's cheap price; the script applies the time-slot surcharge (`AES_OC_PEAK_UTC`). The figure that counts is the one on the provider's *Billing* page.
+- **First run in each worktree:** OpenCode installs the plugin dependency in `.opencode/` (it ignores it in git by itself). It takes longer the first time.
+- **Windows:** the plugin runs the hooks with the same bash that runs `aes-oc.sh` (Git Bash, converted to a Windows path), not with the `bash` on the PATH, which with WSL installed may be WSL's. To use another one, define `AES_BASH`.
+- **Personal skills:** OpenCode also sees your user's skills (`~/.claude/skills/`); `opencode.json` denies them all except the role's.
+- **Parallel:** as with the subagents, one role at a time until the profile solves ports and data per checkout (06 §10).
 
-## Grafo de código con Graphify (opcional, en piloto)
+## Code graph with Graphify (optional, in pilot)
 
-[Graphify](https://github.com/Graphify-Labs/graphify) construye un grafo del código con tree-sitter, en local y sin modelo, y puede servirle al orquestador como hecho adicional para la nota de diseño (AES 10 §5). Se usa como **herramienta** (06 §6.2), desde la terminal:
-
-```bash
-uv tool install graphifyy           # o pipx install graphifyy
-graphify update .                   # primer grafo, local y sin modelo
-graphify hook install               # lo reconstruye en segundo plano tras cada commit y checkout;
-                                    # instalado en el checkout principal, cubre también los worktrees
-```
-
-- Añade `graphify-out/` a `.gitignore`.
-- **No uses `graphify watch`:** deja un proceso vivo entre roles (06 §10). El hook de git basta.
-- Para la nota de diseño solo cuentan como hechos las relaciones que Graphify marca como extraídas del código, no las inferidas.
-- No instales su integración con el asistente (`graphify install`) sin probarla antes: añade su propio hook de lectura a Claude Code, que tiene que convivir con los de AES. Es lo que queda por comprobar en el sandbox.
-- Regístralo en el perfil como cualquier skill o herramienta de terceros.
-
-## Flujo de una tarea con verificación en L3
-
-```
-programador → PR task/<ID>/<TASK>
-CI: todo verde salvo «PASS del verificador aprobado»   ← esperado, no es ciclo FAIL
-orquestador → verifier → PASS
-tú: lees el informe → pones aes:verified
-CI se relanza (evento labeled) → verde → integras
-un commit nuevo en la rama → la CI quita aes:verified (y las otras aprobaciones) → hay que volver a verificar
-```
-
-## Comandos de verificación
-
-Para criterios que no se comprueban con una prueba de aceptación (configuración, herramientas, scripts): `specs/<ID>/<ID>.verify` o, en un lote, `specs/<ID>/BUG-NNN.verify`. Es un script bash que termina con 0 si el criterio se cumple. Lo escribe QA y lo apruebas tú, como una prueba.
+[Graphify](https://github.com/Graphify-Labs/graphify) builds a graph of the code with tree-sitter, locally and without a model, and can serve the orchestrator as an additional fact for the design note (AES 10 §5). It is used as a **tool** (06 §6.2), from the terminal:
 
 ```bash
-# specs/CH-002/CH-002.verify — ejemplo
+uv tool install graphifyy           # or pipx install graphifyy
+graphify update .                   # first graph, local and without a model
+graphify hook install               # rebuilds it in the background after each commit and checkout;
+                                    # installed in the main checkout, it also covers the worktrees
+```
+
+- Add `graphify-out/` to `.gitignore`.
+- **Do not use `graphify watch`:** it leaves a process alive between roles (06 §10). The git hook is enough.
+- For the design note only the relationships Graphify marks as extracted from the code count as facts, not the inferred ones.
+- Do not install its assistant integration (`graphify install`) without testing it first: it adds its own read hook to Claude Code, which has to coexist with AES's. That is what remains to be checked in the sandbox.
+- Register it in the profile like any third-party skill or tool.
+
+## Flow of a task with verification in L3
+
+```
+programmer → PR task/<ID>/<TASK>
+CI: everything green except "Verifier PASS approved"   ← expected, not a FAIL cycle
+orchestrator → verifier → PASS
+you: read the report → put on aes:verified
+CI restarts (labeled event) → green → you merge
+a new commit on the branch → CI removes aes:verified (and the other approvals) → it must be verified again
+```
+
+## Verification commands
+
+For criteria that are not checked with an acceptance test (configuration, tools, scripts): `specs/<ID>/<ID>.verify` or, in a batch, `specs/<ID>/BUG-NNN.verify`. It is a bash script that exits with 0 if the criterion is met. QA writes it and you approve it, like a test.
+
+```bash
+# specs/CH-002/CH-002.verify — example
 set -euo pipefail
 grep -q '<clear />' nuget.config
 dotnet restore --configfile nuget.config --no-cache >/dev/null
 ```
 
-Si es imposible que falle antes del cambio, su primera línea es `# aes: no-red <motivo>` y tu aprobación debe ser explícita.
+If it is impossible for it to fail before the change, its first line is `# aes: no-red <reason>` and your approval must be explicit.
 
-## Probar en local
+## Trying it locally
 
 ```bash
 BASE_REF=origin/dev TASK_SCOPE_FILE=specs/US-005/TASK-014.scope bash ci/aes-guard.sh
 BASE=origin/dev bash ci/defect-gate.sh start US-006
 EVENT=pull_request HEAD_BRANCH=task/US-005/TASK-014 TARGET=dev BASE=origin/dev bash ci/aes-ctx.sh
 bash ci/run-verify.sh green origin/dev specs/CH-002/CH-002.verify
-git merge-base --is-ancestor origin/main origin/dev && echo "main contenido en dev"
+git merge-base --is-ancestor origin/main origin/dev && echo "main contained in dev"
 ```
 
 ## Windows
 
-- Los hooks son bash: instala Git for Windows. Claude Code los ejecuta con Git Bash, y `lib.sh` normaliza rutas `H:\...`.
-- Usa `.gitattributes` con `*.sh text eol=lf`; con CRLF los scripts fallan.
-- El aislamiento de la terminal de Claude Code (*sandbox*) **solo existe en WSL 2**. En Windows nativo, nada impide que un agente escriba fuera del repo (FL-002 del sandbox). Si el disco tiene algo sensible, trabaja en WSL 2 con el sandbox activo, o decláralo como excepción en el perfil (AES 06 §9).
+- The hooks are bash: install Git for Windows. Claude Code runs them with Git Bash, and `lib.sh` normalizes `H:\...` paths.
+- Use `.gitattributes` with `*.sh text eol=lf`; with CRLF the scripts fail.
+- Claude Code's terminal isolation (*sandbox*) **only exists in WSL 2**. On native Windows, nothing prevents an agent from writing outside the repo (FL-002 in the sandbox). If the disk has something sensitive, work in WSL 2 with the sandbox on, or declare it as an exception in the profile (AES 06 §9).
 
-## Límites conocidos
+## Known limits
 
-- Las capas L1 y L2 son fricción, no garantía: la terminal puede escribir lo que el hook de edición bloquea. La garantía es la CI (L3).
-- El clasificador de permisos del modo automático de Claude Code actúa como una capa L1 adicional, no configurada por el proyecto. En el sandbox denegó acciones demasiado amplias (detener todos los procesos `dotnet`/`node`).
-- Las pruebas holdout no están implementadas en esta referencia; la implementación `claude-code-opencode` muestra cómo ejecutarlas desde un repositorio privado.
+- Layers L1 and L2 are friction, not a guarantee: the terminal can write what the edit hook blocks. The guarantee is CI (L3).
+- The permission classifier of Claude Code's automatic mode acts as an additional L1 layer, not configured by the project. In the sandbox it denied overly broad actions (stopping every `dotnet`/`node` process).
+- Holdout tests are not implemented in this reference.
