@@ -5,7 +5,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-version=$(sed -n 's/^\*\*Versión:\*\* *\([0-9.]*\).*/\1/p' README.md | head -n1)
+version=$(sed -nE 's/^\*\*Versi(o|ó)n:\*\* *([0-9.]+).*/\2/p' README.md | head -n1)
 [[ -n "$version" ]] || { echo "No se encontró la versión en README.md" >&2; exit 1; }
 
 tmp=$(mktemp)
