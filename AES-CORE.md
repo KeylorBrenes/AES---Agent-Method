@@ -600,7 +600,7 @@ Traceability SHOULD be machine-checkable:
 - each task declares the criteria it turns green (04 §2), so that CI runs only those (05 §12);
 - every test is derived from an approved criterion. If QA sees a gap, it proposes a new criterion; it does not write a test without a criterion.
 
-A criterion that describes behaviour the code **already has** cannot show RED. Its verification is the **regression** suite of the story that owns that behaviour (05 §2.4), and the criterion says so: "Verification: regression of US-001".
+A criterion that describes behaviour the code **already has** cannot show RED. Its verification is the **regression** suite of the story that owns that behaviour (05 §2.4), and the criterion says so: "Checked with: regression of US-001".
 
 A list of tests without links to the requirements does not count as sufficient traceability.
 
@@ -839,7 +839,7 @@ Those tests are **characterization** tests: they document existing behaviour. Ru
 
 - they live in the suite of the story that **owns** that behaviour (with its tag, for example `@US-001`), and carry the new criterion's ID in the title for traceability;
 - they run in the regression suite from the moment they are merged;
-- the new criterion states "Verification: regression of <ID>" and does **not** appear in any task's criteria file (§12), because it has no tests of its own to run;
+- the new criterion states "Checked with: regression of <ID>" and does **not** appear in any task's criteria file (§12), because it has no tests of its own to run;
 - QA marks them as such in the plan, and the human owner approves them with the rest.
 
 Tags that CI does not run are not invented: a test that never runs verifies nothing.
@@ -1424,7 +1424,7 @@ Projects SHOULD copy these checklists into their repository (01 §2), so that ag
 A story can become `Ready` when:
 
 - [ ] **the stabilization gate is open**: there are no open defects of Critical, High or Medium severity, and the Minor ones do not exceed the profile's limit (02 §9);
-- [ ] the title has the format of its type ("As a… I want… so that…" for stories; "To…, we need…" for enablers) and declares `Depends on:` (02 §3);
+- [ ] the title has the format of its type ("As a… I want… so that…" for stories; "For…, we need…" for enablers) and declares `Depends on:` (02 §3);
 - [ ] the story is **atomic** (one capability that can be demonstrated on its own) and a **vertical slice** (02 §3.1–3.2), with fewer than 8 points;
 - [ ] the story is written in customer language; the technical detail is in the technical plan (03 §1);
 - [ ] scope and relevant exclusions are defined;
@@ -1493,7 +1493,7 @@ A task is technically done when:
 - [ ] no secrets, temporary artifacts or unapproved dependencies were introduced;
 - [ ] no servers, processes or data of the role remain in the environment (06 §10);
 - [ ] the report was delivered with executed evidence and known blockers;
-- [ ] the verifier issued `PASS` **before merging**, and the findings were classified by origin, type and severity (02 §9.3).
+- [ ] the verifier issued `PASS` **before merging**, the findings were classified by origin, type and severity (02 §9.3), and the findings outside the task are recorded as defects with a severity.
 
 The task moves to review; the programmer does not mark it as accepted.
 

@@ -7,7 +7,7 @@ Projects SHOULD copy these checklists into their repository (01 §2), so that ag
 A story can become `Ready` when:
 
 - [ ] **the stabilization gate is open**: there are no open defects of Critical, High or Medium severity, and the Minor ones do not exceed the profile's limit (02 §9);
-- [ ] the title has the format of its type ("As a… I want… so that…" for stories; "To…, we need…" for enablers) and declares `Depends on:` (02 §3);
+- [ ] the title has the format of its type ("As a… I want… so that…" for stories; "For…, we need…" for enablers) and declares `Depends on:` (02 §3);
 - [ ] the story is **atomic** (one capability that can be demonstrated on its own) and a **vertical slice** (02 §3.1–3.2), with fewer than 8 points;
 - [ ] the story is written in customer language; the technical detail is in the technical plan (03 §1);
 - [ ] scope and relevant exclusions are defined;
@@ -76,7 +76,7 @@ A task is technically done when:
 - [ ] no secrets, temporary artifacts or unapproved dependencies were introduced;
 - [ ] no servers, processes or data of the role remain in the environment (06 §10);
 - [ ] the report was delivered with executed evidence and known blockers;
-- [ ] the verifier issued `PASS` **before merging**, and the findings were classified by origin, type and severity (02 §9.3).
+- [ ] the verifier issued `PASS` **before merging**, the findings were classified by origin, type and severity (02 §9.3), and the findings outside the task are recorded as defects with a severity.
 
 The task moves to review; the programmer does not mark it as accepted.
 

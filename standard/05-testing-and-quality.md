@@ -60,7 +60,7 @@ Those tests are **characterization** tests: they document existing behaviour. Ru
 
 - they live in the suite of the story that **owns** that behaviour (with its tag, for example `@US-001`), and carry the new criterion's ID in the title for traceability;
 - they run in the regression suite from the moment they are merged;
-- the new criterion states "Verification: regression of <ID>" and does **not** appear in any task's criteria file (§12), because it has no tests of its own to run;
+- the new criterion states "Checked with: regression of <ID>" and does **not** appear in any task's criteria file (§12), because it has no tests of its own to run;
 - QA marks them as such in the plan, and the human owner approves them with the rest.
 
 Tags that CI does not run are not invented: a test that never runs verifies nothing.

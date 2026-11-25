@@ -21,6 +21,15 @@ AES is now written in English, and a project chooses the language its agents wri
 - `docs/case-study.md`: EN-001 versus ST-001 in aes-todo, what failed and what each version changed.
 - License: CC BY 4.0 for the text and MIT for the code (`LICENSE`); the installer copies it to `docs/aes/`.
 
+### Rule changes made during the translation
+These are not translations of 1.6.0's text; each one records what aes-todo showed, and the scripts already behave this way.
+- The orchestrator's contract (step 11) and 02 §9.3 agree: a task defect of Medium severity or higher is a FAIL cycle by the standing rule; the human decides the rest. The 1.6.0 contract said only "if the human decides to fix it".
+- `Released` counts as closed for the stabilization gate (02 §9.2), as `Accepted` and `Rejected` do; `defect-gate.sh` changed with it.
+- A skipped CI step is not a control (05 §7, the SAST case of 1.5.2); re-verification scope (05 §11, 06 §4); finding origin and type (06 §4).
+- The human applies workflow changes with their own identity (06 §9), as `aes-workflow.sh` already required.
+- New Ready conditions (08): each task's model level is set and approved, and the environment check (`aes-doctor.sh`) passes.
+- The design note writes down the decisions the verifier will test: API edges and the interface's dynamic behaviour (10 §5).
+
 ### Removed
 - `profiles/reference/claude-code-opencode/` (1.1): its CI had fallen behind and OpenCode roles are part of `claude-code-subagents`. It is still at `v1.6.0`.
 - `docs/ci/validate.yml`, an old copy of the repository's own workflow.

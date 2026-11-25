@@ -99,7 +99,7 @@ Traceability SHOULD be machine-checkable:
 - each task declares the criteria it turns green (04 §2), so that CI runs only those (05 §12);
 - every test is derived from an approved criterion. If QA sees a gap, it proposes a new criterion; it does not write a test without a criterion.
 
-A criterion that describes behaviour the code **already has** cannot show RED. Its verification is the **regression** suite of the story that owns that behaviour (05 §2.4), and the criterion says so: "Verification: regression of US-001".
+A criterion that describes behaviour the code **already has** cannot show RED. Its verification is the **regression** suite of the story that owns that behaviour (05 §2.4), and the criterion says so: "Checked with: regression of US-001".
 
 A list of tests without links to the requirements does not count as sufficient traceability.
 
