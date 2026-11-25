@@ -22,6 +22,8 @@ Es un punto de partida, no un perfil prescriptivo. Las partes del stack (.NET + 
 | `.claude/hooks/worktree-create.sh`, `worktree-remove.sh` | L2 | El subagente con `isolation: worktree` trabaja en la rama de trabajo real (la que indicó el orquestador con `delegate`); sin indicación, no arranca | Simulación (falta confirmar en Claude Code el formato del evento) |
 | `.claude/scripts/aes-note.sh` | — | Notas del orquestador con la hora real; `clear` las vacía tras el cierre | Probado (`clear`: simulación) |
 | `.claude/scripts/gh-app-token.sh`, `git-credential-aes-app.sh`, `agent-gh.sh` | L3 | Identidad de los agentes: GitHub App sin permiso de workflows | Probado |
+| `.claude/scripts/aes-workflow.sh` | L3 | Lo ejecuta el humano: aplica en una rama el workflow que el orquestador preparó en `docs/ci/`, con su identidad | Simulación |
+| `.claude/scripts/aes-doctor.sh` | — | Chequeo del entorno antes de delegar: herramientas, permisos de la app, OpenCode (versión, opciones, que el modelo responde) y el stack (`AES_DOCTOR_CHECKS`, con compilaciones mínimas) | Simulación |
 | `.claude/skills/aes-cycle/SKILL.md` | — | Procedimiento del orquestador, con plantillas de delegación | Probado (caminos T1 y lote: simulación) |
 | `.claude/skills/aes-{inception,debugging,security-review,design-note}/` | — | Skills del núcleo de AES, copiadas de `skills/` en la raíz del repo de AES (no se editan aquí) | Pendiente de uso real |
 | `.claude/aes.env` | — | Puertos y comandos de servidores del proyecto | — |
@@ -97,6 +99,7 @@ Los agentes publican ramas y abren PR con la identidad de una GitHub App, no con
    - *Pull requests*: **Read and write**;
    - *Metadata*: Read-only (GitHub lo marca solo);
    - **nada más**. En particular, *Workflows* se queda en *No access*. Sin permisos de cuenta ni de organización.
+     Cuando un elemento necesita cambiar un workflow (por ejemplo, la sección STACK en EN-001), el orquestador deja el archivo nuevo en `docs/ci/` de una rama y tú lo aplicas desde tu terminal con `bash .claude/scripts/aes-workflow.sh <rama>`: muestra el diff, hace el commit con tu identidad y lo publica. Si le diste *Workflows* a la app, `aes-doctor.sh` y `setup-repo.sh` lo avisan.
 6. **Where can this GitHub App be installed?** *Only on this account*. Pulsa ***Create GitHub App***.
 7. En la página *General* de la app, anota el **App ID**.
 8. **Llave privada:** ***Credentials → Key pairs → New key*** (en la interfaz anterior, *Private keys → Generate a private key*). Se descarga un `.pem`. Muévelo fuera de cualquier repositorio:

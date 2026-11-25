@@ -205,13 +205,13 @@ case "$harness" in
   2)
     command -v opencode >/dev/null || die "No encuentro opencode. Instálalo (https://opencode.ai) y vuelve a ejecutar."
     choose "Modelo:" "${AES_MODEL_CHOICE:-1}" \
-      "opencode/deepseek-v4.1-flash-free (gratis por tiempo limitado, sin retención declarada)" \
-      "deepseek/deepseek-flash (de pago: clave de platform.deepseek.com con /connect en OpenCode)" \
+      "deepseek/deepseek-flash (DeepSeek V4.1 Flash de pago, recomendado: clave de platform.deepseek.com con /connect en OpenCode)" \
+      "opencode/deepseek-v4.1-flash-free (gratis, solo para probar: el plan corta las sesiones largas por límite de uso)" \
       "otro (proveedor/modelo)"
     model_choice=$REPLY
     case "$REPLY" in
-      1) oc_model=opencode/deepseek-v4.1-flash-free ;;
-      2) oc_model=deepseek/deepseek-flash ;;
+      1) oc_model=deepseek/deepseek-flash ;;
+      2) oc_model=opencode/deepseek-v4.1-flash-free ;;
       3) while :; do ask_req "proveedor/modelo" "${AES_OPENCODE_MODEL:-}"; [[ "$REPLY" == */* ]] && break; done; oc_model=$REPLY ;;
     esac ;;
   3) die "Codex todavía no está integrado en AES. Vuelve a ejecutar y elige Claude Code u OpenCode." ;;

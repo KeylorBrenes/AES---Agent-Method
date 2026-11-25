@@ -291,6 +291,13 @@ if [[ -n "$dir" && $dry -eq 0 && $dir_check -eq 1 ]]; then
   if tok=$(cd "$dir" && bash .claude/scripts/gh-app-token.sh 2>/dev/null) && [[ "$tok" == ghs_* ]]; then
     if GH_TOKEN=$tok gh api "repos/$repo" --silent 2>/dev/null; then ok "token de la app válido y con acceso al repo"
     else warn "el token de la app es válido, pero todavía no ve $repo (revisa el paso anterior)"; fi
+    perms=$(cd "$dir" && bash .claude/scripts/gh-app-token.sh --permissions 2>/dev/null || echo '{}')
+    for p in contents pull_requests; do
+      [[ "$(jq -r --arg p "$p" '.[$p] // "none"' <<< "$perms")" == write ]] \
+        || warn "la app no tiene $p = write: ajústalo en la app (Permissions) y acepta el cambio en la instalación"
+    done
+    [[ "$(jq -r '.workflows // "none"' <<< "$perms")" == none ]] \
+      || warn "la app tiene permiso de Workflows: AES lo deja en «No access» para que los agentes no puedan cambiar la CI que los juzga. Los cambios de workflow los aplicas tú con .claude/scripts/aes-workflow.sh"
   else
     warn "no se pudo obtener el token de la app: (cd $dir && bash .claude/scripts/gh-app-token.sh)"
   fi

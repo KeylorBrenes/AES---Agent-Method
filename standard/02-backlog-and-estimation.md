@@ -167,9 +167,19 @@ El perfil puede endurecer la compuerta (por ejemplo, un límite menor de defecto
 
 ### 9.3 Qué es un defecto y qué no
 
-- Un hallazgo sobre **lo que añade la tarea en curso** no es un defecto: es un ciclo `FAIL` de esa tarea, que se corrige antes de integrar (04 §9).
+- Un `FAIL` del verificador, o un check rojo de la CI, es un ciclo `FAIL` de la tarea (04 §9).
+- Tras un `PASS`, cada hallazgo trae **origen** (de la tarea o preexistente) y **tipo** (defecto: incumple algo escrito; hueco de la especificación: nada escrito lo decide). La regla por defecto:
+
+  | Hallazgo tras un PASS | Qué se hace |
+  |---|---|
+  | De la tarea, defecto, severidad **Media o mayor** | Ciclo `FAIL` de la tarea, antes de integrar |
+  | De la tarea, defecto **Menor** | Defecto del backlog (`BUG-NNN`, de la historia en curso). El humano puede pedir corregirlo ahora como ciclo `FAIL` |
+  | De la tarea, **hueco de la especificación** | No es un ciclo. Se corrige la especificación: la nota en el cierre y el catálogo de diseño. Si el comportamiento debe cambiar, es un defecto Menor del backlog o un criterio de una historia posterior |
+  | Preexistente | Defecto del backlog con severidad |
+
+- Un hallazgo Menor que aparece **en una reverificación**, fuera de lo que cambió el último ciclo, va al backlog: no abre otro ciclo. Así una tarea no gasta sus 3 ciclos puliendo detalles mientras la compuerta de estabilización (§9.2) ya limita cuántos Menores se acumulan.
 - Un hallazgo sobre comportamiento **ya aceptado o preexistente** es un defecto: se registra con ID, severidad, historia de origen, reproducción y criterio, aunque se encuentre durante otra historia.
-- El responsable humano puede fijar en el perfil una **regla permanente** para clasificar los hallazgos tras un `PASS` del verificador (por ejemplo, «lo que añade la tarea se corrige; lo demás va al backlog»). El orquestador la aplica, registra cada clasificación como decisión y se la muestra al humano, que puede cambiarla antes de integrar.
+- El responsable humano puede reemplazar esta regla en el perfil por una **regla permanente** propia. El orquestador la aplica, registra cada clasificación como decisión y se la muestra al humano, que puede cambiarla antes de integrar.
 
 ### 9.4 Lote de estabilización
 

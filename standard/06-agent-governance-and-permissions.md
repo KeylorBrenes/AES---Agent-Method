@@ -250,6 +250,8 @@ Un rol MAY correr en un harness distinto al del orquestador (por ejemplo, el orq
 4. **L3 sin cambios:** la CI y la compuerta de fin de rol (servidores, guardián, validaciones) se aplican igual, porque no dependen del harness.
 5. **Sin credenciales de publicación** en el entorno del rol: publica el orquestador (§10).
 6. **Costo por delegación:** cada ejecución registra modelo, tokens (entrada, salida, razonamiento, caché) y costo estimado con el precio de lista del proveedor, incluidos los recargos por horario, aunque el modelo se use gratis. La retrospectiva del elemento resume el costo por rol (09 §6).
-7. **Datos fuera del proveedor principal:** el perfil registra a qué proveedor va el código y el contexto de cada rol, y sus condiciones de retención y entrenamiento. Un proyecto con datos sensibles no delega en un proveedor que retiene o entrena con ellos.
+7. **Versión probada y entorno comprobado:** el perfil registra con qué versiones del otro harness se probó la delegación, y antes de delegar se comprueba que el harness acepta lo que la delegación usa y que el modelo responde. Un cambio de versión del harness no debe descubrirse como un rol que no se ejecutó.
+8. **Plan del proveedor adecuado a la tarea:** un plan gratuito o con límite de uso corto MUST NOT usarse para tareas que compilan o duran más que su ventana; un corte a mitad de tarea deja trabajo sin compuerta. La fila de costo se registra también cuando el proveedor falla.
+9. **Datos fuera del proveedor principal:** el perfil registra a qué proveedor va el código y el contexto de cada rol, y sus condiciones de retención y entrenamiento. Un proyecto con datos sensibles no delega en un proveedor que retiene o entrena con ellos.
 
 El verificador SHOULD correr en una familia de modelos distinta a la del programador: un modelo que revisa su propio tipo de errores los detecta peor.
