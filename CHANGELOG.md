@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.5.1] — 2026-11-25
+
+### Corregido
+- **El tablero del backlog se quedaba viejo.** `aes-board.mjs` solo se ejecutaba al terminar la incepción y al cerrar un elemento, pero el backlog cambia también en el PR de QA (`Ready`), con cada defecto nuevo y en los lotes de estabilización. Ahora `aes-board.mjs --install-hook` instala hooks locales de git (`post-merge`, `post-rewrite`) que lo regeneran tras cada `git pull` en el checkout principal (nunca en los worktrees de los roles), sin dependencias y sin tocar hooks que ya existan. El instalador lo pone, `aes-doctor.sh` avisa si falta en una máquina (los hooks no se versionan) y `aes-cycle` termina con `Tablero: <ruta>` cada vez que el backlog cambió. El script imprime también la URL `file://` del tablero, para abrirlo con un clic.
+
 ## [1.5.0] — 2026-11-25
 
 Nivel de modelo por tarea: el binding de un rol deja de ser el mismo para todas sus tareas. Cambio MINOR: una tarea sin el campo nuevo usa el binding de siempre.

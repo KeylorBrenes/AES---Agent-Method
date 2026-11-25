@@ -1,6 +1,6 @@
 # Agentic Engineering Standard (AES)
 
-**Versión:** 1.5.0  
+**Versión:** 1.5.1  
 **Estado:** Estándar en uso  
 **Idioma normativo:** Español  
 **Propósito:** establecer un proceso de ingeniería consistente para desarrollar y mantener software con agentes de IA, sin depender de un proveedor, modelo, harness o stack específico.
@@ -128,7 +128,7 @@ Después baja AES a una carpeta temporal, crea el repositorio en GitHub, instala
 
 - Fuera del proyecto solo queda la configuración de tu cuenta (datos de la app y tus respuestas por defecto) en `~/.config/aes/`. Lo que necesitas instalado: git, gh, jq, node, Claude Code y, si lo eliges, OpenCode; el script te dice qué falta y cómo instalarlo.
 - El script se aparta a `.aes/aes-new.sh` (fuera de git). Si algo falla a medias, `bash .aes/aes-new.sh` lo retoma: cada paso se salta lo que ya está hecho.
-- Después, una sesión por elemento: *«Avanza EN-001»*, *«Avanza US-001»*… Tablero: `node .claude/scripts/aes-board.mjs`. Costo de los roles en OpenCode: `bash .claude/scripts/aes-oc.sh report`.
+- Después, una sesión por elemento: *«Avanza EN-001»*, *«Avanza US-001»*… Tablero: `.aes/board.html`, que se regenera solo tras cada `git pull` (o `node .claude/scripts/aes-board.mjs`). Costo de los roles en OpenCode: `bash .claude/scripts/aes-oc.sh report`.
 
 Sin preguntas, para automatizar: `scripts/setup-repo.sh <dueño/repo> [--create public|private] [--personal] [--opencode <proveedor/modelo>] [--dir <carpeta>]` desde una copia de AES. Para un proyecto que ya existe: `scripts/install-aes.sh <proyecto>` (con `--upgrade` actualiza y con `--check` comprueba).
 
