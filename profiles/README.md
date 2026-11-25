@@ -1,14 +1,15 @@
-# Perfiles de proyecto
+# Project profiles
 
-Los perfiles adaptan AES Core al tipo de producto y stack. No reemplazan AES Core ni reducen sus controles fundamentales.
+Profiles adapt AES Core to the type of product and stack. They do not replace AES Core or reduce its fundamental controls.
 
-Cree `project-profile.md` usando `templates/project-profile.template.md`. Puede añadir perfiles especializados (web, backend, móvil, escritorio, embedded, data) cuando se conozcan los requisitos concretos.
+Create `project-profile.md` using `templates/project-profile.template.md`. You can add specialized profiles (web, backend, mobile, desktop, embedded, data) once the concrete requirements are known.
 
-No se incluye un perfil de stack prescriptivo: la tecnología debe elegirse para cada proyecto y documentarse con sus comandos, rutas protegidas y estándares de calidad.
+No prescriptive stack profile is included: the technology must be chosen for each project and documented with its commands, protected paths and quality standards.
 
-## Implementaciones de referencia
+## Reference implementations
 
-- [`reference/claude-code-subagents/`](reference/claude-code-subagents/) **(1.2.0)**: Claude Code como único harness, con el orquestador en la sesión principal y QA, programador, mecánico y verificador como subagentes. Sale del experimento [aes-sandbox-gastos](https://github.com/KeylorBrenes/aes-sandbox-gastos). Incluye subagentes, hooks por rol, skill del orquestador, CI completa (guardián, RED con trazabilidad, CI por criterio, comandos de verificación, compuerta de estabilización, aprobaciones validadas, verificación antes de integrar) e identidad de agentes con una GitHub App.
-- [`reference/claude-code-opencode/`](reference/claude-code-opencode/) (1.1): Claude Code como orquestador, OpenCode como programador/verificador y GitHub Actions como CI. Incluye permisos de OpenCode, hooks, guardián, workflow con pruebas holdout desde un repositorio privado, CODEOWNERS y un `AGENTS.md` de ejemplo. Su CI no tiene las novedades de 1.2.0: tómalas de `claude-code-subagents`.
+- [`reference/claude-code-subagents/`](reference/claude-code-subagents/) **(2.0.0)**: Claude Code as the orchestrator's harness, with the orchestrator in the main session and QA, programmer, mechanic and verifier as subagents or, according to the binding, in OpenCode with another provider. It comes out of the [aes-sandbox-gastos](https://github.com/KeylorBrenes/aes-sandbox-gastos) and [aes-todo](https://github.com/KeylorBrenes/aes-todo) sandboxes. It includes the subagents, hooks per role, the orchestrator's skill, the full CI (guard, RED with traceability, CI per criterion, verification commands, stabilization gate, validated approvals, verification before merging, SAST), the agents' identity with a GitHub App, the backlog board and the environment check.
 
-Una implementación de referencia muestra cómo cumplir los controles; no obliga a usar esas herramientas.
+The `claude-code-opencode` implementation (1.1, with holdout tests run from a private repository) was removed in 2.0.0: its CI had fallen behind, and OpenCode roles are now part of `claude-code-subagents`. It is still available at the `v1.6.0` tag.
+
+A reference implementation shows how to meet the controls; it does not require using those tools.
