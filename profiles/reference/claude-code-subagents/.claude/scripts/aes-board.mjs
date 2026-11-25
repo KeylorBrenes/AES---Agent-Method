@@ -189,22 +189,43 @@ const relRank = (r) => { const i = releases.findIndex((x) => x.id === r); return
 const rank = (a, b) => prio(a.prioridad) - prio(b.prioridad) || relRank(a.release) - relRank(b.release) || a.order - b.order;
 const enCurso = items.filter((i) => ACTIVE.has(lc(i.estado))).sort(rank);
 const listas = items.filter((i) => i.lista && !ACTIVE.has(lc(i.estado)) && !i.frenadaPorCompuerta).sort(rank);
+// Idioma del proyecto (AES_LANG en .claude/aes.env): el de la interfaz y el de las frases.
+// Sin AES_LANG (proyectos anteriores a 2.0.0), se deduce de las columnas del backlog.
+const lang = (env.match(/^AES_LANG="?(es|en)/m)?.[1]) ?? (itemsTable.head.includes('titulo') ? 'es' : 'en');
+const M = {
+  en: {
+    critical: 'A Critical defect is open: only its fix is worked on.',
+    active: (st) => `Already ${st === 'In Review' ? 'in review' : 'in progress'}: finish it before starting another (one item per session).`,
+    closed: 'The stabilization gate is closed: no new story becomes Ready until defects are fixed.',
+    ready: (it) => [it.requiere.length ? `Its prerequisites (${it.requiere.join(', ')}) are accepted.` : 'It depends on nothing.',
+      [it.prioridad && `Priority ${it.prioridad}`, it.release && `in ${it.release}`].filter(Boolean).join(', ')].filter(Boolean).join(' ') + '.',
+    batch: (ids) => `Run a stabilization batch with ${ids}`, cont: (id) => `Continue ${id} with aes-cycle`,
+    by: { BUG: (id) => `Fix ${id} with aes-cycle`, SP: (id) => `Investigate ${id} with aes-cycle`, ST: (id) => `Run batch ${id} with aes-cycle`, CH: (id) => `Do chore ${id} with aes-cycle` },
+    adv: (id) => `Advance ${id} with aes-cycle`,
+  },
+  es: {
+    critical: 'Hay un defecto Crítico abierto: solo se trabaja en su corrección.',
+    active: (st) => `Ya está ${st === 'In Review' ? 'en revisión' : 'en curso'}: termínalo antes de empezar otro (un elemento por sesión).`,
+    closed: 'La compuerta de estabilización está cerrada: ninguna historia nueva pasa a Ready hasta corregir defectos.',
+    ready: (it) => [it.requiere.length ? `Sus requisitos (${it.requiere.join(', ')}) ya están aceptados.` : 'No depende de nada.',
+      [it.prioridad && `Prioridad ${it.prioridad}`, it.release && `del ${it.release}`].filter(Boolean).join(', ')].filter(Boolean).join(' ') + '.',
+    batch: (ids) => `Hagamos un lote de estabilización con ${ids}`, cont: (id) => `Continuemos ${id} con aes-cycle`,
+    by: { BUG: (id) => `Corrijamos ${id} con aes-cycle`, SP: (id) => `Investiguemos ${id} con aes-cycle`, ST: (id) => `Hagamos el lote ${id} con aes-cycle`, CH: (id) => `Hagamos el chore ${id} con aes-cycle` },
+    adv: (id) => `Avancemos ${id} con aes-cycle`,
+  },
+}[lang];
 let siguiente = null; let motivo = '';
-if (gate.criticas.length) { siguiente = byId.get(gate.criticas[0]); motivo = 'Hay un defecto Crítico abierto: solo se trabaja en su corrección.'; }
-else if (enCurso.length) { siguiente = enCurso[0]; motivo = `Ya está ${siguiente.estado === 'In Review' ? 'en revisión' : 'en curso'}: termínalo antes de empezar otro (un elemento por sesión).`; }
+if (gate.criticas.length) { siguiente = byId.get(gate.criticas[0]); motivo = M.critical; }
+else if (enCurso.length) { siguiente = enCurso[0]; motivo = M.active(siguiente.estado); }
 else if (!gate.abierta) {
   siguiente = listas.find((i) => i.prefijo === 'ST') ?? listas.find((i) => i.severidad) ?? null;
-  motivo = 'La compuerta de estabilización está cerrada: ninguna historia nueva pasa a Ready hasta corregir defectos.';
-} else if (listas.length) {
-  siguiente = listas[0];
-  motivo = [siguiente.requiere.length ? `Sus requisitos (${siguiente.requiere.join(', ')}) ya están aceptados.` : 'No depende de nada.',
-    siguiente.prioridad && `Prioridad ${siguiente.prioridad}`, siguiente.release && `del ${siguiente.release}`].filter(Boolean).join(' ').replace(/ (del)/, ', $1') + '.';
-}
+  motivo = M.closed;
+} else if (listas.length) { siguiente = listas[0]; motivo = M.ready(siguiente); }
 const phrase = (it) => {
   if (!it) return '';
-  if (gate.menores.length + gate.graves.length && it.severidad && !gate.abierta) return `Hagamos un lote de estabilización con ${[...gate.criticas, ...gate.graves, ...gate.menores].join(', ')}`;
-  if (ACTIVE.has(lc(it.estado))) return `Continuemos ${it.id} con aes-cycle`;
-  return { BUG: `Corrijamos ${it.id} con aes-cycle`, SP: `Investiguemos ${it.id} con aes-cycle`, ST: `Hagamos el lote ${it.id} con aes-cycle`, CH: `Hagamos el chore ${it.id} con aes-cycle` }[it.prefijo] ?? `Avancemos ${it.id} con aes-cycle`;
+  if (gate.menores.length + gate.graves.length && it.severidad && !gate.abierta) return M.batch([...gate.criticas, ...gate.graves, ...gate.menores].join(', '));
+  if (ACTIVE.has(lc(it.estado))) return M.cont(it.id);
+  return (M.by[it.prefijo] ?? M.adv)(it.id);
 };
 for (const it of items) it.frase = phrase(it);
 const alternativas = listas.filter((i) => i !== siguiente).slice(0, 4).map((i) => i.id);
@@ -220,7 +241,7 @@ if (json) {
 const project = (titleM?.[1] ?? '').replace(/^Backlog\s*[—-]\s*/i, '').replace(/\s*\((?:nombre provisional|working title)\)\s*$/i, '').replace(/\s*\(.*\)$/, '').trim() || 'Backlog';
 const target = out ?? '.aes/board.html';
 const data = {
-  base: relative(dirname(resolve(target)), root).replace(/\\/g, '/') || '.', project, vision: visionM?.[1]?.trim() ?? '', generado: new Date().toISOString(), fuente: src,
+  lang, base: relative(dirname(resolve(target)), root).replace(/\\/g, '/') || '.', project, vision: visionM?.[1]?.trim() ?? '', generado: new Date().toISOString(), fuente: src,
   gate, siguiente: siguiente?.id ?? null, motivo, frase: siguiente ? siguiente.frase : '', alternativas,
   releases, epics, items, totales: { runsUsd: Object.values(runs).reduce((n, r) => n + r.usd, 0) },
 };
