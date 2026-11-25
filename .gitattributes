@@ -1,0 +1,5 @@
+# Text files with LF on every system: bash scripts fail with CRLF, and AES-CORE.md is compared byte
+# by byte with what build-core.sh generates.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
