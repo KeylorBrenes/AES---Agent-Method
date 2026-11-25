@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.6.0] — 2026-11-25
+
+### Añadido
+- **Tablero del backlog rediseñado** (`.aes/board.html`), con la skill impeccable y el lenguaje visual de la señalética de aeropuerto. Sigue siendo un solo archivo, sin red ni dependencias. La plantilla está en `.claude/scripts/aes-board.html` y `aes-board.mjs` la rellena.
+  - **Letrero «Siguiente».** Muestra qué trabajar ahora y por qué, con la frase exacta para el orquestador y un botón de copiar. Lo que está en curso va primero; con la compuerta cerrada, los defectos; si no, lo que está listo, ordenado por prioridad, release y orden del backlog.
+  - **Panel lateral.** La compuerta de estabilización (abierta o cerrada, con los Menores frente al límite) y las demás tareas listas para empezar.
+  - **Tablero completo.** Todas las tarjetas siguen a la vista, cada una marcada como lista, en espera de algo concreto, frenada por la compuerta, en curso o hecha. Al pasar o enfocar una tarjeta se iluminan sus requisitos y lo que depende de ella.
+  - **Filtros.** Por texto, release, epic y tipo, y «solo listas». Se agrupa por estado, epic o release.
+  - **Panel de detalle.** No es modal. Muestra los datos, la frase para el orquestador, la ruta de requisitos pendientes, lo que espera a este elemento, las notas del backlog, las métricas y los enlaces a la especificación y la retrospectiva. Tiene enlace directo: `board.html#d=US-009`.
+  - **Pestaña Releases.** Avance por puntos y elementos, en curso, tipos y defectos abiertos.
+  - **Pestaña Métricas.** Ciclos FAIL, costo y duración de `docs/harness-findings.md`, y corridas, tokens y USD estimados de `.aes/costs.csv`.
+  - **Pestaña Guía.** La nomenclatura en una página: tipos de ID y cómo pedir cada uno, estados, marcas, tracks, severidad y compuerta, prioridad, etiquetas de PR, ramas y nivel de modelo.
+  - **Accesibilidad y uso.** Modo claro y oscuro según el sistema, teclado completo (pestañas con flechas, Esc cierra el detalle) y filtros que se recuerdan en el navegador.
+- `aes-board.mjs --json` añade la compuerta, el siguiente elemento, los releases, los epics y, por elemento, su frase, si está listo, lo que bloquea, sus notas y sus métricas.
+
 ## [1.5.2] — 2026-11-25
 
 Correcciones del lote ST-001 de aes-todo (0 ciclos FAIL; la tabla de comportamiento dinámico de la nota de diseño funcionó a la primera).
