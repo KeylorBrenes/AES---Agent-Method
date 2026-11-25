@@ -33,13 +33,14 @@ elif [[ -n "$src" && -f "$src" ]]; then file=$src; fi
 level=""
 if [[ -n "$file" ]]; then
   text=$(git -C "$root" show "origin/dev:$file" 2>/dev/null || cat "$root/$file" 2>/dev/null || cat "$file" 2>/dev/null || true)
-  level=$(sed -n 's/^[-*[:space:]]*\*\*Nivel de modelo:\*\*[[:space:]]*//p' <<< "$text" | head -n1 | tr -d '\r')
+  # «Model level» (inglés) o «Nivel de modelo» (español).
+  level=$(sed -nE 's/^[-*[:space:]]*\*\*(Model level|Nivel de modelo):\*\*[[:space:]]*//p' <<< "$text" | head -n1 | tr -d '\r')
 fi
 level=${level%%[[:space:]]—*}; level=${level%%[[:space:]]-[[:space:]]*}; level=${level%% (*}
 level="${level%"${level##*[![:space:]]}"}"   # sin espacios al final
 
 case "$level" in
-  ""|estándar|estandar|Estándar|Estandar)
+  ""|estándar|estandar|Estándar|Estandar|standard|Standard)
     echo "aes-bind: $role → $default (por defecto${file:+, $file})" >&2; printf '%s\n' "$default" ;;
   opencode:*|claude|claude:*)
     echo "aes-bind: $role → $level (fijado en $file)" >&2; printf '%s\n' "$level" ;;
@@ -48,6 +49,11 @@ case "$level" in
     N=${N//Á/A}; N=${N//É/E}; N=${N//Í/I}; N=${N//Ó/O}; N=${N//Ú/U}
     N=$(tr '[:lower:]' '[:upper:]' <<< "$N" | tr -c 'A-Z0-9\n' '_')
     v="AES_BIND_${R}_${N}"
+    # Alias entre idiomas: high ⇄ alto, max ⇄ maximo.
+    if [[ -z "${!v:-}" ]]; then
+      case "$N" in HIGH) alt=ALTO ;; ALTO) alt=HIGH ;; MAX|MAXIMUM) alt=MAXIMO ;; MAXIMO) alt=MAX ;; *) alt="" ;; esac
+      if [[ -n "$alt" ]]; then a="AES_BIND_${R}_${alt}"; [[ -n "${!a:-}" ]] && v=$a; fi
+    fi
     if [[ -n "${!v:-}" ]]; then echo "aes-bind: $role → ${!v} (nivel $level, $v)" >&2; printf '%s\n' "${!v}"
     else echo "aes-bind: $role → $default (nivel $level sin $v en aes.env: se usa el de por defecto)" >&2; printf '%s\n' "$default"; fi ;;
 esac

@@ -84,13 +84,13 @@ const blank = (v) => (v === '—' || v === '-' || v === undefined ? '' : v);
 const md = read(src);
 if (md === null) { console.error(`aes-board: no existe ${src}.`); process.exit(2); }
 const all = tables(md);
-const itemsTable = all.find((t) => col(t, 'id') >= 0 && col(t, 'titulo', 'title') >= 0 && col(t, 'estado', 'status') >= 0);
+const itemsTable = all.find((t) => col(t, 'id') >= 0 && col(t, 'titulo', 'title') >= 0 && col(t, 'estado', 'status', 'state') >= 0);
 if (!itemsTable) throw new Error(`No se encontró en ${src} una tabla con las columnas ID, Título y Estado (AES 02 §11).`);
 const C = {
   id: col(itemsTable, 'id'), tipo: col(itemsTable, 'tipo', 'type'), epic: col(itemsTable, 'epic', 'epica'),
-  titulo: col(itemsTable, 'titulo', 'title'), requiere: col(itemsTable, 'requiere', 'requires'),
+  titulo: col(itemsTable, 'titulo', 'title'), requiere: col(itemsTable, 'requiere', 'requires', 'depends on'),
   puntos: col(itemsTable, 'puntos', 'points', 'pts'), prioridad: col(itemsTable, 'prioridad', 'priority'),
-  release: col(itemsTable, 'release'), severidad: col(itemsTable, 'severidad', 'severity'), estado: col(itemsTable, 'estado', 'status'),
+  release: col(itemsTable, 'release'), severidad: col(itemsTable, 'severidad', 'severity'), estado: col(itemsTable, 'estado', 'status', 'state'),
 };
 const items = itemsTable.rows.map((r, order) => {
   const g = (k) => (C[k] >= 0 ? blank((r[C[k]] ?? '').trim()) : '');
@@ -101,10 +101,10 @@ const items = itemsTable.rows.map((r, order) => {
   };
 }).filter((i) => i.id);
 
-const relTable = all.find((t) => norm(t.section) === 'releases' && col(t, 'release') >= 0);
+const relTable = all.find((t) => ['releases', 'versiones'].includes(norm(t.section)) && col(t, 'release') >= 0);
 const releases = relTable ? relTable.rows.map((r) => ({
-  id: blank(r[col(relTable, 'release')] ?? ''), objetivo: blank(r[col(relTable, 'objetivo (lo que el usuario ya puede hacer)', 'objetivo')] ?? r[1] ?? ''),
-  estado: blank(r[col(relTable, 'estado', 'status')] ?? ''),
+  id: blank(r[col(relTable, 'release')] ?? ''), objetivo: blank(r[col(relTable, 'objetivo (lo que el usuario ya puede hacer)', 'objetivo', 'goal (what the user can already do)', 'goal', 'objective')] ?? r[1] ?? ''),
+  estado: blank(r[col(relTable, 'estado', 'status', 'state')] ?? ''),
 })).filter((r) => r.id) : [];
 for (const id of new Set(items.map((i) => i.release).filter(Boolean))) if (!releases.some((r) => r.id === id)) releases.push({ id, objetivo: '', estado: '' });
 releases.sort((a, b) => a.id.localeCompare(b.id, 'es', { numeric: true }));
@@ -114,21 +114,21 @@ const epics = epicTable ? epicTable.rows.map((r) => ({ id: blank(r[col(epicTable
 
 // Notas: «- US-001: …» bajo «## Notas».
 const notes = {};
-const notesBlock = md.split(/^##\s+Notas\s*$/m)[1]?.split(/^##\s/m)[0] ?? '';
+const notesBlock = md.split(/^##\s+(?:Notas|Notes)\s*$/m)[1]?.split(/^##\s/m)[0] ?? '';
 for (const m of notesBlock.matchAll(/^\s*[-*]\s+([A-Z]{2,4}-\d+):\s*(.+)$/gm)) (notes[m[1]] ??= []).push(m[2].trim());
 
-const visionM = md.match(/\*\*Visi[oó]n:\*\*\s*(.+)/);
+const visionM = md.match(/\*\*(?:Visi[oó]n|Vision):\*\*\s*(.+)/);
 const titleM = md.match(/^#\s+(.+)$/m);
 
 // --- Métricas, costos, compuerta ------------------------------------------------------------------
 const metrics = {};
 const hf = read(join(root, 'docs/harness-findings.md'));
 if (hf) {
-  const t = tables(hf).find((x) => col(x, 'elemento') >= 0 && col(x, 'ciclos fail') >= 0);
+  const t = tables(hf).find((x) => col(x, 'elemento', 'item') >= 0 && col(x, 'ciclos fail', 'fail cycles') >= 0);
   if (t) for (const r of t.rows) {
-    const id = blank(r[col(t, 'elemento')] ?? ''); if (!id) continue;
+    const id = blank(r[col(t, 'elemento', 'item')] ?? ''); if (!id) continue;
     const g = (...n) => blank(r[col(t, ...n)] ?? '');
-    metrics[id] = { inicio: g('inicio'), fin: g('fin'), fails: g('ciclos fail'), costo: g('costo'), api: g('tiempo de api'), total: g('tiempo total'), modelos: g('modelo real por rol') };
+    metrics[id] = { inicio: g('inicio', 'start'), fin: g('fin', 'end'), fails: g('ciclos fail', 'fail cycles'), costo: g('costo', 'cost'), api: g('tiempo de api', 'api time'), total: g('tiempo total', 'total time'), modelos: g('modelo real por rol', 'actual model per role') };
   }
 }
 const runs = {};
@@ -171,9 +171,9 @@ for (const it of items) {
 const defects = items.filter((i) => i.severidad && !CLOSED.has(lc(i.estado)));
 const sevKey = (s) => lc(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 const gate = {
-  criticas: defects.filter((d) => sevKey(d.severidad) === 'critica').map((d) => d.id),
-  graves: defects.filter((d) => ['alta', 'media'].includes(sevKey(d.severidad))).map((d) => d.id),
-  menores: defects.filter((d) => sevKey(d.severidad) === 'menor').map((d) => d.id),
+  criticas: defects.filter((d) => ['critica', 'critical'].includes(sevKey(d.severidad))).map((d) => d.id),
+  graves: defects.filter((d) => ['alta', 'media', 'high', 'medium'].includes(sevKey(d.severidad))).map((d) => d.id),
+  menores: defects.filter((d) => ['menor', 'minor', 'baja', 'low'].includes(sevKey(d.severidad))).map((d) => d.id),
   limite: minorLimit,
 };
 gate.abierta = gate.criticas.length + gate.graves.length === 0 && gate.menores.length <= minorLimit;
@@ -217,7 +217,7 @@ if (json) {
 }
 
 // --- HTML -----------------------------------------------------------------------------------------
-const project = (titleM?.[1] ?? '').replace(/^Backlog\s*[—-]\s*/i, '').replace(/\s*\(.*\)$/, '').trim() || 'Backlog';
+const project = (titleM?.[1] ?? '').replace(/^Backlog\s*[—-]\s*/i, '').replace(/\s*\((?:nombre provisional|working title)\)\s*$/i, '').replace(/\s*\(.*\)$/, '').trim() || 'Backlog';
 const target = out ?? '.aes/board.html';
 const data = {
   base: relative(dirname(resolve(target)), root).replace(/\\/g, '/') || '.', project, vision: visionM?.[1]?.trim() ?? '', generado: new Date().toISOString(), fuente: src,

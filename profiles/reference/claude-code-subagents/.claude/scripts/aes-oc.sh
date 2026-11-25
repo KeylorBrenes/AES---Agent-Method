@@ -243,7 +243,7 @@ fi
 
 final=$(events "${files[@]}" | jq -rs '[.[] | select(.type == "text") | .part.text] | last // ""')
 # shellcheck disable=SC2016  # las comillas invertidas son parte del patrón
-blocked_re='estado( propuesto)?[^a-z]{0,4}[:=][[:space:]*`]*BLOCKED|^[[:space:]*`#-]*BLOCKED'
+blocked_re='(estado( propuesto)?|(proposed )?status)[^a-z]{0,4}[:=][[:space:]*`]*BLOCKED|^[[:space:]*`#-]*BLOCKED'
 if grep -qiE "$blocked_re" <<< "$final"; then status=blocked; fi
 
 record "$status" "${files[@]}"

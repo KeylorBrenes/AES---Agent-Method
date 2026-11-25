@@ -71,7 +71,7 @@ declare -a crit high med minor
 crit=(); high=(); med=(); minor=()
 while IFS=$'\t' read -r id sev st; do
   [[ -z "$id" ]] && continue
-  case "$(norm "$st")" in accepted|rejected) continue ;; esac
+  case "$(norm "$st")" in accepted|rejected|released) continue ;; esac
   case "$(norm "$sev")" in
     critica|critical) crit+=("$id") ;;
     alta|high)        high+=("$id") ;;
