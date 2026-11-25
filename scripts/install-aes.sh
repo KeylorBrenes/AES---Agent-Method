@@ -42,7 +42,7 @@ target=$(cd "$target" && pwd)
 ref="$aes_root/profiles/reference/$profile"
 [[ -d "$ref" ]] || { echo "No existe la implementación de referencia: $ref" >&2; exit 2; }
 
-version=$(sed -n 's/^\*\*Versión:\*\* *\([0-9.]*\).*/\1/p' "$aes_root/README.md" | head -n1)
+version=$(sed -nE 's/^\*\*Versi(o|ó)n:\*\* *([0-9.]+).*/\2/p' "$aes_root/README.md" | head -n1)
 commit=$(git -C "$aes_root" rev-parse --short HEAD 2>/dev/null || echo "sin-git")
 if [[ -n "$(git -C "$aes_root" status --porcelain 2>/dev/null)" ]]; then commit="$commit-modificado"; fi
 stamp="AES $version ($commit, perfil $profile)"
