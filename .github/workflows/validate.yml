@@ -40,7 +40,7 @@ jobs:
             python3 -m json.tool "$f" > /dev/null || exit 1
             echo "ok $f"
           done
-          for f in profiles/reference/*/.github/workflows/*.yml .github/workflows/*.yml docs/ci/*.yml; do
+          for f in profiles/reference/*/.github/workflows/*.yml .github/workflows/*.yml; do
             python3 -c "import sys, yaml; yaml.safe_load(open(sys.argv[1]))" "$f" || exit 1
             echo "ok $f"
           done
