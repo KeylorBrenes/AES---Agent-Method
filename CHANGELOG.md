@@ -1,5 +1,35 @@
 # Changelog
 
+Entries from 2.0.0 on are in English; earlier ones are kept in Spanish, as published.
+
+## [2.0.0] — 2026-11-25
+
+AES is now written in English, and a project chooses the language its agents write in. MAJOR because every normative text, template, contract, skill and message changed language, and because the reference implementation's names (rulesets, CODEOWNERS placeholder, task field) changed; projects on 1.x keep working after `install-aes.sh --upgrade`, which keeps their language. The Spanish edition stays at the `v1.6.0` tag.
+
+### Changed
+- **Everything in English:** the standard (00–10, section numbers unchanged so references like "02 §9.3" still hold) and `AES-CORE.md`, the 18 templates, the agent contracts, the core skills, the reference's role prompts, `aes-cycle`, the `CLAUDE.md` seed, the READMEs, and the comments, messages and step names of every script, hook, CI script and workflow.
+- Reference rulesets are named `ci-branches`, `approval-dev` and `approval-main`; `setup-repo.sh` recognizes the Spanish names of repositories set up before 2.0.0 and renames them instead of duplicating them. The CODEOWNERS placeholder is `@your-user` (`@tu-usuario` still works).
+- The task field is `**Model level:** standard / high`; `aes-bind.sh` still reads `**Nivel de modelo:** estándar / alto`, and `AES_BIND_<ROLE>_HIGH` and `_ALTO` are aliases.
+
+### Added
+- **Project language, `AES_LANG`** (`en` | `es`, in `.claude/aes.env`; 00 §3, 01 §2.3): the language of stories, plans, design notes, reports, backlog, board and the orchestrator's messages. AES's own text, IDs, labels, commit prefixes, branch names and `PASS`/`FAIL`/`BLOCKED` stay the same in every language.
+  - The roles do not read `aes.env`, so every delegation template starts with `Project language: <AES_LANG>`; `aes-oc.sh` puts it in the OpenCode prompt.
+  - `install-aes.sh --lang`, `setup-repo.sh --lang`, and a question in `aes-new`. On upgrade, a project without `AES_LANG` keeps the language of its backlog.
+  - `aes-inception` asks for it when it is not set.
+- **Bilingual readers:** the board, the stabilization gate, `aes-bind.sh` and `aes-oc.sh`'s BLOCKED detection read English and Spanish column names, sections, severities and statuses. A Spanish backlog gives the same board as in 1.6.0.
+- The standard records what 1.4–1.6 learned in aes-todo: FAIL attribution in the retrospective (09 §3), a skipped CI step is not a control (05 §7), re-verification scope (05 §11, 06 §4), the decisions the verifier will test in the design note (10 §5), and the environment check in the DoR (08).
+- `docs/case-study.md`: EN-001 versus ST-001 in aes-todo, what failed and what each version changed.
+- License: CC BY 4.0 for the text and MIT for the code (`LICENSE`); the installer copies it to `docs/aes/`.
+
+### Removed
+- `profiles/reference/claude-code-opencode/` (1.1): its CI had fallen behind and OpenCode roles are part of `claude-code-subagents`. It is still at `v1.6.0`.
+- `docs/ci/validate.yml`, an old copy of the repository's own workflow.
+
+### Upgrading a 1.x project
+1. `./scripts/install-aes.sh <project> --upgrade` from a 2.0.0 copy. It adds `AES_LANG` (the backlog's language) to `.claude/aes.env`, updates the seeds the project had not adapted (the role prompts, usually) and leaves `.aes-new` beside the adapted ones.
+2. Review the `.aes-new` files. `.github/workflows/aes.yml.aes-new` only changes comments and step names: the human applies it, if wanted, with `aes-workflow.sh`. The old Spanish workflow keeps working with the 2.0.0 scripts.
+3. Nothing in the project's own artifacts (backlog, specs, retrospectives) needs translating.
+
 ## [1.6.0] — 2026-11-25
 
 ### Añadido
