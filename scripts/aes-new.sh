@@ -250,7 +250,7 @@ save_default AES_WANT_IMPECCABLE "$want_imp"
 
 # --- 7. Descargas (temporales) -------------------------------------------------------------------
 step "7. Descargas"
-git clone -q --depth 1 --branch "$ref" "$AES_REPO_URL" "$tmp/aes" 2>/dev/null \
+git -c core.autocrlf=false clone -q --depth 1 --branch "$ref" "$AES_REPO_URL" "$tmp/aes" 2>/dev/null \
   || die "No pude bajar AES $ref de $AES_REPO_URL."
 grep -q -- '--personal' "$tmp/aes/scripts/setup-repo.sh" || die "AES $ref es anterior a 1.4.0: aes-new necesita 1.4.0 o posterior (AES_REF)."
 ok "AES $ref"
@@ -260,8 +260,8 @@ skill() { # $1 nombre, $2 repo → añade a $vendors la carpeta de la skill
   tags=$(git ls-remote --tags --refs "$url" 2>/dev/null | sed 's#.*refs/tags/##' || true)
   tag=$(printf '%s\n' "$tags" | grep -E '^v?[0-9]+\.[0-9]+' | sort -V | tail -n1 || true)
   [[ -n "$tag" ]] || tag=$(printf '%s\n' "$tags" | grep -E '[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n1 || true)
-  if [[ -n "$tag" ]]; then git clone -q --depth 1 --branch "$tag" "$url" "$dst" 2>/dev/null
-  else git clone -q --depth 1 "$url" "$dst" 2>/dev/null; fi || { warn "No pude bajar $nm; sigo sin ella."; return 0; }
+  if [[ -n "$tag" ]]; then git -c core.autocrlf=false clone -q --depth 1 --branch "$tag" "$url" "$dst" 2>/dev/null
+  else git -c core.autocrlf=false clone -q --depth 1 "$url" "$dst" 2>/dev/null; fi || { warn "No pude bajar $nm; sigo sin ella."; return 0; }
   # La carpeta de la skill: la copia para Claude Code si la trae, si no la del SKILL.md con su nombre.
   if [[ -f "$dst/.claude/skills/$nm/SKILL.md" ]]; then folder="$dst/.claude/skills/$nm"
   else
