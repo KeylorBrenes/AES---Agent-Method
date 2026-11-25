@@ -5,7 +5,7 @@
 Correcciones del lote ST-001 de aes-todo (0 ciclos FAIL; la tabla de comportamiento dinámico de la nota de diseño funcionó a la primera).
 
 ### Corregido
-- **El SAST (Semgrep) y el detector de interfaz no se ejecutaban nunca** si el proyecto no definía las variables `AES_SAST` y `AES_UI_DETECT`. En las expresiones de GitHub Actions, una variable sin definir vale `null`, y `null != '0'` es falso porque ambos se convierten al número 0. Ahora la condición es `(vars.AES_SAST || '1') != '0'`. Desde 1.2.0, ninguna tarea de un proyecto sin esas variables pasó por el SAST.
+- **El SAST (Semgrep) y el detector de interfaz no se ejecutaban nunca** si el proyecto no definía las variables `AES_SAST` y `AES_UI_DETECT`. En las expresiones de GitHub Actions, una variable sin definir vale `null`, y `null != '0'` es falso porque ambos se convierten al número 0. Ahora la condición es `(vars.AES_SAST || '1') != '0'`. Desde 1.3.0, cuando se añadió, ninguna tarea de un proyecto sin esas variables pasó por el SAST.
 - `aes-doctor.sh`: quita la `v` de `opencode --version` (`v2.2.7`) antes de compararla con `AES_OC_TESTED`, que daba un aviso falso en cada arranque.
 - `aes-wt.sh close`: si la carpeta del worktree no se puede borrar (en Windows, porque una terminal tiene su directorio actual dentro), lo dice con el comando para borrarla. `aes-cycle`: el orquestador no hace `cd` a un worktree.
 - `aes-workflow.sh`: si la rama ya se integró (GitHub la borra) o no se indica, y `dev` tiene `docs/ci/*.yml`, crea una rama nueva desde `dev`, aplica el workflow y abre el PR él mismo.
