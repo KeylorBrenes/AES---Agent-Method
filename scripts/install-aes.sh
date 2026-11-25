@@ -78,7 +78,8 @@ for f in .claude/settings.json .claude/aes.env .github/workflows/aes.yml .github
   seeds+=("$ref/$f|$f")
 done
 
-same() { [[ -f "$2" ]] && cmp -s "$1" "$2"; }
+# Iguales salvo fines de línea: en Windows, un clon con core.autocrlf deja CRLF en la copia de trabajo.
+same() { [[ -f "$2" ]] && cmp -s <(tr -d '\r' < "$1") <(tr -d '\r' < "$2"); }
 # sha256sum no existe en macOS; shasum sí.
 sha256() { if command -v sha256sum >/dev/null; then sha256sum "$@"; else shasum -a 256 "$@"; fi; }
 
@@ -118,9 +119,11 @@ done
 seedsums="$target/docs/aes/seeds.sha256"; touch "$seedsums"; newsums=""
 for p in "${seeds[@]}"; do
   src=${p%%|*}; rel=${p#*|}; dst="$target/$rel"
-  sum=$(sha256 < "$src" | cut -c1-64)
+  sum=$(tr -d '\r' < "$src" | sha256 | cut -c1-64)
+  # Huella de la misma semilla con CRLF: la que registraba 1.4.0 si AES se bajó en Windows con autocrlf.
+  sum_crlf=$(tr -d '\r' < "$src" | sed 's/$/\r/' | sha256 | cut -c1-64)
   if [[ ! -f "$dst" ]]; then put "$src" "$dst"; new_seeds+=("$rel")
-  elif ! same "$src" "$dst" && ! grep -qxF "$sum $rel" "$seedsums"; then
+  elif ! same "$src" "$dst" && ! grep -qxF "$sum $rel" "$seedsums" && ! grep -qxF "$sum_crlf $rel" "$seedsums"; then
     put "$src" "$dst.aes-new"; pending+=("$rel.aes-new")
   fi
   newsums+="$sum $rel"$'\n'
@@ -134,6 +137,12 @@ mkdir -p "$target/specs"
 touch "$target/.gitignore"
 for line in .aes/ .claude/settings.local.json .claude/worktrees/; do
   grep -qxF "$line" "$target/.gitignore" || printf '%s\n' "$line" >> "$target/.gitignore"
+done
+
+# Scripts con LF en cualquier sistema: bash no acepta CRLF, y Windows con core.autocrlf lo pondría.
+touch "$target/.gitattributes"
+for line in '*.sh text eol=lf' '*.mjs text eol=lf'; do
+  grep -qxF "$line" "$target/.gitattributes" || printf '%s\n' "$line" >> "$target/.gitattributes"
 done
 
 # --- Skills de terceros --------------------------------------------------------------------------

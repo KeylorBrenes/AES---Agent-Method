@@ -1,9 +1,35 @@
 # Changelog
 
-## [1.4.1] — sin publicar
+## [1.4.1] — 2026-11-25
+
+Correcciones de la primera prueba real de 1.4.0 (EN-001 de aes-todo: Rust + React en Windows, roles en OpenCode con DeepSeek). Cambio PATCH: corrige la delegación a OpenCode y ajusta reglas que, aplicadas al pie de la letra, hacían gastar ciclos FAIL en detalles. En EN-001, la mayoría de los ciclos y del costo del orquestador vino de esto, no del modelo de los roles: el verificador dio PASS en todas sus corridas, y los ciclos salieron de hallazgos Menores y de huecos de la nota de diseño.
 
 ### Corregido
+- **`aes-oc.sh`** (FL-001, FL-002, FL-004, FL-005 de aes-todo):
+  - sin `--dir` (OpenCode 2.2 ya no lo acepta; el script ya hace `cd` al worktree), y antes de ejecutar comprueba que `opencode run` acepta `--agent`, `--model`, `--format`, `--session` y `--title`;
+  - solo analiza las líneas JSON de la salida de OpenCode y ya no corta la salida de jq con `head` (en Windows, `jq | head` fallaba con «writing output failed» y, con `pipefail`, el script salía con 2 sin compuerta ni costo);
+  - un evento de error del proveedor (p. ej. 429 del plan gratuito) sale con 4 y lo explica; cualquier fallo del script **después** de que el rol terminó sale con el nuevo código **5** («compuerta pendiente») e imprime el comando para ejecutarla a mano;
+  - la fila de `.aes/costs.csv` se registra siempre, también si OpenCode falla (estado `opencode-error`) o si el script falla después (`script-error`);
+  - no arranca si hay servidores en `AES_PORTS` (código **6**: la compuerta de fin de rol fallaría, como pasó con los de la demo en el cierre);
+  - copia `.aes/*-pending.md` al `.aes/` del worktree: OpenCode no deja leer fuera de él y el mecánico no podía consolidar las notas en el cierre (M1).
+- `aes-wt.sh close` borra la carpeta vacía que dejaba en Windows.
 - `aes-new`: las rutas que se pegan (llave `.pem`, carpeta del proyecto) se aceptan tal como las copia Windows, con comillas y barras invertidas, y se guardan como `C:/…`. Antes, «Copiar como ruta» hacía que la llave no se encontrara aunque existiera.
+
+### Cambiado
+- **02 §9.3, qué hacer con los hallazgos tras un PASS.** El verificador clasifica cada hallazgo por **tipo**: defecto (incumple algo escrito, citando la regla) o hueco de la especificación (nada escrito lo decide). Regla por defecto: un defecto de la tarea Media o mayor es un ciclo FAIL; uno Menor va al backlog salvo que el humano pida corregirlo ahora; un hueco corrige la nota y el catálogo, nunca es un ciclo; un Menor nuevo en una reverificación, fuera de lo que cambió el ciclo, va al backlog. La compuerta de estabilización ya limita cuántos Menores se acumulan. En EN-001, TASK-002 gastó sus 3 ciclos en Menores encadenados (cada arreglo de foco destapaba otro detalle) y aun así terminó con 3 defectos en el backlog.
+- **Reverificación acotada:** tras un ciclo FAIL, el verificador repite toda la evidencia automática, pero la prueba manual cubre lo que cambió el ciclo y una pasada breve de regresión (plantilla **V1r** en `aes-cycle`). En EN-001, el verificador fue el 37 % del costo de Claude.
+- **Plantilla de nota de diseño:** secciones «Bordes de la API» (405, ruta desconocida y barra final por prefijo, cuerpo de error, qué fallback los cubre) y «Comportamiento dinámico de la interfaz» (foco tras cada transición, regiones vivas, anillo por tipo de elemento, espacio reservado, respuestas que deben cubrir las pruebas). La skill `aes-design-note` las exige.
+- **Plantilla del plan técnico:** un criterio que verifica el harness lleva sus cambios en un PR `spec/<ID>-ci` entre `qa/<ID>` y la primera tarea (en el PR de QA harían pasar su propio comando de verificación y la CI rechazaría el RED).
+- **Programador:** el presupuesto de diff es un límite (más de un 25 % por encima se justifica en el reporte), no lee `.claude/aes.env` ni sale de su worktree, y lo que la nota no decide lo anota como supuesto, que el orquestador revisa antes de gastar una verificación.
+- **CI:** `aes:deps-approved` se conserva en los commits siguientes que no cambian manifiestos ni lockfiles (`aes-guard.sh --deps-changed`). En EN-001 hubo que volver a ponerla 5 veces.
+- **`aes-cycle`:** comprueba que la sesión se abrió en la raíz del proyecto; el orquestador edita rutas protegidas con Edit/Write, no por shell (el bash-guard lo bloquea); pide detener los servidores de la demo antes del cierre y `/clear` después; los códigos 5 y 6 de `aes-oc.sh`.
+- **06 §12:** versiones probadas del otro harness y comprobación antes de delegar; un plan gratuito o con límite corto no sirve para tareas que compilan.
+- `aes-new` recomienda `deepseek/deepseek-flash` (de pago) y deja el modelo gratuito como opción para probar.
+
+### Añadido
+- **`.claude/scripts/aes-doctor.sh`:** chequeo del entorno de una vez, antes de delegar: herramientas de AES, permisos de la GitHub App, OpenCode (versión, opciones de `aes-oc.sh`, que cada modelo del binding responde) y el stack con `AES_DOCTOR_CHECKS` en `aes.env`, incluidas compilaciones mínimas (`probe:rust`, `probe:dotnet`, `probe:node`) que detectan un compilador sin enlazador. `aes-cycle` lo ejecuta al arrancar y `aes-inception` añade las comprobaciones en cuanto se elige el stack. En EN-001, Rust y después el enlazador de MSVC se descubrieron por partes, con el programador en BLOCKED.
+- **`.claude/scripts/aes-workflow.sh`:** el humano aplica desde su terminal, con su identidad, el workflow que el orquestador preparó en `docs/ci/`. La GitHub App sigue **sin** permiso de Workflows (06 §10): así ningún agente puede cambiar la CI que lo juzga. `aes-doctor.sh` y `setup-repo.sh` avisan si la app lo tiene.
+- `gh-app-token.sh --permissions`.
 
 ## [1.4.0] — 2026-11-21
 
