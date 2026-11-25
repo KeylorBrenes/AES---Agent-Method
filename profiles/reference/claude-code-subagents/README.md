@@ -23,6 +23,7 @@ Es un punto de partida, no un perfil prescriptivo. Las partes del stack (.NET + 
 | `.claude/scripts/aes-note.sh` | — | Notas del orquestador con la hora real; `clear` las vacía tras el cierre | Probado (`clear`: simulación) |
 | `.claude/scripts/gh-app-token.sh`, `git-credential-aes-app.sh`, `agent-gh.sh` | L3 | Identidad de los agentes: GitHub App sin permiso de workflows | Probado |
 | `.claude/scripts/aes-workflow.sh` | L3 | Lo ejecuta el humano: aplica en una rama el workflow que el orquestador preparó en `docs/ci/`, con su identidad | Simulación |
+| `.claude/scripts/aes-bind.sh` | — | Binding efectivo de un rol para una tarea: el «Nivel de modelo» de su especificación (`estándar`, `alto`, o un binding concreto) resuelto con `AES_BIND_<ROL>_<NIVEL>` de `aes.env` | Simulación |
 | `.claude/scripts/aes-doctor.sh` | — | Chequeo del entorno antes de delegar: herramientas, permisos de la app, OpenCode (versión, opciones, que el modelo responde) y el stack (`AES_DOCTOR_CHECKS`, con compilaciones mínimas) | Simulación |
 | `.claude/skills/aes-cycle/SKILL.md` | — | Procedimiento del orquestador, con plantillas de delegación | Probado (caminos T1 y lote: simulación) |
 | `.claude/skills/aes-{inception,debugging,security-review,design-note}/` | — | Skills del núcleo de AES, copiadas de `skills/` en la raíz del repo de AES (no se editan aquí) | Pendiente de uso real |

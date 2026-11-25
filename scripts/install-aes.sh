@@ -108,7 +108,7 @@ fi
 git -C "$target" rev-parse --git-dir >/dev/null 2>&1 || echo "Aviso: $target no es un repositorio git."
 
 # --- Copia ---------------------------------------------------------------------------------------
-copied=0; unchanged=0; new_seeds=(); pending=()
+copied=0; unchanged=0; new_seeds=(); updated_seeds=(); pending=()
 put() { mkdir -p "$(dirname "$2")"; cp "$1" "$2"; }
 for p in "${owned[@]}"; do
   src=${p%%|*}; dst="$target/${p#*|}"
@@ -122,7 +122,12 @@ for p in "${seeds[@]}"; do
   sum=$(tr -d '\r' < "$src" | sha256 | cut -c1-64)
   # Huella de la misma semilla con CRLF: la que registraba 1.4.0 si AES se bajó en Windows con autocrlf.
   sum_crlf=$(tr -d '\r' < "$src" | sed 's/$/\r/' | sha256 | cut -c1-64)
+  # Huella de la copia del proyecto: si coincide con la semilla entregada, el proyecto no la adaptó.
+  cur=""; [[ -f "$dst" ]] && cur=$(tr -d '\r' < "$dst" | sha256 | cut -c1-64)
+  cur_crlf=""; [[ -f "$dst" ]] && cur_crlf=$(tr -d '\r' < "$dst" | sed 's/$/\r/' | sha256 | cut -c1-64)
   if [[ ! -f "$dst" ]]; then put "$src" "$dst"; new_seeds+=("$rel")
+  elif ! same "$src" "$dst" && { grep -qxF "$cur $rel" "$seedsums" || grep -qxF "$cur_crlf $rel" "$seedsums"; }; then
+    put "$src" "$dst"; updated_seeds+=("$rel")   # sin adaptar: se actualiza sin preguntar
   elif ! same "$src" "$dst" && ! grep -qxF "$sum $rel" "$seedsums" && ! grep -qxF "$sum_crlf $rel" "$seedsums"; then
     put "$src" "$dst.aes-new"; pending+=("$rel.aes-new")
   fi
@@ -199,6 +204,7 @@ echo
 echo "$stamp → $target"
 echo "  archivos de AES: $copied copiados, $unchanged sin cambios"
 [[ ${#new_seeds[@]} -gt 0 ]] && printf '  semilla nueva (adáptala): %s\n' "${new_seeds[@]}"
+[[ ${#updated_seeds[@]} -gt 0 ]] && printf '  semilla actualizada (el proyecto no la había adaptado): %s\n' "${updated_seeds[@]}"
 [[ ${#pending[@]} -gt 0 ]] && printf '  REVISA a mano y borra después: %s\n' "${pending[@]}"
 if [[ $mode == install && -z "${AES_QUIET_NEXT:-}" ]]; then
   cat <<EOF
