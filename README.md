@@ -1,212 +1,155 @@
 # Agentic Engineering Standard (AES)
 
-**Versión:** 1.6.0  
-**Estado:** Estándar en uso  
-**Idioma normativo:** Español  
-**Propósito:** establecer un proceso de ingeniería consistente para desarrollar y mantener software con agentes de IA, sin depender de un proveedor, modelo, harness o stack específico.
+**Version:** 1.6.0 · **Status:** in use
 
-## Qué es AES
+AES is an engineering process for building and maintaining software with AI coding agents **without having to read every line they write to trust the result**. It is harness-agnostic (Claude Code, OpenCode, others), model-agnostic and stack-agnostic, and it ships with a working reference implementation: agent contracts, hooks, CI gates, scripts and a backlog board.
 
-AES es un estándar de trabajo para proyectos de software asistidos por agentes. Define cómo descubrir y planificar el producto, mantener la arquitectura, organizar el backlog, especificar historias, dividir tareas, probar, verificar, aprobar y registrar cambios.
+> **Language note.** This README and the [case study](docs/case-study.md) are in English. The normative text (`standard/`), templates, agent contracts and skills are still in Spanish; the full English translation is in progress and will ship as **AES 2.0.0**. Version 1.6.0 stays available in Spanish under the `v1.6.0` tag.
 
-AES no es un generador automático de requisitos ni una metodología de cascada. La planificación es progresiva: se define con mayor detalle el trabajo próximo y se conserva una visión suficiente del producto y de su arquitectura.
+## The problem
 
-### Lo que AES intenta evitar
+Coding agents are fast, but left alone they:
 
-- Agentes que se van por las ramas, generan código de más o implementan lo que nadie pidió.
-- Agentes que modifican, desactivan o borran pruebas para obtener un resultado verde.
-- Procesos de especificación tan pesados que convierten un bug pequeño en una cascada de documentos.
-- Tener que leer cada línea de código para confiar en el resultado.
-- Arrastrar defectos de una historia a la siguiente, hasta que arreglar uno rompe otro.
-- Que una funcionalidad a medias o un arreglo apresurado rompa lo que ya funcionaba.
+- wander off scope, write more code than asked, or build what nobody requested;
+- edit, disable or delete tests to get a green run;
+- turn a small bug into a cascade of documents when the process is heavy, or skip the process when it is light;
+- carry defects from one story to the next until fixing one breaks another;
+- make it hard to know what anything costs, or which model is worth using where.
 
-### Cómo lo hace, en una frase
+## The idea in one sentence
 
-**Tú apruebas los contratos (criterios y pruebas de aceptación); un agente independiente escribe esas pruebas sin ver el código; el programador no puede tocarlas; la CI las ejecuta desde una copia que nadie puede alterar; un verificador independiente re-ejecuta todo y prueba la aplicación de verdad.**
+**You approve the contract (acceptance criteria and acceptance tests); an independent agent writes those tests without seeing the code; the programmer agent cannot touch them; CI runs them from a copy nobody can alter; and an independent verifier re-runs everything and exercises the real application before anything is merged.**
 
-## El ciclo
+## Results so far
 
-```
-0. Compuerta de estabilización: ¿defectos abiertos?   [CI]
-   └─ Crítico, Alto o Medio abierto → lote de estabilización antes de seguir
-   Clasificar track (T0–T3)                          [orquestador → tú confirmas]
-1. Historia atómica y vertical («Como… quiero… para…»), en lenguaje de cliente:
-   criterios + fuera de alcance + plan + decisiones (D-NN)   [orquestador → tú apruebas]
-2. Contrato de interfaz (si hay frontera nueva)       [arquitecto]
-3. QA: pruebas visibles + holdout, cada una con su criterio
-   → RED confirmado por herramienta → supuestos resueltos → rama protegida
-                                                     [tú apruebas pruebas y supuestos]
-4. Tareas por criterio: superficie, criterios que cierran, comandos exactos
-   + nota de diseño por tarea (orquestador = senior, modelo más capaz)
-5. Programador (sesión nueva por tarea):
-   baseline → RED/GREEN/REFACTOR → commits struct:/feat: → reporte
-6. CI (L3): criterios de la tarea + regresión desde ref confiable, holdout, guardián
-7. Verificador (sesión limpia, solo lectura), ANTES de integrar:
-   re-ejecución → prueba manual agéntica → PASS / FAIL / BLOCKED
-   └─ 3 FAIL en la misma tarea → circuit breaker
-   └─ hallazgos preexistentes → defectos con severidad en el backlog
-8. Tú: informe → apruebas la verificación → integras
-9. Cierre: demo (+ código en T3) → Accepted / Rejected → regresión en dev
-10. Retrospectiva compuesta: registro de fallos → un control nuevo por patrón
-11. Release cuando tú decides: dev → main (merge commit) → back-merge a dev
-    Hotfix de algo liberado: ramas desde main → main → back-merge a dev
-```
+AES is being validated on [aes-todo](https://github.com/KeylorBrenes/aes-todo), a Rust (Axum + SQLx + SQLite) and React + TypeScript app built end to end by agents: **Claude Opus** orchestrates and designs, **Claude Sonnet** verifies, and **DeepSeek V4.1 Flash** (via OpenCode) writes tests and code.
 
-| Track | Para qué | Proceso mínimo |
+| | EN-001 — walking skeleton | ST-001 — stabilization batch |
 |---|---|---|
-| T0 | Errata, configuración no funcional | Tarea + CI |
-| T1 | Bug, chore, lote de estabilización | Camino corto: comprobación de reproducción protegida (RED) + tareas |
-| T2 | Funcionalidad nueva | Ciclo completo |
-| T3 | Auth, datos, pagos, migraciones, arquitectura | Ciclo completo + ADR + holdout + revisión humana del código de riesgo |
+| FAIL cycles | 5 | **0** |
+| Claude cost | USD 24.35 | **USD 3.38** |
+| DeepSeek cost | USD 0.17 | USD 0.04 |
+| Wall-clock | 11 h over 4 days | 44 min, one session |
+| Hook / permission blocks | 9 | 0 |
 
-## Principios de uso
+The first item exposed real problems. The diagnosis showed they were **not the cheap model**: the verifier passed every run, and the FAIL cycles came from gaps in the design notes (focus management, live regions, API edge cases), a rule that turned minor findings into rework, and harness bugs on Windows. Each pattern got a control (AES 1.4.1 → 1.5.2), and the next item ran clean. ST-001 is smaller than EN-001, so the fair comparison is the next user stories; the full analysis is in the **[case study](docs/case-study.md)**.
 
-1. Leer `standard/00-governance-and-principles.md` antes de iniciar un proyecto.
-2. Declarar la versión de AES y completar un perfil para cada proyecto.
-3. Adaptar las herramientas al proyecto; no cambiar los controles fundamentales sin una excepción documentada.
-4. Usar las plantillas como punto de partida. No rellenar campos irrelevantes por formalidad.
-5. Mantener la trazabilidad: objetivo → Epic → Historia de Usuario → criterios de aceptación → tareas → pruebas → evidencia → aceptación.
-6. Trabajar en incrementos pequeños y verificables. No planificar en detalle trabajo lejano que aún depende de aprendizaje.
+## How it works
 
-## Estructura
+```
+0. Stabilization gate: open defects?                        [CI]
+   └─ an open Critical, High or Medium defect → stabilization batch first
+   Classify the track (T0–T3)                     [orchestrator → you confirm]
+1. Atomic, vertical story ("As a… I want… so that…") in customer language:
+   criteria + out of scope + plan + decisions (D-NN)  [orchestrator → you approve]
+2. Interface contract, if there is a new boundary       [architect]
+3. QA agent: visible + holdout tests, one per criterion
+   → RED confirmed by tooling → assumptions resolved → protected branch
+                                              [you approve tests and assumptions]
+4. Tasks per criterion: change surface, criteria they close, exact commands,
+   a design note per task, and a model level per task (standard / high)
+5. Programmer agent (fresh session per task):
+   baseline → RED/GREEN/REFACTOR → struct:/feat: commits → report
+6. CI: the task's criteria + regression from a trusted ref, holdout, SAST, guard
+7. Verifier agent (clean session, read-only), BEFORE merging:
+   re-run → hands-on testing of the real app → PASS / FAIL / BLOCKED
+   └─ 3 FAILs on the same task → circuit breaker
+   └─ findings classified: code defect vs. spec gap, with severity
+8. You: report → approve the verification → merge
+9. Close: demo → Accepted / Rejected → regression on dev
+10. Retrospective: failure log → one new control per pattern
+11. Release when you decide: dev → main (merge commit) → back-merge to dev
+```
 
-| Ruta | Contenido |
-|---|---|
-| `standard/` | Reglas normativas de AES Core (00–09). |
-| `AES-CORE.md` | Las reglas de `standard/` consolidadas en un único documento (generado). |
-| `templates/` | Plantillas: brief, arquitectura, ADR, backlog, epic, historia (lenguaje de cliente), plan técnico, tarea, nota de diseño, catálogo de diseño, release, defecto, lote de estabilización, plan de aceptación, informe de verificación, perfil, registro de fallos y registro de hallazgos. |
-| `skills/` | Skills del núcleo de AES (depuración por causa raíz, revisión de seguridad, nota de diseño), en formato Agent Skills. |
-| `agent-contracts/` | Responsabilidades, permisos y límites de cada rol: orquestador, arquitecto, QA, programador, mecánico y verificador. |
-| `profiles/` | Perfiles de proyecto e implementaciones de referencia. |
-| `profiles/reference/claude-code-subagents/` | Implementación de referencia de 1.2.0, salida del experimento con agentes reales (las piezas nuevas de 1.2.0, probadas en simulación): subagentes de Claude Code, hooks, skill del orquestador, CI completa (guardián, RED, CI por criterio, compuerta de estabilización, aprobaciones validadas) e identidad de agentes con una GitHub App. |
-| `profiles/reference/claude-code-opencode/` | Implementación de referencia de 1.1: Claude Code como orquestador y OpenCode como programador, con pruebas holdout desde un repositorio privado. |
-| `docs/rfc/` | Propuestas de cambio con su justificación y fuentes. |
-| `scripts/` | Utilidades del repositorio. |
+| Track | For | Minimum process |
+|---|---|---|
+| T0 | Typos, non-functional config | Task + CI |
+| T1 | Bug, chore, stabilization batch | Short path: protected reproduction check (RED) + tasks |
+| T2 | New functionality | Full cycle |
+| T3 | Auth, data, payments, migrations, architecture | Full cycle + ADR + holdout + human review of risky code |
 
-| Capítulo | Tema |
-|---|---|
-| 00 | Gobierno, principios, roles, estados, evidencia, revisión humana proporcional |
-| 01 | Inicio del proyecto y arquitectura |
-| 02 | Backlog (archivo y vistas), historias atómicas y verticales, cómo dividirlas, planificación en dos niveles, tracks T0–T3, severidad de defectos y compuerta de estabilización |
-| 03 | Historia (lenguaje de cliente) y plan técnico (se elimina al cerrar), aceptación y registro de decisiones |
-| 04 | Diseño y ejecución de tareas, commits, circuit breaker, camino corto T0/T1 |
-| 05 | Pruebas: contrato de interfaz, RED confirmado, holdout, caracterización, aislamiento, guardián, prueba manual agéntica, qué ejecuta la CI |
-| 06 | Gobierno de agentes, permisos, controles en capas L1/L2/L3, acciones denegadas, estado entre roles |
-| 07 | Cambios, riesgos, liberación, ramas `main`/`dev`, release, hotfix y back-merge |
-| 08 | Definition of Ready y Definition of Done |
-| 09 | Mejora continua del harness, evidencia del proceso y métricas |
-| 10 | Principios de diseño (siempre) y patrones (con razón presente); nota de diseño y catálogo |
+**Three layers of control** keep agents honest regardless of the model:
 
-## Palabras normativas
+- **L1, permissions:** what each role may run or read (no network, no publishing credentials for agents).
+- **L2, hooks:** what each role may write. The programmer cannot touch acceptance tests, specs or CI; violations are blocked, not just discouraged.
+- **L3, CI:** the guard checks the change surface, RED-before-GREEN, holdout tests, approvals by label (`aes:verified`, `aes:deps-approved`) and the stabilization gate. Agents publish through a GitHub App **without** workflow permissions, so no agent can change the CI that judges it.
 
-- **MUST / DEBE:** requisito obligatorio.
-- **MUST NOT / NO DEBE:** prohibición.
-- **SHOULD / DEBERÍA:** regla esperada; una excepción requiere razón registrada.
-- **SHOULD NOT / NO DEBERÍA:** práctica que se evita salvo justificación.
-- **MAY / PUEDE:** opción permitida.
+**Multi-model by design.** Each role has a binding (`claude`, `claude:<model>` or `opencode:<provider>/<model>`), and each task can request a higher model level with a stated reason, for example "read this whole legacy database schema". Every OpenCode run is costed per task, peak-hour pricing included.
 
-Estas palabras describen la fuerza de la regla, no una herramienta particular.
+## The backlog board
 
-## Empezar un proyecto nuevo
+`docs/backlog.md` is the single source of truth. `.claude/scripts/aes-board.mjs` turns it into `.aes/board.html`: one self-contained file, no network or dependencies, regenerated after every `git pull` by a local git hook. It is read-only: the backlog changes through pull requests. Screenshots are from [aes-todo](https://github.com/KeylorBrenes/aes-todo) with its real data (the UI is in Spanish today).
 
-Crea la carpeta del proyecto, baja ahí el script y ejecútalo (macOS, Linux o Windows con Git Bash):
+**What to work on now.** The yellow "Next" sign shows the item to work on and why, plus the exact sentence to give the orchestrator, with a copy button. The side panel shows the stabilization gate and the other items ready to start. Every card stays visible and says whether it is ready, waiting on something specific, held by the gate, in progress or done.
+
+![Board: the "Next" sign with US-001 and the sentence for the orchestrator; the stabilization gate and other ready items on the right; filters and columns by state below](docs/img/tablero/tablero.png)
+
+**Item detail.** The remaining prerequisites in order, what depends on this item, backlog notes, metrics and links to the spec and the retrospective. On the board, its prerequisites and dependents light up. Deep link: `board.html#d=US-009`.
+
+![Detail of US-009: waits on US-008, the route of five pending prerequisites from EN-001, and the stories that wait on it](docs/img/tablero/detalle.png)
+
+**Releases, metrics and a guide.** Progress per release by points and items, FAIL cycles and cost per item, and the AES naming conventions on one page. Light and dark mode follow the system, and the board is fully keyboard-operable.
+
+![Releases: progress of REL-001 to REL-003](docs/img/tablero/releases.png)
+
+![Metrics per item: FAIL cycles, cost and duration](docs/img/tablero/metricas.png)
+
+![Guide: item types with the sentence to request each one, states and card markers](docs/img/tablero/guia.png)
+
+![The board in dark mode](docs/img/tablero/oscuro.png)
+
+## Start a new project
+
+Create the project folder, download the script there and run it (macOS, Linux, or Windows with Git Bash):
 
 ```bash
-mkdir to-do && cd to-do
+mkdir my-app && cd my-app
 curl -fsSL https://raw.githubusercontent.com/KeylorBrenes/AES---Agent-Method/main/scripts/aes-new.sh -o aes-new.sh
 bash aes-new.sh
 ```
 
-Te pregunta, con valores por defecto (Enter los acepta):
+It asks a few questions, each with a default:
 
-1. si el proyecto va en esa carpeta, el nombre del repositorio (el de la carpeta) y si es **público** (por defecto) o privado. En un repo privado con GitHub Free no hay reglas de rama y Actions tiene un límite de minutos: el script lo comprueba y te avisa;
-2. con qué identidad publican los agentes: la **GitHub App** de los agentes (sus PR los apruebas tú) o el **modo personal**, con tu propia sesión de gh (PR y CI obligatorios; integrar es tu aprobación). Si quieres la app y no la has creado, te manda a [la sección que explica cómo](profiles/reference/claude-code-subagents/README.md#2-github-app-de-los-agentes) y sale;
-3. dónde trabajan QA, el programador y el mecánico: **Claude Code** u **OpenCode** (DeepSeek gratis, de pago u otro modelo). El orquestador y el verificador son siempre Claude;
-4. si quieres las skills de terceros (archify, impeccable).
+1. **Repository:** confirms the folder, names the repository after it, and makes it public by default.
+2. **Agent identity:** the agents publish through their GitHub App, or in personal mode with your own `gh` session.
+3. **Where QA, programmer and mechanic run:** Claude Code or OpenCode, and which model.
+4. **Third-party skills:** whether to add them ([archify](https://github.com/tt-a1i/archify), [impeccable](https://github.com/pbakaus/impeccable)).
 
-Después baja AES a una carpeta temporal, crea el repositorio en GitHub, instala AES, hace el commit inicial, crea `main` y `dev`, aplica las reglas y configura los roles. La última pregunta es **«¿Empiezo ahora?»**: abre Claude Code ahí mismo, con Opus, y el orquestador arranca la incepción preguntándote por la idea. Si abres Claude por tu cuenta en un proyecto sin planeamiento, hace lo mismo.
+It then creates the repository, installs AES, sets up `main` and `dev` with branch rules, and finally asks **"Start now?"**, which opens Claude Code with the orchestrator ready to interview you about the idea (inception). From there it is one session per backlog item: *"Advance US-001 with aes-cycle"*.
 
-- Fuera del proyecto solo queda la configuración de tu cuenta (datos de la app y tus respuestas por defecto) en `~/.config/aes/`. Lo que necesitas instalado: git, gh, jq, node, Claude Code y, si lo eliges, OpenCode; el script te dice qué falta y cómo instalarlo.
-- El script se aparta a `.aes/aes-new.sh` (fuera de git). Si algo falla a medias, `bash .aes/aes-new.sh` lo retoma: cada paso se salta lo que ya está hecho.
-- Después, una sesión por elemento: *«Avanza EN-001»*, *«Avanza US-001»*… Tablero: `.aes/board.html`, que se regenera solo tras cada `git pull` (o `node .claude/scripts/aes-board.mjs`). Costo de los roles en OpenCode: `bash .claude/scripts/aes-oc.sh report`.
+Requirements: git, gh, jq, node, Claude Code and, if you choose it, OpenCode. `bash .claude/scripts/aes-doctor.sh` checks everything a role needs before delegating, including a minimal compile of your stack.
 
-Sin preguntas, para automatizar: `scripts/setup-repo.sh <dueño/repo> [--create public|private] [--personal] [--opencode <proveedor/modelo>] [--dir <carpeta>]` desde una copia de AES. Para un proyecto que ya existe: `scripts/install-aes.sh <proyecto>` (con `--upgrade` actualiza y con `--check` comprueba).
+## Repository layout
 
-### Qué hace AES en cada elemento
+| Path | Content |
+|---|---|
+| `standard/` | The normative rules, chapters 00–10 (governance, inception and architecture, backlog, stories, tasks, testing, agent governance, change and release, DoR/DoD, process improvement, design). |
+| `AES-CORE.md` | All of `standard/` in one generated document. |
+| `templates/` | Brief, architecture, ADR, backlog, story, technical plan, task, design note, defect, stabilization batch, acceptance test plan, verification report, project profile, failure log. |
+| `skills/` | AES core skills in Agent Skills format: inception, orchestrator cycle, design note, root-cause debugging, security review. |
+| `agent-contracts/` | Responsibilities, permissions and limits of each role: orchestrator, architect, QA, programmer, mechanic, verifier. |
+| `profiles/reference/claude-code-subagents/` | The reference implementation: Claude Code subagents, OpenCode delegation, hooks, CI workflow, guard, stabilization gate, scripts and the board. |
+| `scripts/` | `aes-new.sh` (new project), `setup-repo.sh`, `install-aes.sh` (install, `--upgrade`, `--check`). |
+| `docs/` | RFCs and the [case study](docs/case-study.md). |
 
-1. **Incepción** (01 §2), una vez: brief, backlog completo pero superficial con Epics y releases, arquitectura inicial, ADR del stack, dirección visual si hay interfaz y EN-001.
-2. **EN-001**, el esqueleto que camina; después, release a release, refinando solo las historias próximas.
-3. Para cada historia: criterios aprobados, contrato de interfaz, pruebas de aceptación con RED confirmado, tareas pequeñas con superficie de cambio, CI, verificación independiente y aceptación humana.
-4. Cierre con la Definition of Done, retrospectiva y, antes de la historia siguiente, un lote de estabilización con los defectos Críticos, Altos y Medios.
+## Normative words
 
-Instalar AES en un proyecto que ya existe, sin `setup-repo.sh`: `./scripts/install-aes.sh <proyecto>` (con `--upgrade` actualiza y con `--check` comprueba).
+MUST / MUST NOT, SHOULD / SHOULD NOT and MAY carry their RFC 2119 meaning. They describe the strength of a rule, not a particular tool.
 
-## El tablero del backlog
+## Versioning
 
-`docs/backlog.md` es la única fuente del backlog. A partir de él, `.claude/scripts/aes-board.mjs` genera `.aes/board.html`: un solo archivo, sin red ni dependencias, que se regenera solo tras cada `git pull` (hook local de git) y se abre en cualquier navegador. Es de solo lectura: el backlog cambia por PR. Las capturas son del proyecto de prueba [aes-todo](https://github.com/KeylorBrenes/aes-todo), con sus datos reales.
+Semantic versioning: MAJOR for incompatible changes to fundamental rules, MINOR for new compatible rules or capabilities, PATCH for fixes and clarifications. Every project declares the AES version it adopts, and upgrades are reviewed, not applied silently (`install-aes.sh --upgrade` proposes `.aes-new` files for anything the project adapted). See [CHANGELOG.md](CHANGELOG.md).
 
-**Qué trabajar ahora.**
+## Scope
 
-![Tablero: letrero «Siguiente» con US-001, la frase para el orquestador y el botón de copiar; a la derecha, la compuerta de estabilización abierta y las otras tareas listas; abajo, filtros y columnas por estado](docs/img/tablero/tablero.png)
+AES covers the engineering cycle: inception, backlog planning with proportional tracks and a stabilization gate, relative estimation, small task design, ATDD/TDD with protected and holdout tests, layered agent governance, independent verification, human acceptance and continuous improvement of the harness. It does not prescribe languages, frameworks, model providers, tracking tools or a universal software architecture.
 
-- **Letrero «Siguiente».** Es el elemento que conviene trabajar y por qué. Primero va lo que ya está en curso; con la compuerta cerrada, los defectos; si no, lo que está listo, por prioridad, release y orden del backlog.
-- **Frase para el orquestador.** Se copia con un clic y se pega en Claude Code.
-- **Panel lateral.** El estado de la compuerta de estabilización (Menores abiertos frente al límite) y las demás tareas listas para empezar.
-- **Todas las tarjetas a la vista.** Cada una dice si está lista, en espera de algo concreto, frenada por la compuerta, en curso o hecha. Se filtran por texto, release, epic o tipo, y se agrupan por estado, epic o release.
-
-**El detalle de un elemento.**
-
-![Detalle de US-009: espera a US-008, frase para el orquestador, la ruta de cinco requisitos pendientes desde EN-001 y las dos historias que esperan a esta; en el tablero se iluminan sus requisitos](docs/img/tablero/detalle.png)
-
-- **Cómo se abre.** Con un clic en una tarjeta, o con un enlace directo (`board.html#d=US-009`). No es modal: el tablero sigue usable.
-- **Ruta hasta aquí.** Todo lo que falta antes de poder empezarlo, en orden.
-- **Lo que depende de él.** Los elementos que esperan a este.
-- **Notas y métricas.** Las notas del backlog, las métricas y los enlaces a la especificación y la retrospectiva.
-- **En el tablero.** Se iluminan sus requisitos y lo que depende de él.
-
-**Releases y métricas.**
-
-![Releases: avance de REL-001 a REL-003 por puntos y elementos, con los IDs de cada uno](docs/img/tablero/releases.png)
-
-![Métricas por elemento: ciclos FAIL, costo y duración de EN-001 y ST-001](docs/img/tablero/metricas.png)
-
-- **Releases.** El avance de cada release por puntos y por elementos, lo que está en curso y los defectos abiertos.
-- **Métricas.** Las que consolida el cierre de cada elemento (`docs/harness-findings.md`), más las corridas, tokens y costo estimado de los roles en OpenCode de esa máquina (`.aes/costs.csv`).
-
-**La guía.** La nomenclatura de AES en una página: tipos de ID y la frase para pedir cada uno, estados, marcas de las tarjetas, tracks, severidad y compuerta, prioridad, etiquetas de los PR, ramas y nivel de modelo.
-
-![Guía: tipos de elemento con la frase para pedir cada uno, estados y marcas de las tarjetas](docs/img/tablero/guia.png)
-
-**Modo oscuro**, según el sistema, y todo el tablero se usa con el teclado: pestañas con flechas, Esc cierra el detalle y los filtros se recuerdan.
-
-![El tablero en modo oscuro](docs/img/tablero/oscuro.png)
-
-## Versionado
-
-AES utiliza versionado semántico:
-
-- **MAJOR:** incompatibilidad en reglas fundamentales o estructura normativa.
-- **MINOR:** nuevas reglas o capacidades compatibles.
-- **PATCH:** aclaraciones, correcciones y mejoras que no cambian el significado normativo.
-
-Cada proyecto declara la versión de AES que adopta. Una actualización no se aplica silenciosamente: se revisa y se registra en el proyecto. Los cambios propuestos se documentan como RFC en `docs/rfc/` antes de incorporarse.
-
-Para regenerar `AES-CORE.md` tras editar `standard/`:
-
-```bash
-./scripts/build-core.sh
-```
-
-## Alcance
-
-AES establece el ciclo de ingeniería, planificación por backlog con tracks proporcionales y compuerta de estabilización, estimación relativa con Fibonacci, diseño de tareas pequeñas, ATDD/TDD con pruebas protegidas y holdout, gobierno de agentes con controles en capas, verificación independiente, aceptación humana y mejora continua del harness. No prescribe lenguajes, frameworks, proveedores de modelos, herramientas de seguimiento ni una arquitectura de software universal.
-
-## Fuentes principales
+## Main sources
 
 - Simon Willison — [Agentic Engineering Patterns](https://simonwillison.net/guides/agentic-engineering-patterns/)
 - Kent Beck — [Augmented Coding: Beyond the Vibes](https://kentbeck.com/summaries/augmented-coding-beyond-the-vibes/)
-- Alonso, Yovine y Braberman — TDAD (arXiv:2603.17973), resumido en [TDAD and the testing revolution](https://codex.danielvaughan.com/premium-pdfs/04-tdad-and-the-testing-revolution.pdf)
+- Alonso, Yovine and Braberman — TDAD (arXiv:2603.17973), summarized in [TDAD and the testing revolution](https://codex.danielvaughan.com/premium-pdfs/04-tdad-and-the-testing-revolution.pdf)
 - Birgitta Böckeler — [Understanding Spec-Driven-Development: Kiro, spec-kit, and Tessl](https://www.martinfowler.com/articles/exploring-gen-ai/sdd-3-tools.html)
 - Anthropic — [Equipping agents for the real world with Agent Skills](https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills)
 
-La justificación completa de la versión 1.1.0 está en [`docs/rfc/RFC-001-aes-1.1.0.md`](docs/rfc/RFC-001-aes-1.1.0.md). La de 1.2.0, con la evidencia del experimento [aes-sandbox-gastos](https://github.com/KeylorBrenes/aes-sandbox-gastos), está en [`docs/rfc/RFC-002-aes-1.2.0.md`](docs/rfc/RFC-002-aes-1.2.0.md).
+The rationale for each version is in `docs/rfc/` (in Spanish for now): [RFC-001](docs/rfc/RFC-001-aes-1.1.0.md) for 1.1.0, [RFC-002](docs/rfc/RFC-002-aes-1.2.0.md) for 1.2.0 with the evidence from the first sandbox, [aes-sandbox-gastos](https://github.com/KeylorBrenes/aes-sandbox-gastos), and later RFCs for 1.3.0 and 1.4.0.
