@@ -71,6 +71,8 @@ for f in aes-ctx.sh aes-guard.sh defect-gate.sh label-approver.sh red-check.mjs 
 done
 owned+=("$aes_root/standard/08-definition-of-ready-and-done.md|docs/aes/08-definition-of-ready-and-done.md")
 owned+=("$aes_root/AES-CORE.md|docs/aes/AES-CORE.md")
+# Licencia de AES (MIT para el código, CC BY 4.0 para el resto): viaja con las copias.
+for f in LICENSE LICENSE-MIT.txt LICENSE-CC-BY-4.0.txt; do owned+=("$aes_root/$f|docs/aes/$f"); done
 add_tree owned "$aes_root/templates" docs/aes/templates
 
 add_tree seeds "$ref/.claude/agents" .claude/agents

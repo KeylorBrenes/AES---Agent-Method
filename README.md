@@ -153,3 +153,7 @@ AES covers the engineering cycle: inception, backlog planning with proportional 
 - Anthropic — [Equipping agents for the real world with Agent Skills](https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills)
 
 The rationale for each version is in `docs/rfc/` (in Spanish for now): [RFC-001](docs/rfc/RFC-001-aes-1.1.0.md) for 1.1.0, [RFC-002](docs/rfc/RFC-002-aes-1.2.0.md) for 1.2.0 with the evidence from the first sandbox, [aes-sandbox-gastos](https://github.com/KeylorBrenes/aes-sandbox-gastos), and later RFCs for 1.3.0 and 1.4.0.
+
+## License
+
+AES is dual-licensed: the **code** (scripts, hooks, CI workflows, the board) under the [MIT License](LICENSE-MIT.txt), and the **standard, templates, agent contracts, skills and documentation** under [CC BY 4.0](LICENSE-CC-BY-4.0.txt). Details in [LICENSE](LICENSE).
