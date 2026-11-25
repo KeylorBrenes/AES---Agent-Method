@@ -17,12 +17,13 @@ tmp=$(mktemp)
   for f in standard/[0-9][0-9]-*.md; do
     if [[ $first -eq 0 ]]; then printf '\n---\n\n'; fi
     first=0
-    cat "$f"
+    tr -d '\r' < "$f"
   done
 } > "$tmp"
 
 if [[ "${1:-}" == "--check" ]]; then
-  if ! diff -q "$tmp" AES-CORE.md >/dev/null 2>&1; then
+  # Ignoring CR: a Windows checkout with core.autocrlf has CRLF in standard/ and in AES-CORE.md.
+  if ! diff -q <(tr -d '\r' < "$tmp") <(tr -d '\r' < AES-CORE.md 2>/dev/null) >/dev/null 2>&1; then
     echo "AES-CORE.md is out of date. Run ./scripts/build-core.sh" >&2
     rm -f "$tmp"; exit 1
   fi
