@@ -1,95 +1,101 @@
-# 10 — Principios de diseño y patrones
+# 10 — Design principles and patterns
 
-## 1. Objetivo
+## 1. Goal
 
-Que el código, sea pequeño o grande, se pueda entender, probar, depurar y hacer crecer sin reescribirlo, **sin** añadir estructura que nadie necesita todavía.
+That code, small or large, can be understood, tested, debugged and grown without rewriting it, **without** adding structure nobody needs yet.
 
-Decirle a un modelo «aplica SOLID» o «escribe código limpio» no le da información que no tuviera: añade ruido. Este capítulo convierte esos principios en reglas con un síntoma comprobable y una frontera explícita de cuándo no aplican, y asigna a alguien con criterio la decisión de qué patrón usar en cada caso.
+Telling a model "apply SOLID" or "write clean code" gives it no information it did not have: it adds noise. This chapter turns those principles into rules with a checkable symptom and an explicit boundary of when they do not apply, and gives someone with judgement the decision of which pattern to use in each case.
 
-## 2. Dos niveles
+## 2. Two levels
 
-Un principio es de **nivel 1 (siempre obligatorio)** si cumple las tres condiciones:
+A principle is **level 1 (always mandatory)** if it meets all three conditions:
 
-1. **Aplicarlo hoy no cuesta casi nada:** no añade tipos, capas ni indirección; es una forma de escribir lo que se iba a escribir de todos modos.
-2. **Aplicarlo después cuesta cada vez más:** introducirlo en código existente crece con el tamaño de ese código.
-3. **Es local:** no obliga a diseñar otros módulos alrededor.
+1. **Applying it today costs almost nothing:** it adds no types, layers or indirection; it is a way of writing what was going to be written anyway.
+2. **Applying it later costs more and more:** introducing it into existing code grows with the size of that code.
+3. **It is local:** it does not force other modules to be designed around it.
 
-Lo que no cumple las tres es de **nivel 2 (condicional)**: se aplica solo cuando hay una **razón presente**, es decir, variantes reales en el código, historias del backlog que la piden o un ADR. «Por si acaso» no es una razón presente.
+What does not meet all three is **level 2 (conditional)**: it is applied only when there is a **present reason**, that is, real variants in the code, backlog stories that ask for it or an ADR. "Just in case" is not a present reason.
 
-Los dos niveles se refuerzan: los principios del nivel 1 son los que hacen que añadir un patrón del nivel 2 más adelante sea un cambio local y no un refactor de todo el código. Por eso el nivel 2 puede esperar sin que esperar salga caro.
+The two levels reinforce each other: level-1 principles are what make adding a level-2 pattern later a local change rather than a refactor of the whole code. That is why level 2 can wait without waiting being expensive.
 
-## 3. Nivel 1: principios siempre obligatorios
+## 3. Level 1: always mandatory principles
 
-Aplican a todo código del proyecto, en cualquier lenguaje, también en scripts. Un incumplimiento es un hallazgo del verificador (de la tarea → ciclo `FAIL`). Las excepciones son excepciones documentadas (00 §4).
+They apply to all of the project's code, in any language, scripts included. A violation is a verifier finding (from the task → a `FAIL` cycle). Exceptions are documented exceptions (00 §4).
 
-| Principio | Qué exige | Síntoma de incumplimiento |
+| Principle | What it requires | Symptom of a violation |
 |---|---|---|
-| **Responsabilidad única** | Cada función y cada módulo hace una sola cosa. En un script: leer la entrada, procesar y escribir la salida son funciones distintas | Una unidad que cambia por dos motivos; un nombre con «y» o vago (`procesar`, `manejar`, `utils`) |
-| **Lógica separada de la entrada/salida** | Las reglas del negocio reciben datos y devuelven datos; no leen archivos, no llaman a la red ni a la base de datos | Una regla que no se puede probar sin levantar la base de datos, el servidor o el sistema de archivos |
-| **Dependencias recibidas, no creadas** | Lo que una pieza necesita lo recibe por parámetro o constructor; no lo crea por dentro ni lo toma de un global. No exige crear interfaces | Una regla de negocio que instancia un cliente HTTP, una conexión o un reloj, o que lee un global |
-| **Acceso a datos agrupado por funcionalidad** | Las consultas y escrituras de una funcionalidad viven juntas, en un solo lugar | La misma consulta, o una casi igual, repartida en varios archivos |
-| **Contratos explícitos en las fronteras** | Lo que se expone (API, CLI, eventos) tiene tipos propios, distintos de los internos | Cambiar una columna o un tipo interno cambia la respuesta pública |
-| **Errores explícitos** | Se falla pronto, con un mensaje que dice qué y dónde; ningún error se silencia | `catch` vacío; devolver `null`, `-1` o una cadena vacía para indicar un error |
-| **Sustitución (Liskov)** | Si se usa herencia, una subclase funciona donde se espera su base. La opción por defecto es la composición | Una subclase que lanza «no soportado», ignora o debilita un método de su base |
-| **Interfaces pequeñas** | Cuando se crea una interfaz (por una razón del nivel 2), contiene solo lo que usan sus clientes. No es una razón para crear interfaces | Una implementación con métodos vacíos o que lanzan «no implementado» |
-| **Visibilidad mínima** | Todo es privado salvo lo que otra pieza necesita usar | Miembros públicos que solo se usan dentro de su propio módulo |
-| **Configuración fuera del código** | Direcciones, rutas, credenciales y valores que cambian por entorno salen del entorno o de la configuración | Un valor de un entorno concreto escrito en el código |
-| **Validar en la frontera y convertir** («parse, don't validate») | Lo que entra (petición, archivo, argumento) se valida una vez, en la frontera, y se convierte a un tipo que ya no puede ser inválido; el interior trabaja con ese tipo | La misma validación repetida dentro del sistema; funciones internas que vuelven a comprobar si un valor es nulo, vacío o tiene el formato correcto |
-| **Sin código provisional** | Un corte mínimo se escribe con la estructura que va a tener: cada pieza en el archivo y el módulo que le corresponden desde el primer commit, aunque eso signifique cuatro archivos de dos líneas en lugar de uno de seis. «Después lo refactorizamos» no es un plan | Un archivo que acumula piezas de responsabilidades distintas para que funcione rápido (todo en `App.tsx`, toda la API en `Program.cs`); lógica dentro de componentes de interfaz o de endpoints; comentarios como «temporal», «por ahora», «TODO: mover» |
-| **Comprobaciones estrictas del compilador** | El modo estricto del lenguaje está activado (por ejemplo, `strict` en TypeScript, *nullable reference types* y advertencias como errores en C#, `set -euo pipefail` en bash) | Valores que pueden ser nulos sin que el tipo lo diga; advertencias del compilador ignoradas |
+| **Single responsibility** | Each function and each module does one thing. In a script: reading the input, processing and writing the output are different functions | A unit that changes for two reasons; a name with "and" or a vague one (`process`, `handle`, `utils`) |
+| **Logic separate from input/output** | Business rules receive data and return data; they do not read files or call the network or the database | A rule that cannot be tested without bringing up the database, the server or the file system |
+| **Dependencies received, not created** | What a piece needs it receives as a parameter or through its constructor; it does not create it inside or take it from a global. It does not require creating interfaces | A business rule that instantiates an HTTP client, a connection or a clock, or reads a global |
+| **Data access grouped by feature** | A feature's queries and writes live together, in one place | The same query, or almost the same, spread over several files |
+| **Explicit contracts at the boundaries** | What is exposed (API, CLI, events) has its own types, distinct from the internal ones | Changing an internal column or type changes the public response |
+| **Explicit errors** | Fail early, with a message that says what and where; no error is silenced | An empty `catch`; returning `null`, `-1` or an empty string to signal an error |
+| **Substitution (Liskov)** | If inheritance is used, a subclass works wherever its base is expected. Composition is the default | A subclass that throws "not supported", ignores or weakens a method of its base |
+| **Small interfaces** | When an interface is created (for a level-2 reason), it contains only what its clients use. It is not a reason to create interfaces | An implementation with empty methods or methods that throw "not implemented" |
+| **Minimal visibility** | Everything is private except what another piece needs to use | Public members used only inside their own module |
+| **Configuration outside the code** | Addresses, paths, credentials and values that change per environment come from the environment or the configuration | A value from a specific environment written in the code |
+| **Validate at the boundary and convert** ("parse, don't validate") | What comes in (request, file, argument) is validated once, at the boundary, and converted to a type that can no longer be invalid; the inside works with that type | The same validation repeated inside the system; internal functions that check again whether a value is null, empty or well-formed |
+| **No provisional code** | A minimal slice is written with the structure it is going to have: each piece in the file and module it belongs to from the first commit, even if that means four two-line files instead of one six-line file. "We'll refactor it later" is not a plan | A file that piles up pieces of different responsibilities to get it working quickly (everything in `App.tsx`, the whole API in `Program.cs`); logic inside interface components or endpoints; comments such as "temporary", "for now", "TODO: move" |
+| **Strict compiler checks** | The language's strict mode is on (for example, `strict` in TypeScript, nullable reference types and warnings as errors in C#, `set -euo pipefail` in bash) | Values that can be null without the type saying so; compiler warnings ignored |
 
-Lo que un linter del stack pueda detectar (complejidad y largo máximos por función y por archivo, un componente por archivo, `catch` vacíos, variables globales, ShellCheck en scripts) SHOULD ir a la CI (L3): así deja de depender de que alguien lo recuerde. El perfil lista qué reglas del nivel 1 cubre su CI. Los marcadores de trabajo pendiente (`TODO`, `FIXME`, `HACK`) añadidos por un agente se tratan como marcadores del guardián (05 §10): exigen aprobación humana o un elemento del backlog que los resuelva.
+What a stack linter can detect (maximum complexity and length per function and per file, one component per file, empty `catch` blocks, global variables, ShellCheck on scripts) SHOULD go to CI (L3): that way it stops depending on someone remembering it. The profile lists which level-1 rules its CI covers. Pending-work markers (`TODO`, `FIXME`, `HACK`) added by an agent are treated as guard markers (05 §10): they require human approval or a backlog item that resolves them.
 
-Los modelos tienden al camino más corto que hace funcionar algo, y ese camino no suele ser el que evita retrabajo. Por eso esta regla no se deja a criterio del agente: la nota de diseño dice en qué archivo va cada pieza, y juntarlas es un hallazgo de la tarea (ciclo `FAIL`).
+Models tend toward the shortest path that makes something work, and that path is not usually the one that avoids rework. That is why this rule is not left to the agent's judgement: the design note says which file each piece goes in, and putting them together is a finding of the task (a `FAIL` cycle).
 
-## 4. Nivel 2: principios y patrones condicionales
+## 4. Level 2: conditional principles and patterns
 
-| Principio o patrón | Cuándo sí | Cuándo no |
+| Principle or pattern | When yes | When not |
 |---|---|---|
-| **Abierto/cerrado** | La variación ya existe: hay dos o más variantes reales, o están en el backlog | Para «facilitar extensiones futuras» que nadie pidió |
-| **DRY (no repetirse)** | A la **tercera** repetición del mismo conocimiento, no del mismo texto | Dos fragmentos que se parecen pero cambian por motivos distintos: unificarlos crea la abstracción equivocada |
-| **Interfaz o abstracción** | Hay dos implementaciones, o las pruebas necesitan sustituir la dependencia y el lenguaje no permite hacerlo sin una interfaz | Una sola implementación sin otra a la vista |
-| **Repository** | Varias fuentes de datos para el mismo agregado, consultas complejas que se repiten entre funcionalidades, o un ADR que lo pide | Encima de un ORM que ya es un repositorio, con una sola fuente y consultas simples |
-| **Strategy** | Varias formas de hacer lo mismo elegidas en tiempo de ejecución, ya presentes o en el backlog | Una sola forma, o dos que no cambian |
-| **Observer / eventos** | Varios consumidores independientes de un mismo hecho, o desacoplar módulos que de otro modo se llamarían en cadena | Un solo consumidor conocido: una llamada directa es más clara y más fácil de depurar |
-| **Factory** | La creación tiene lógica real (elegir tipo, validar, ensamblar varias piezas) | Un `new` con parámetros |
-| **Mediator, CQRS, bus de comandos** | Un ADR que lo justifica por escala, auditoría o separación de modelos de lectura y escritura | Un CRUD |
-| **Genéricos y plugins** | Tres casos concretos que comparten la forma | El primer caso |
-| **Tipos propios para conceptos del dominio** (*value objects*: un monto, un correo, un periodo) | El concepto tiene reglas propias (rango, formato, redondeo) que hoy se comprueban en más de un lugar, o un error de unidades ya costó un defecto | Un valor sin reglas, que solo se transporta |
-| **Estados imposibles irrepresentables** (uniones discriminadas, máquinas de estado tipadas) | Un objeto con campos que solo tienen sentido en ciertos estados, y combinaciones inválidas que ya aparecieron | Dos o tres estados simples que un enumerado expresa bien |
+| **Open/closed** | The variation already exists: there are two or more real variants, or they are in the backlog | To "make future extensions easier" that nobody asked for |
+| **DRY (don't repeat yourself)** | On the **third** repetition of the same knowledge, not of the same text | Two fragments that look alike but change for different reasons: unifying them creates the wrong abstraction |
+| **Interface or abstraction** | There are two implementations, or the tests need to replace the dependency and the language does not allow it without an interface | A single implementation with no other in sight |
+| **Repository** | Several data sources for the same aggregate, complex queries repeated across features, or an ADR that asks for it | On top of an ORM that already is a repository, with one source and simple queries |
+| **Strategy** | Several ways of doing the same thing chosen at run time, already present or in the backlog | A single way, or two that do not change |
+| **Observer / events** | Several independent consumers of the same fact, or decoupling modules that would otherwise call each other in a chain | A single known consumer: a direct call is clearer and easier to debug |
+| **Factory** | Creation has real logic (choosing a type, validating, assembling several pieces) | A `new` with parameters |
+| **Mediator, CQRS, command bus** | An ADR that justifies it by scale, auditing or separating read and write models | A CRUD |
+| **Generics and plugins** | Three concrete cases that share the shape | The first case |
+| **Own types for domain concepts** (*value objects*: an amount, an email, a period) | The concept has its own rules (range, format, rounding) that today are checked in more than one place, or a units mistake already caused a defect | A value without rules that is only carried around |
+| **Impossible states unrepresentable** (discriminated unions, typed state machines) | An object with fields that only make sense in some states, and invalid combinations that have already appeared | Two or three simple states that an enum expresses well |
 
-La tabla no es exhaustiva. Todo patrón del nivel 2 se decide con la misma pregunta: **¿qué razón presente lo justifica, y qué costaría añadirlo más adelante si se respeta el nivel 1?** Si la respuesta a la segunda es «poco», se espera.
+The table is not exhaustive. Every level-2 pattern is decided with the same question: **what present reason justifies it, and what would it cost to add it later if level 1 is respected?** If the answer to the second is "little", wait.
 
-## 5. Nota de diseño
+## 5. Design note
 
-El **orquestador** decide el nivel 2 y actúa como diseñador senior del equipo. Por eso MUST correr en el modelo más capaz disponible (06 §11): elegir un patrón, y sobre todo decidir no usarlo, es razonamiento, no redacción.
+The **orchestrator** decides level 2 and acts as the team's senior designer. That is why it MUST run on the most capable model available (06 §11): choosing a pattern, and above all deciding not to use one, is reasoning, not writing.
 
-**Cuándo:**
-- en cada historia o enabler T2/T3, al dividir en tareas y antes de `Ready`: una nota de diseño por tarea;
-- a demanda: si el programador tiene una duda de diseño a mitad de una tarea, termina con `BLOCKED` y la pregunta; el orquestador responde con una nota nueva o una enmienda.
+**When:**
 
-**Con qué decide:** con hechos, no con el relato de otro agente (00 §7):
-- la historia, sus criterios y el contrato de interfaz;
-- los ADR y el **catálogo de diseño** del proyecto (§6);
-- un **resumen estructural** generado por una herramienta: los archivos y las firmas públicas, sin el código de las implementaciones; o, si el proyecto lo usa, un grafo de código generado por análisis sintáctico, del que solo cuentan como hechos las relaciones extraídas del código, no las inferidas;
-- la pregunta del programador, si la hay.
+- in each T2/T3 story or enabler, when splitting into tasks and before `Ready`: one design note per task;
+- on demand: if the programmer has a design question halfway through a task, it ends with `BLOCKED` and the question; the orchestrator answers with a new note or an amendment.
 
-**Qué produce** (plantilla `templates/design-note.md`):
-- qué piezas crear o cambiar, dónde y con qué responsabilidad cada una;
-- qué patrón del nivel 2 se usa, con su razón presente;
-- **qué no se hace**, de forma explícita («no se crea interfaz para X: hay una sola implementación»), con el mismo peso que lo que sí;
-- cómo se aplica el nivel 1 donde no es obvio (por ejemplo, dónde termina la lógica y empieza la entrada/salida).
+**What it decides with:** facts, not another agent's account (00 §7):
 
-La nota va en la especificación de la tarea y la aprueba el responsable humano con el resto del PR de pruebas y tareas. Una decisión que vale para más de una historia sube a un ADR (01 §4).
+- the story, its criteria and the interface contract;
+- the ADRs and the project's **design catalogue** (§6);
+- a **structural outline** generated by a tool: the files and the public signatures, without the implementations' code; or, if the project uses one, a code graph generated by syntactic analysis, of which only the relationships extracted from the code count as facts, not the inferred ones;
+- the programmer's question, if there is one.
 
-## 6. Catálogo de diseño del proyecto
+**What it produces** (template `templates/design-note.md`):
 
-Cada proyecto mantiene `docs/design-catalog.md` (plantilla `templates/design-catalog.md`): qué patrones del nivel 2 usa, dónde, por qué y qué se decidió no usar. Es la memoria de diseño del proyecto: sin él, cada nota de diseño vuelve a decidir lo mismo, o decide distinto.
+- which pieces to create or change, where and with which responsibility each one;
+- which level-2 pattern is used, with its present reason;
+- **what is not done**, explicitly ("no interface is created for X: there is a single implementation"), with the same weight as what is;
+- how level 1 is applied where it is not obvious (for example, where the logic ends and input/output begins);
+- **the decisions the verifier will test**, so the programmer does not improvise them: for tasks that add or change API routes, the **API edges** (what an unsupported method, an unknown route and the trailing slash return for each prefix, with which error body, and which fallback covers them); for tasks with an interface, the **dynamic behaviour** (where focus goes after each state transition, which live regions exist from page load, which focus ring each type of element shows, whether a message reserves space, and which responses the technical tests must cover, including a success with an unexpected body).
 
-El orquestador lo actualiza en el cierre de cada elemento con lo que las notas de diseño introdujeron.
+The note goes in the task's specification and the human owner approves it with the rest of the tests-and-tasks PR. A decision that applies to more than one story moves up to an ADR (01 §4).
 
-## 7. Verificación
+Every decision the note leaves open is a likely `FAIL` cycle: in aes-todo, the three FAIL cycles of one interface task came from focus, live regions and focus rings that the note did not specify; the same kind of task, with those decisions written, passed verification on the first attempt.
 
-- La nota de diseño es parte del contrato de la tarea: el verificador revisa el diff contra ella igual que contra la superficie de cambio. Un patrón que la nota no autoriza o una pieza con otra responsabilidad que la asignada es un hallazgo.
-- El verificador revisa el diff contra los síntomas del nivel 1 (§3).
-- Lo que detecta un linter en la CI no hace falta revisarlo a mano; lo que no, sí.
+## 6. The project's design catalogue
+
+Each project keeps `docs/design-catalog.md` (template `templates/design-catalog.md`): which level-2 patterns it uses, where, why and what it decided not to use. It is the project's design memory: without it, each design note decides the same thing again, or decides differently.
+
+The orchestrator updates it when each item closes with what the design notes introduced.
+
+## 7. Verification
+
+- The design note is part of the task's contract: the verifier reviews the diff against it as it does against the change surface. A pattern the note does not authorize, or a piece with a responsibility other than the assigned one, is a finding.
+- The verifier reviews the diff against the level-1 symptoms (§3).
+- What a linter detects in CI does not need to be reviewed by hand; what it does not, does.

@@ -1,147 +1,148 @@
-# 04 — Diseño y ejecución de tareas
+# 04 — Task design and execution
 
-## 1. Objetivo de una tarea
+## 1. Purpose of a task
 
-Una tarea transforma una parte de una Historia de Usuario o un enabler aprobado en un cambio concreto y comprobable. No es una instrucción abierta como «termina el módulo» o «mejora el código».
+A task turns part of an approved user story or enabler into a concrete, checkable change. It is not an open instruction such as "finish the module" or "improve the code".
 
-## 2. Campos obligatorios
+## 2. Mandatory fields
 
-Cada tarea lista para ejecución DEBE especificar:
+Every task ready to run MUST specify:
 
-- ID y título orientado al resultado;
-- Historia de Usuario/Enabler relacionado;
-- objetivo y resultado esperado;
-- alcance incluido y exclusiones relevantes;
-- dependencias y contratos que debe respetar;
+- ID and a result-oriented title;
+- the related user story/enabler;
+- goal and expected result;
+- included scope and relevant exclusions;
+- dependencies and contracts it must respect;
 - track (02 §8);
-- **superficie de cambio**: globs de archivos que la tarea puede modificar;
-- restricciones y permisos;
-- **comandos de validación exactos** (no descripciones como «ejecuta las pruebas relevantes»);
-- **pruebas de regresión afectadas** (test map), cuando puedan generarse o deducirse;
-- **criterios que deja en verde**: los IDs de criterio (o de defecto) que esta tarea cumple. La CI de la tarea ejecuta solo esos más la regresión; la **última** tarea de la historia ejecuta la historia completa (05 §12);
-- presupuesto de diff orientativo, separado en producción y pruebas (02 §6);
-- **nota de diseño** (10 §5) en T2/T3: piezas, responsabilidades, patrón (o ausencia de patrón) y lo que no se hace;
-- si la tarea introduce un **estado** (de error, de carga, de edición), las transiciones que lo crean y las que lo limpian;
-- condición de finalización.
+- **change surface**: file globs the task may modify;
+- constraints and permissions;
+- **exact validation commands** (not descriptions such as "run the relevant tests");
+- **affected regression tests** (test map), when they can be generated or inferred;
+- **criteria it turns green**: the criterion (or defect) IDs this task satisfies. The task's CI runs only those plus the regression suite; the **last** task of the story runs the whole story (05 §12);
+- indicative diff budget, separate for production and tests (02 §6);
+- **model level** (06 §12.1): standard by default, or a higher level with its reason;
+- **design note** (10 §5) in T2/T3: pieces, responsibilities, pattern (or absence of a pattern) and what is not done;
+- if the task introduces a **state** (error, loading, editing), the transitions that create it and those that clear it;
+- completion condition.
 
-La superficie de cambio no es una sugerencia: la CI compara el diff contra ella (05 §10). Un archivo modificado fuera de la superficie es un `FAIL` salvo aprobación registrada. La superficie se publica en la rama protegida **antes** de delegar la tarea, para que el programador no pueda ampliarla.
+The change surface is not a suggestion: CI compares the diff against it (05 §10). A file modified outside the surface is a `FAIL` unless there is a recorded approval. The surface is published on the protected branch **before** the task is delegated, so the programmer cannot widen it.
 
-### Por qué comandos exactos y no instrucciones de proceso
+### Why exact commands and not process instructions
 
-El estudio TDAD (Alonso, Yovine y Braberman, arXiv:2603.17973; tesis de maestría, Universidad ORT Uruguay) midió que añadir instrucciones genéricas de TDD a la guía de un agente aumentó su tasa de regresiones de 6,08 % a 9,94 %, mientras que darle un mapa de qué pruebas afecta cada archivo la redujo a 1,82 %. El estudio se hizo con un modelo abierto (Qwen3-Coder 30B) y solo en Python, así que AES no adopta la cifra, sino el principio: **información estructural concreta en lugar de procedimientos genéricos**.
+The TDAD study (Alonso, Yovine and Braberman, arXiv:2603.17973; master's thesis, Universidad ORT Uruguay) measured that adding generic TDD instructions to an agent's guidance increased its regression rate from 6.08% to 9.94%, while giving it a map of which tests each file affects reduced it to 1.82%. The study used an open model (Qwen3-Coder 30B) and only Python, so AES does not adopt the figure but the principle: **concrete structural information instead of generic procedures**.
 
-## 3. Tamaño y divisibilidad
+## 3. Size and divisibility
 
-Una tarea es suficientemente pequeña si un agente puede comprender su objetivo, implementarla, inspeccionar el diff y ejecutar su validación sin tener que aceptar varios resultados independientes como un bloque indivisible.
+A task is small enough if an agent can understand its goal, implement it, inspect the diff and run its validation without having to accept several independent results as one indivisible block.
 
-Una historia tiene **3 tareas como máximo**. Si no cabe, la historia es demasiado grande y se divide (02 §3.1, §10), en lugar de hacer tareas más grandes.
+A story has **at most 3 tasks**. If it does not fit, the story is too large and is split (02 §3.1, §10), instead of making larger tasks.
 
-Las tareas se dividen **por criterios** (cortes verticales que dejan criterios en verde), no por capas técnicas. Una tarea «solo API» y otra «solo UI» no pueden quedar verdes por separado si la aceptación cruza ambas. Sin CI por criterio, toda historia termina en una sola tarea grande: en el sandbox de AES, las dos primeras historias acabaron en tareas únicas de 300 a 500 líneas.
+Tasks are split **by criteria** (vertical slices that turn criteria green), not by technical layers. An "API only" task and a "UI only" task cannot turn green separately if the acceptance spans both. Without per-criterion CI, every story ends up as one large task: in the AES sandbox, the first two stories ended in single tasks of 300 to 500 lines.
 
-Señales para dividir:
+Signals to split:
 
-- más de un resultado observable sin dependencia necesaria;
-- lógica, interfaz, migración y despliegue agrupados solo por conveniencia;
-- múltiples módulos o contratos modificados sin una razón común;
-- numerosas condiciones de aceptación que pueden fallar de forma independiente;
-- alta incertidumbre técnica;
-- imposibilidad de describir una prueba focalizada.
+- more than one observable result with no necessary dependency;
+- logic, interface, migration and deployment grouped only for convenience;
+- several modules or contracts modified with no common reason;
+- many acceptance conditions that can fail independently;
+- high technical uncertainty;
+- being unable to describe a focused test.
 
-No dividir hasta producir tareas artificiales sin valor o dependientes de detalles especulativos. Mantener cohesión técnica y una secuencia ejecutable.
+Do not split until the tasks become artificial, valueless or dependent on speculative details. Keep technical cohesion and an executable sequence.
 
-## 4. Contrato de ejecución
+## 4. Execution contract
 
-El programador recibe un paquete de contexto acotado: historia aprobada, tarea, criterios relacionados, arquitectura/ADRs pertinentes, contratos de APIs/datos y convenciones del proyecto.
+The programmer receives a bounded context package: the approved story, the task, the related criteria, the relevant architecture/ADRs, API/data contracts and the project's conventions.
 
-El programador DEBE:
+The programmer MUST:
 
-1. **ejecutar primero la suite existente** y registrar el baseline (pruebas que ya fallaban antes de tocar nada), para no «arreglar» ni atribuirse fallos preexistentes;
-2. inspeccionar el código relevante antes de cambiarlo;
-3. describir brevemente el enfoque cuando el cambio no sea trivial;
-4. implementar solo el alcance de la tarea, dentro de su superficie de cambio;
-5. añadir o ajustar pruebas técnicas permitidas, siguiendo RED/GREEN/REFACTOR donde aplique (05 §3);
-6. separar commits estructurales y conductuales (§8);
-7. ejecutar los comandos de validación exactos de la tarea;
-8. inspeccionar su propio diff para detectar archivos o cambios ajenos;
-9. dejar el entorno como lo encontró: ningún servidor, proceso ni dato que el rol siguiente pueda tomar como propio (06 §10);
-10. entregar un reporte con archivos modificados, pruebas ejecutadas, resultados, riesgos y decisiones/supuestos.
+1. **run the existing suite first** and record the baseline (tests that were already failing before touching anything), so as not to "fix" pre-existing failures or take credit for them;
+2. inspect the relevant code before changing it;
+3. briefly describe the approach when the change is not trivial;
+4. implement only the task's scope, within its change surface;
+5. add or adjust the technical tests it is allowed to, following RED/GREEN/REFACTOR where it applies (05 §3);
+6. separate structural and behavioural commits (§8);
+7. run the task's exact validation commands;
+8. inspect its own diff to detect unrelated files or changes;
+9. leave the environment as it found it: no server, process or data that the next role could take as its own (06 §10);
+10. deliver a report with modified files, tests run, results, risks and decisions/assumptions.
 
-El programador NO DEBE:
+The programmer MUST NOT:
 
-- modificar criterios aprobados o pruebas de aceptación protegidas;
-- alterar CI, permisos, políticas o configuraciones de agentes para facilitar su tarea;
-- ocultar, saltar o silenciar pruebas fallidas;
-- ampliar el alcance con refactorizaciones no relacionadas;
-- añadir dependencias sin justificación y aprobación requerida;
-- editar a mano código generado por herramientas (por ejemplo, migraciones): se regenera;
-- introducir un patrón, una abstracción o una pieza que la nota de diseño no contempla: si cree que hace falta, se detiene con `BLOCKED` y la pregunta de diseño;
-- borrar un marcador del guardián que no escribió (por ejemplo, un `#pragma` de código generado) para que el control deje de marcarlo: se reporta;
-- afirmar que algo funciona sin evidencia de ejecución.
+- modify approved criteria or protected acceptance tests;
+- alter CI, permissions, policies or agent configuration to make its task easier;
+- hide, skip or silence failing tests;
+- widen the scope with unrelated refactors;
+- add dependencies without justification and the required approval;
+- hand-edit code generated by tools (for example, migrations): it is regenerated;
+- introduce a pattern, an abstraction or a piece the design note does not contemplate: if it thinks one is needed, it stops with `BLOCKED` and the design question;
+- remove a guard marker it did not write (for example, a `#pragma` in generated code) so the control stops flagging it: it reports it;
+- claim that something works without evidence of execution.
 
-## 5. Dependencias y paralelismo
+## 5. Dependencies and parallelism
 
-Las tareas pueden ejecutarse en paralelo solo si sus archivos, contratos y dependencias permiten trabajo independiente. El orquestador debe identificar conflictos de escritura y definir integración.
+Tasks may run in parallel only if their files, contracts and dependencies allow independent work. The orchestrator must identify write conflicts and define the integration.
 
-Se DEBERÍA usar ramas o worktrees separados para agentes concurrentes. No se permite que dos agentes escriban simultáneamente en los mismos archivos sin coordinación explícita.
+Separate branches or worktrees SHOULD be used for concurrent agents. Two agents writing to the same files at the same time without explicit coordination is not allowed.
 
-## 6. Bloqueos
+## 6. Blockers
 
-Si el agente descubre una dependencia, contradicción o cambio necesario fuera del alcance, debe detener esa parte, explicar el bloqueo y proponer opciones. No debe resolverlo ampliando unilateralmente la tarea.
+If the agent discovers a dependency, a contradiction or a necessary change outside the scope, it must stop that part, explain the blocker and propose options. It must not resolve it by unilaterally widening the task.
 
-Una **acción denegada** (por un permiso, un hook o un clasificador del harness) también es un bloqueo. El agente termina con `BLOCKED` e indica la acción exacta que necesita **del responsable humano**. No la intenta de otra forma ni le pide a otro agente que la haga: eso es un rodeo por delegación (06 §6.1).
+A **denied action** (by a permission, a hook or a harness classifier) is also a blocker. The agent ends with `BLOCKED` and states the exact action it needs **from the human owner**. It does not try it another way or ask another agent to do it: that is a workaround by delegation (06 §6.1).
 
-## 7. Cierre de tarea
+## 7. Closing a task
 
-Una tarea puede pasar a revisión cuando:
+A task can move to review when:
 
-- el resultado esperado está implementado;
-- las pruebas aplicables se ejecutaron;
-- el diff está limitado y revisado;
-- no quedan cambios temporales o secretos;
-- el reporte de ejecución está completo.
+- the expected result is implemented;
+- the applicable tests were run;
+- the diff is bounded and reviewed;
+- no temporary changes or secrets remain;
+- the execution report is complete.
 
-El cierre de una tarea no significa que la Historia de Usuario esté aceptada.
+Closing a task does not mean the user story is accepted.
 
-## 8. Commits estructurales y conductuales
+## 8. Structural and behavioural commits
 
-Basado en *Tidy First* (Kent Beck).
+Based on *Tidy First* (Kent Beck).
 
-- Cada commit MUST ser **estructural** (reorganiza código sin cambiar comportamiento; todas las pruebas verdes antes y después) **o conductual** (cambia comportamiento). Nunca ambos.
-- Prefijos obligatorios: `struct:` para estructurales; `feat:`, `fix:` o `test:` para conductuales. El perfil puede mapearlos a Conventional Commits.
-- Un cambio estructural fuera de la superficie de la tarea es fuera de alcance, aunque mejore el código. Se propone como tarea propia.
+- Each commit MUST be **structural** (reorganizes code without changing behaviour; all tests green before and after) **or behavioural** (changes behaviour). Never both.
+- Mandatory prefixes: `struct:` for structural; `feat:`, `fix:` or `test:` for behavioural. The profile may map them to Conventional Commits.
+- A structural change outside the task's surface is out of scope, even if it improves the code. It is proposed as a task of its own.
 
-Efecto: un commit `struct:` se revisa comprobando que las pruebas siguen verdes; la atención humana y del verificador se concentra en los conductuales.
+Effect: a `struct:` commit is reviewed by checking that the tests stay green; human and verifier attention concentrates on the behavioural ones.
 
-## 9. Circuit breaker e higiene de contexto
+## 9. Circuit breaker and context hygiene
 
-- Cada tarea MUST ejecutarse en una **sesión nueva**. No se reutiliza el contexto de una tarea anterior.
-- Cuenta como ciclo `FAIL`: una CI roja por causa del cambio, un `FAIL` del verificador, o un hallazgo tras un `PASS` que el responsable humano manda corregir antes de integrar. No cuenta: una CI roja que solo espera una aprobación humana prevista (por ejemplo, la etiqueta de dependencias).
-- Si una misma tarea acumula **3 ciclos `FAIL`** (CI o verificador), se detiene. No hay cuarto intento automático. El orquestador clasifica la causa y decide:
-  - tarea mal especificada o demasiado grande → vuelve a refinamiento;
-  - prueba de aceptación incorrecta → control de cambios con QA (05 §6);
-  - problema de diseño → arquitecto o Spike;
-  - limitación del modelo o del harness → reasignar o escalar al responsable humano.
-- Si el agente repite el mismo enfoque fallido dos veces seguidas, el orquestador SHOULD reiniciar el contexto con un resumen escrito de lo aprendido en lugar de compactarlo: la compactación conserva los supuestos erróneos.
-- El perfil puede reducir el umbral de 3 ciclos; aumentarlo requiere excepción documentada.
+- Each task MUST run in a **new session**. The context of a previous task is not reused.
+- A `FAIL` cycle is: a CI run that is red because of the change, a verifier `FAIL`, or a finding after a `PASS` that the human owner orders fixed before merging (02 §9.3). It is not: a red CI run that is only waiting for a planned human approval (for example, the dependency label).
+- If the same task accumulates **3 `FAIL` cycles** (CI or verifier), it stops. There is no automatic fourth attempt. The orchestrator classifies the cause and decides:
+  - badly specified or too large task → back to refinement;
+  - incorrect acceptance test → change control with QA (05 §6);
+  - design problem → architect or Spike;
+  - model or harness limitation → reassign, raise the task's model level (06 §12.1) or escalate to the human owner.
+- If the agent repeats the same failed approach twice in a row, the orchestrator SHOULD restart the context with a written summary of what was learned instead of compacting it: compaction keeps the wrong assumptions.
+- The profile may lower the 3-cycle threshold; raising it requires a documented exception.
 
-## 10. Camino corto para T0 y T1
+## 10. Short path for T0 and T1
 
-T0 y T1 no recorren el ciclo de una historia, pero tampoco se improvisan. Pasos mínimos:
+T0 and T1 do not go through a story's cycle, but they are not improvised either. Minimum steps:
 
-| Paso | T0 | T1 (defecto, chore o lote de estabilización) |
+| Step | T0 | T1 (defect, chore or stabilization batch) |
 |---|---|---|
-| Elemento en el backlog | Sí | Sí, con severidad si es defecto (02 §9) y con historia de origen |
-| Especificación | La tarea | Un PR de especificación con el elemento, su criterio y la superficie. Aprobarlo es el gate humano |
-| Comprobación de reproducción | — | Prueba de aceptación protegida o **comando de verificación** (05 §12), con RED confirmado; o «sin RED» declarado y aprobado (02 §8) |
-| QA | No | Solo si la comprobación es una prueba de aceptación nueva |
-| Tareas | Una | Las mínimas, agrupadas por superficie; cada una declara qué defectos deja en verde |
-| CI | Guardián + validaciones | Guardián + validaciones + la comprobación del elemento + regresión |
-| Verificador | No (salvo que el perfil lo exija) | Sí, ejecutando la comprobación él mismo |
-| Cierre | Estado en el backlog | Estado, comprobación añadida a la regresión, hallazgos registrados |
+| Backlog item | Yes | Yes, with a severity if it is a defect (02 §9) and with the story of origin |
+| Specification | The task | A specification PR with the item, its criterion and the surface. Approving it is the human gate |
+| Reproduction check | — | A protected acceptance test or a **verification command** (05 §12), with RED confirmed; or "no RED" declared and approved (02 §8) |
+| QA | No | Only if the check is a new acceptance test |
+| Tasks | One | The minimum, grouped by surface; each declares which defects it turns green |
+| CI | Guard + validations | Guard + validations + the item's check + regression |
+| Verifier | No (unless the profile requires it) | Yes, running the check itself |
+| Close | Status in the backlog | Status, check added to the regression suite, findings recorded |
 
-Un T1 que, al trabajarse, resulta tocar comportamiento nuevo o un riesgo de T3 sube de track (02 §8).
+A T1 that, while being worked on, turns out to touch new behaviour or a T3 risk moves up a track (02 §8).
 
-## 11. Sesiones del orquestador
+## 11. Orchestrator sessions
 
-- El orquestador trabaja **una historia, enabler o lote por sesión**. Arrastrar el contexto de otro elemento encarece cada turno y mezcla decisiones; en el sandbox de AES, el contexto acumulado fue la mayor parte del costo de cada historia.
-- La redacción mecánica (consolidar notas, tablas de métricas) SHOULD delegarse en un rol barato (el mecánico).
+- The orchestrator works on **one story, enabler or batch per session**. Carrying the context of another item makes every turn more expensive and mixes decisions; in the AES sandbox, accumulated context was most of the cost of each story.
+- Mechanical writing (consolidating notes, metrics tables) SHOULD be delegated to a cheap role (the mechanic).

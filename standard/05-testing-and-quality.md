@@ -1,225 +1,228 @@
-# 05 — Pruebas y calidad
+# 05 — Testing and quality
 
-## 1. Estrategia
+## 1. Strategy
 
-AES combina ATDD (Acceptance Test-Driven Development) y TDD (Test-Driven Development), junto con pruebas de integración, extremo a extremo y controles estáticos. La selección depende del riesgo y del tipo de cambio.
+AES combines ATDD (Acceptance Test-Driven Development) and TDD (Test-Driven Development) with integration tests, end-to-end tests and static controls. The selection depends on the risk and the type of change.
 
-## 2. ATDD: antes de implementar la historia
+## 2. ATDD: before implementing the story
 
-Para cada Historia de Usuario, QA o un rol independiente DEBE:
+For each user story, QA or an independent role MUST:
 
-1. leer la petición y la historia aprobada;
-2. derivar escenarios de aceptación desde los criterios;
-3. identificar casos positivos, negativos y límites relevantes;
-4. mapear cada criterio a una prueba o método de comprobación;
-5. revisar que los escenarios prueben comportamiento, no una implementación supuesta;
-6. proteger la versión aprobada de las pruebas.
+1. read the request and the approved story;
+2. derive acceptance scenarios from the criteria;
+3. identify the relevant positive, negative and boundary cases;
+4. map each criterion to a test or a checking method;
+5. check that the scenarios test behaviour, not an assumed implementation;
+6. protect the approved version of the tests.
 
-Los escenarios de aceptación deben estar disponibles antes de declarar que la implementación está completa. Cuando sea viable, las pruebas automatizadas se escriben antes de la implementación.
+Acceptance scenarios must be available before declaring the implementation complete. When feasible, the automated tests are written before the implementation.
 
-### 2.1 Contrato de interfaz antes de las pruebas
+### 2.1 Interface contract before the tests
 
-QA no puede escribir pruebas útiles antes de que exista el código si no sabe por dónde entrar al sistema. Cuando la historia introduce o modifica una frontera observable, el orden es:
+QA cannot write useful tests before the code exists if it does not know where to enter the system. When the story introduces or modifies an observable boundary, the order is:
 
-1. criterios de aceptación aprobados;
-2. **contrato de interfaz** propuesto por el arquitecto/orquestador, en el plan técnico de la historia (03 §1.2): el punto de entrada observable que usarán las pruebas. Por defecto, la frontera externa del sistema:
-   - HTTP/API: método, ruta, payload, códigos y forma de la respuesta;
-   - CLI: comando, argumentos, salida y código de salida;
-   - UI: flujo y selectores estables acordados (por ejemplo, `data-testid`);
-   - librería: firmas públicas mínimas;
-3. pruebas de aceptación escritas por QA contra ese contrato.
+1. approved acceptance criteria;
+2. an **interface contract** proposed by the architect/orchestrator, in the story's technical plan (03 §1.2): the observable entry point the tests will use. By default, the system's external boundary:
+   - HTTP/API: method, route, payload, codes and response shape;
+   - CLI: command, arguments, output and exit code;
+   - UI: flow and agreed stable selectors (for example, `data-testid`);
+   - library: minimal public signatures;
+3. acceptance tests written by QA against that contract.
 
-Las pruebas de aceptación MUST ejercitar comportamiento a través del contrato de interfaz, no detalles internos. Si el programador necesita cambiar el contrato, la tarea pasa a `BLOCKED` y se resuelve por control de cambios; el programador no adapta las pruebas. Si el contrato no puede definirse por incertidumbre real, primero se ejecuta un Spike cuyo resultado es precisamente el contrato.
+Acceptance tests MUST exercise behaviour through the interface contract, not internal details. If the programmer needs to change the contract, the task becomes `BLOCKED` and is resolved through change control; the programmer does not adapt the tests. If the contract cannot be defined because of real uncertainty, a Spike runs first, and its result is precisely the contract.
 
-### 2.2 RED confirmado
+### 2.2 Confirmed RED
 
-Una prueba que ya pasa antes del cambio no verifica el código nuevo: puede no estar ejercitando el comportamiento en absoluto. El paso rojo demuestra que la prueba es capaz de detectar la funcionalidad ausente.
+A test that already passes before the change does not verify the new code: it may not be exercising the behaviour at all. The red step shows that the test is able to detect the missing functionality.
 
-Antes de que una historia pase a `Ready`, QA MUST ejecutar la suite de aceptación contra la rama base y registrar que **cada prueba nueva falla por la razón esperada** (por ejemplo, «404 en `/notifications`», no «error de importación» ni «timeout»). Una prueba nueva que pasa en verde contra la base se considera defectuosa hasta que se justifique. Este registro (`acceptance-baseline` en el plan de pruebas o artefacto de CI) forma parte de la DoR de la historia.
+Before a story becomes `Ready`, QA MUST run the acceptance suite against the base branch and record that **each new test fails for the expected reason** (for example, "404 on `/notifications`", not "import error" or "timeout"). A new test that passes against the base is considered defective until justified. This record (`acceptance-baseline` in the test plan, or a CI artifact) is part of the story's DoR.
 
-RED confirmado exige, además:
+Confirmed RED also requires:
 
-- que **todas** las pruebas nuevas se hayan **ejecutado**. Un error de compilación, de configuración o de arranque no es RED: no demuestra que ninguna aserción falle. Tampoco lo es una prueba que no llegó a correr (por ejemplo, por un modo serie que detiene la suite al primer fallo) ni una prueba omitida;
-- que la comprobación la haga una **herramienta**, la misma en el entorno de QA y en la CI, sobre el reporte de la ejecución. «Las corrí por separado» no es evidencia: en el sandbox de AES, QA reportó un RED con dos pruebas sin ejecutar y la herramienta lo detectó;
-- una única excepción, el **RED de arranque**: cuando la base todavía no tiene código de aplicación (el primer enabler), se acepta que ninguna prueba se ejecute porque no hay nada que arrancar. La herramienta solo la admite si la base no tiene código.
+- that **all** the new tests were **executed**. A compilation, configuration or start-up error is not RED: it does not show that any assertion fails. Neither is a test that never ran (for example, because a serial mode stops the suite at the first failure) or a skipped test;
+- that the check is made by a **tool**, the same one in QA's environment and in CI, over the run's report. "I ran them separately" is not evidence: in the AES sandbox, QA reported a RED with two tests that never ran, and the tool caught it;
+- a single exception, the **bootstrap RED**: when the base has no application code yet (the first enabler), it is accepted that no test runs because there is nothing to start. The tool only allows it if the base has no code.
 
-### 2.3 Pruebas visibles y holdout
+### 2.3 Visible and holdout tests
 
-La suite de aceptación SHOULD dividirse (MUST en T3) en:
+The acceptance suite SHOULD be split (MUST in T3) into:
 
-- **visibles**: el programador puede leerlas y ejecutarlas; le dan el bucle de retroalimentación;
-- **holdout**: variantes de los mismos criterios con datos y casos distintos, almacenadas donde el entorno del programador no tiene acceso (repositorio separado, rama sin permisos o directorio no montado). Solo las ejecutan la CI y el verificador.
+- **visible**: the programmer can read and run them; they give it the feedback loop;
+- **holdout**: variants of the same criteria with different data and cases, stored where the programmer's environment has no access (a separate repository, a branch without permissions or an unmounted directory). Only CI and the verifier run them.
 
-Cuando una prueba holdout falla, el programador recibe el ID del criterio y el comportamiento observado, **no el código de la prueba**. Objetivo: detectar implementaciones ajustadas a los datos visibles (valores codificados, ramas especiales para el caso de prueba) sin quitar el feedback. Proporción orientativa: 20–30 % de los escenarios; el perfil la ajusta.
+When a holdout test fails, the programmer receives the criterion ID and the observed behaviour, **not the test code**. Goal: detect implementations tailored to the visible data (hard-coded values, special branches for the test case) without removing the feedback. Indicative proportion: 20–30% of the scenarios; the profile adjusts it.
 
-### 2.4 Pruebas de caracterización
+### 2.4 Characterization tests
 
-A veces un criterio nuevo describe algo que el código **ya hace** (por ejemplo, el mismo mensaje de error en el formulario de alta que la historia nueva exige en el de edición). Su prueba pasa contra la base, así que no puede demostrar RED, y la regla de §2.2 la rechazaría junto con todo el conjunto.
+Sometimes a new criterion describes something the code **already does** (for example, the same error message in the create form that the new story requires in the edit form). Its test passes against the base, so it cannot show RED, and the rule of §2.2 would reject it along with the whole set.
 
-Esas pruebas son de **caracterización**: documentan un comportamiento existente. Reglas:
+Those tests are **characterization** tests: they document existing behaviour. Rules:
 
-- viven en la suite de la historia **dueña** de ese comportamiento (con su etiqueta, por ejemplo `@US-001`), y llevan en el título el ID del criterio nuevo para la trazabilidad;
-- corren en la regresión desde que se integran;
-- el criterio nuevo declara «Verificación: regresión de <ID>» y **no** aparece en el archivo de criterios de ninguna tarea (§12), porque no tiene pruebas propias que ejecutar;
-- QA las marca como tales en el plan, y el responsable humano las aprueba con el resto.
+- they live in the suite of the story that **owns** that behaviour (with its tag, for example `@US-001`), and carry the new criterion's ID in the title for traceability;
+- they run in the regression suite from the moment they are merged;
+- the new criterion states "Checked with: regression of <ID>" and does **not** appear in any task's criteria file (§12), because it has no tests of its own to run;
+- QA marks them as such in the plan, and the human owner approves them with the rest.
 
-No se inventan etiquetas que la CI no ejecuta: una prueba que nunca corre no verifica nada.
+Tags that CI does not run are not invented: a test that never runs verifies nothing.
 
-### 2.5 Aislamiento de datos
+### 2.5 Data isolation
 
-Las pruebas de aceptación corren en paralelo y comparten datos (la misma base, el mismo periodo, la misma lista). Cada prueba MUST:
+Acceptance tests run in parallel and share data (the same database, the same period, the same list). Each test MUST:
 
-- crear sus propios datos y buscarlos por algo que solo ella usa (una marca única en un texto, un periodo propio);
-- no comparar totales o conteos globales que otras pruebas pueden cambiar mientras corre;
-- no depender del orden de ejecución ni de lo que dejó otra prueba.
+- create its own data and look it up by something only it uses (a unique marker in a text, its own period);
+- not compare global totals or counts that other tests may change while it runs;
+- not depend on the order of execution or on what another test left behind.
 
-Una prueba que falla a veces no es ruido: es un defecto de severidad Alta (02 §9) si corre en la regresión de la rama principal, porque puede ponerla en rojo para todos.
+A test that sometimes fails is not noise: it is a High severity defect (02 §9) if it runs in the main branch's regression suite, because it can turn it red for everyone.
 
-## 3. TDD: durante la implementación
+## 3. TDD: during implementation
 
-Para lógica nueva o modificada donde sea práctico, el programador SHOULD seguir:
+For new or modified logic where practical, the programmer SHOULD follow:
 
-1. **Red:** crear una prueba focalizada que falle por la razón esperada.
-2. **Green:** implementar el cambio mínimo para pasarla.
-3. **Refactor:** mejorar estructura sin cambiar el comportamiento y manteniendo todas las pruebas verdes.
+1. **Red:** create a focused test that fails for the expected reason.
+2. **Green:** implement the minimal change to make it pass.
+3. **Refactor:** improve the structure without changing the behaviour, keeping all tests green.
 
-No se exige TDD mecánico para cambios donde no aporta una prueba útil (por ejemplo, ciertos cambios visuales, documentación o configuración). En esos casos se documenta el método alternativo de verificación.
+Mechanical TDD is not required for changes where it does not yield a useful test (for example, some visual changes, documentation or configuration). In those cases the alternative verification method is documented.
 
-## 4. Capas de prueba
+## 4. Test layers
 
-El perfil del proyecto define herramientas y comandos. En general:
+The project profile defines tools and commands. In general:
 
-- **Unitarias:** lógica aislada y casos de borde.
-- **Integración:** persistencia, servicios, colas, APIs y límites entre componentes.
-- **Contrato:** compatibilidad entre consumidores y proveedores.
-- **E2E:** flujos de usuario que cruzan capas relevantes.
-- **Aceptación:** criterios de la Historia de Usuario.
-- **Regresión:** comportamiento existente que podría verse afectado.
-- **No funcionales:** seguridad, rendimiento, accesibilidad, resiliencia u otras cualidades según riesgo.
+- **Unit:** isolated logic and edge cases.
+- **Integration:** persistence, services, queues, APIs and boundaries between components.
+- **Contract:** compatibility between consumers and providers.
+- **E2E:** user flows that cross the relevant layers.
+- **Acceptance:** the user story's criteria.
+- **Regression:** existing behaviour that could be affected.
+- **Non-functional:** security, performance, accessibility, resilience or other qualities according to risk.
 
-No todas las historias requieren todas las capas. La omisión de una capa relevante debe justificarse.
+Not every story needs every layer. Leaving out a relevant layer must be justified.
 
-## 5. Protección de pruebas de aceptación
+## 5. Protecting acceptance tests
 
-Las pruebas que expresan criterios de aceptación aprobados constituyen un contrato independiente y DEBEN protegerse técnicamente.
+The tests that express approved acceptance criteria are an independent contract and MUST be technically protected.
 
-El agente programador:
+The programmer agent:
 
-- puede crear y modificar pruebas unitarias/de integración propias del cambio, dentro del alcance;
-- NO puede modificar o borrar la suite de aceptación protegida para conseguir un resultado verde;
-- no puede cambiar workflows o configuración de CI que ejecutan esas pruebas.
+- may create and modify the unit/integration tests of its own change, within scope;
+- may NOT modify or delete the protected acceptance suite to get a green result;
+- may not change the workflows or CI configuration that run those tests.
 
-Los cambios en pruebas protegidas requieren un cambio aprobado del requisito o una corrección de prueba demostrada, revisión independiente y aprobación de un responsable autorizado.
+Changes to protected tests require an approved change to the requirement or a demonstrated test fix, an independent review and the approval of an authorized owner.
 
-La CI MUST ejecutar la suite protegida obtenida desde la rama protegida (o verificar su integridad contra un manifiesto almacenado en ella), nunca la versión presente en la rama del agente. Este es un control de capa L3 (06 §9). CODEOWNERS, protección de rama, montajes de solo lectura y repositorios separados lo complementan.
+CI MUST run the protected suite taken from the protected branch (or verify its integrity against a manifest stored there), never the version present on the agent's branch. This is a layer L3 control (06 §9). CODEOWNERS, branch protection, read-only mounts and separate repositories complement it.
 
-No basta con confiar en el prompt del programador, ni tampoco en los permisos de su harness: un permiso que niega editar un archivo no impide escribirlo mediante la terminal.
+Trusting the programmer's prompt is not enough, and neither are its harness's permissions: a permission that denies editing a file does not prevent writing it through the terminal.
 
-## 6. Verificación de pruebas
+## 6. Checking tests
 
-Si una prueba falla, el equipo debe clasificar la causa antes de cambiar código o prueba:
+If a test fails, the team must classify the cause before changing code or test:
 
-- defecto de implementación;
-- defecto en la prueba;
-- requisito contradictorio o incompleto;
-- entorno/configuración;
-- dependencia externa.
+- implementation defect;
+- defect in the test;
+- contradictory or incomplete requirement;
+- environment/configuration;
+- external dependency.
 
-El agente no debe borrar, deshabilitar, reducir aserciones ni cambiar datos esperados para ocultar un fallo. La corrección de una prueba es legítima solo si se demuestra que la prueba contradice el requisito aprobado o es técnicamente incorrecta.
+The agent must not delete, disable, weaken assertions or change expected data to hide a failure. Fixing a test is legitimate only if it is shown that the test contradicts the approved requirement or is technically wrong.
 
-Una prueba **inestable** (falla sin cambio de código) es técnicamente incorrecta. Se registra como defecto (02 §9), la corrige QA por el flujo autorizado de pruebas protegidas, y su comprobación no es un RED sino evidencia de estabilidad: el número de corridas que fallaban antes y una serie de corridas sin fallo después (el perfil fija cuántas; por ejemplo, 10). Su corrección no cambia lo que la prueba exige.
+A **flaky** test (fails without a code change) is technically wrong. It is recorded as a defect (02 §9), QA fixes it through the authorized flow for protected tests, and its check is not a RED but evidence of stability: the number of runs that failed before and a series of runs without failure afterwards (the profile sets how many; for example, 10). Its fix does not change what the test requires.
 
-## 7. Calidad estática y seguridad
+## 7. Static quality and security
 
-El perfil de proyecto debe declarar herramientas y umbrales aplicables: formato, lint, tipos, análisis estático, dependencias, secretos, vulnerabilidades y migraciones. Los umbrales deben ser razonados para el proyecto; AES no impone un porcentaje universal de cobertura.
+The project profile must declare the applicable tools and thresholds: formatting, lint, types, static analysis, dependencies, secrets, vulnerabilities and migrations. The thresholds must be reasoned for the project; AES does not impose a universal coverage percentage.
 
-Los cambios que afectan autenticación, autorización, datos personales, pagos, secretos, límites de confianza o migraciones requieren revisión reforzada y pruebas negativas pertinentes.
+Changes that affect authentication, authorization, personal data, payments, secrets, trust boundaries or migrations require a reinforced review and the relevant negative tests.
 
-El **análisis estático de seguridad** (SAST, con reglas mapeadas a OWASP y CWE) SHOULD ejecutarse en la CI de cada tarea sobre lo que la tarea cambia:
+**Static application security testing** (SAST, with rules mapped to OWASP and CWE) SHOULD run in each task's CI over what the task changes:
 
-- un hallazgo **nuevo** de severidad alta en el diff falla la tarea: es un hallazgo de la tarea (ciclo `FAIL`);
-- un hallazgo nuevo de severidad menor y los hallazgos **preexistentes** no bloquean la tarea: el orquestador los registra como defectos con severidad (02 §9), y la compuerta de estabilización hace el resto;
-- un falso positivo se suprime en la configuración de la herramienta, con motivo, y como cualquier marcador del guardián exige aprobación humana (05 §10).
+- a **new** high-severity finding in the diff fails the task: it is a finding of the task (a `FAIL` cycle);
+- a new lower-severity finding and **pre-existing** findings do not block the task: the orchestrator records them as defects with a severity (02 §9), and the stabilization gate does the rest;
+- a false positive is suppressed in the tool's configuration, with a reason, and like any guard marker it requires human approval (05 §10).
 
-La comprobación de dependencias con vulnerabilidades conocidas sigue la política del perfil.
+Checking dependencies for known vulnerabilities follows the profile's policy.
 
-Si el proyecto tiene interfaz, un **detector determinista de interfaz** (contraste, legibilidad, desbordes, accesibilidad básica, desviaciones del sistema visual del proyecto) SHOULD ejecutarse en la CI de cada tarea sobre los archivos de interfaz que cambia. Mientras el proyecto no haya decidido qué reglas bloquean, sus hallazgos se anotan en el PR y el orquestador los registra como defectos; después, las reglas que el perfil declare bloqueantes fallan la tarea, igual que el SAST. Las revisiones de diseño de un agente (crítica, puntuaciones de estilo) son hallazgos, no evidencia (00 §7).
+If the project has an interface, a **deterministic UI detector** (contrast, legibility, overflow, basic accessibility, deviations from the project's visual system) SHOULD run in each task's CI over the interface files it changes. While the project has not decided which rules block, its findings are noted in the PR and the orchestrator records them as defects; afterwards, the rules the profile declares blocking fail the task, like SAST. An agent's design reviews (critiques, style scores) are findings, not evidence (00 §7).
 
-## 8. Cobertura y mutation testing
+A CI step that is skipped is not a control. Reading the log of a passing run (§9) is how a step that silently never runs is detected: in aes-todo, the SAST step had been skipped on every run since it was added, because an unset CI variable made its condition false.
 
-La cobertura es una señal, no prueba de calidad. No se debe optimizar el porcentaje a costa de aserciones significativas.
+## 8. Coverage and mutation testing
 
-Mutation testing SHOULD aplicarse a lógica crítica, autorización, cálculos sensibles y áreas donde sea importante saber si las pruebas detectan defectos. Su uso puede ser selectivo por coste.
+Coverage is a signal, not proof of quality. The percentage must not be optimized at the expense of meaningful assertions.
 
-## 9. Evidencia
+Mutation testing SHOULD be applied to critical logic, authorization, sensitive calculations and areas where it matters to know whether the tests detect defects. Its use can be selective because of cost.
 
-Los resultados se registran con comando, estado (`PASS`, `FAIL`, `NOT RUN`, `BLOCKED`), entorno o versión relevante y resumen. No se aceptan pruebas reportadas como ejecutadas sin salida o evidencia verificable.
+## 9. Evidence
 
-La evidencia válida es la salida capturada por la CI o por una herramienta que ejecuta el comando y registra su salida real (por ejemplo, el patrón `exec` de Showboat descrito por Simon Willison). Registrar la salida real, en lugar de lo que el agente esperaba que ocurriera, desincentiva fingir resultados. El texto redactado por un agente sobre lo que ejecutó no es evidencia.
+Results are recorded with the command, status (`PASS`, `FAIL`, `NOT RUN`, `BLOCKED`), the relevant environment or version and a summary. Tests reported as run without output or verifiable evidence are not accepted.
 
-Un check verde no prueba que se ejecutó lo esperado. La CI MUST imprimir qué ejecutó (tipo de rama, elemento, criterios o etiquetas, número de pruebas), y el orquestador y el humano lo confirman en el log antes de dar el gate por superado. En el sandbox de AES, un cierre salió en verde sin ejecutar ni una prueba de su historia.
+Valid evidence is the output captured by CI or by a tool that runs the command and records its real output (for example, the `exec` pattern of Showboat described by Simon Willison). Recording the real output, instead of what the agent expected to happen, discourages faking results. Text written by an agent about what it ran is not evidence.
 
-Las afirmaciones sobre el repositorio se comprueban en su fuente (00 §7).
+A green check does not prove that what was expected ran. CI MUST print what it ran (branch type, item, criteria or tags, number of tests), and the orchestrator and the human confirm it in the log before considering the gate passed. In the AES sandbox, a close went green without running a single test of its story.
 
-## 10. Guardián de CI: superficie de cambio y detector de trampas
+Claims about the repository are checked at their source (00 §7).
 
-La CI MUST incluir un guardián que, como mínimo:
+## 10. CI guard: change surface and cheating detector
 
-1. **rechaza modificaciones a rutas protegidas** (suite de aceptación, especificaciones, CI, configuración de agentes, hooks, `AGENTS.md`/`CLAUDE.md`);
-2. **compara el diff con la superficie de cambio** de la tarea, leída desde la rama protegida;
-3. **rechaza cambios en manifiestos y lockfiles** de dependencias sin aprobación;
-4. **detecta archivos de prueba eliminados**;
-5. **busca marcadores de trampa en las líneas añadidas**:
+CI MUST include a guard that, at least:
 
-| Señal | Ejemplos |
+1. **rejects changes to protected paths** (acceptance suite, specifications, CI, agent configuration, hooks, `AGENTS.md`/`CLAUDE.md`);
+2. **compares the diff with the task's change surface**, read from the protected branch;
+3. **rejects changes to dependency manifests and lockfiles** without approval;
+4. **detects deleted test files**;
+5. **looks for cheating markers in the added lines**:
+
+| Signal | Examples |
 |---|---|
-| Pruebas omitidas | `.skip(`, `xit(`, `xdescribe(`, `@Disabled`, `@Ignore`, `#[ignore]`, `pytest.mark.skip`, `[Fact(Skip=` |
-| Analizadores silenciados | `eslint-disable`, `@ts-ignore`, `@ts-expect-error`, `# type: ignore`, `#pragma warning disable`, `noqa` |
-| Errores tragados | `catch {}` o `catch (e) {}` vacíos, `except: pass` |
+| Skipped tests | `.skip(`, `xit(`, `xdescribe(`, `@Disabled`, `@Ignore`, `#[ignore]`, `pytest.mark.skip`, `[Fact(Skip=` |
+| Silenced analysers | `eslint-disable`, `@ts-ignore`, `@ts-expect-error`, `# type: ignore`, `#pragma warning disable`, `noqa` |
+| Swallowed errors | empty `catch {}` or `catch (e) {}`, `except: pass` |
 
-Una coincidencia no siempre es trampa, pero siempre requiere justificación en el reporte de la tarea y una aprobación explícita de alguien distinto del programador. El perfil añade los patrones propios de su stack.
+A match is not always cheating, but it always requires a justification in the task report and an explicit approval by someone other than the programmer. The profile adds the patterns of its own stack.
 
-Dos precisiones aprendidas en la práctica:
+Two refinements learned in practice:
 
-- **Dependencias** incluye las fuentes de paquetes y las herramientas locales, no solo los manifiestos: cambiar de dónde salen los paquetes es tan sensible como cambiar un paquete (por ejemplo, `nuget.config`, `.npmrc`, `pip.conf`, `global.json`, manifiestos de herramientas).
-- **El código generado** por herramientas (por ejemplo, migraciones) contiene marcadores que nadie escribió a mano. Si el guardián lo excluye de la búsqueda, la exclusión MUST ser estrecha: una ubicación conocida **y** el encabezado de generación, de modo que un encabezado puesto a mano en otro archivo no esconda un marcador. Los archivos excluidos se listan en la salida para el verificador.
+- **Dependencies** include package sources and local tools, not only manifests: changing where packages come from is as sensitive as changing a package (for example, `nuget.config`, `.npmrc`, `pip.conf`, `global.json`, tool manifests).
+- **Code generated** by tools (for example, migrations) contains markers nobody wrote by hand. If the guard excludes it from the search, the exclusion MUST be narrow: a known location **and** the generation header, so that a hand-written header in another file does not hide a marker. Excluded files are listed in the output for the verifier.
 
-La cobertura de los archivos tocados SHOULD compararse con el baseline; una caída se trata igual que un marcador de trampa.
+Coverage of the touched files SHOULD be compared with the baseline; a drop is treated like a cheating marker.
 
-## 11. Prueba manual agéntica
+## 11. Agentic manual testing
 
-Que todas las pruebas pasen no garantiza que el programa arranque o que un elemento de la interfaz sea visible. Para T2 y T3 con interfaz de usuario o API, el verificador MUST arrancar la aplicación y ejercitar los flujos de los criterios con la herramienta adecuada:
+All tests passing does not guarantee that the program starts or that an interface element is visible. For T2 and T3 with a user interface or an API, the verifier MUST start the application and exercise the criteria's flows with the appropriate tool:
 
-- APIs: servidor de desarrollo y peticiones reales (`curl` o equivalente);
-- interfaces web: automatización de navegador (por ejemplo, Playwright) con capturas;
-- CLI y librerías: ejecución real, con scripts temporales fuera del repositorio.
+- APIs: development server and real requests (`curl` or equivalent);
+- web interfaces: browser automation (for example, Playwright) with screenshots;
+- CLIs and libraries: real execution, with temporary scripts outside the repository.
 
-Las salidas y capturas se adjuntan al informe de verificación. Un defecto encontrado así se clasifica (02 §9.3): si es de lo que añade la tarea, es un ciclo `FAIL`; si no, se registra como T1 con severidad y se corrige con RED/GREEN, de modo que quede una comprobación automatizada permanente.
+Outputs and screenshots are attached to the verification report. A defect found this way is classified (02 §9.3): if it belongs to what the task adds, it is a `FAIL` cycle; if not, it is recorded as T1 with a severity and fixed with RED/GREEN, so that a permanent automated check remains.
 
-Reglas adicionales:
+Additional rules:
 
-- **Sin prueba manual no hay `PASS`.** Si el track la exige y el verificador no pudo hacerla, el resultado es `BLOCKED`, no `PASS`: las pruebas automatizadas, aunque pasen, no la sustituyen. En el sandbox de AES, un verificador la omitió porque «la aceptación ya usa servidores reales».
-- La prueba manual usa **datos distintos** de los de las pruebas automatizadas.
-- Los servidores se arrancan y se detienen con una herramienta que **siempre** detiene lo que arrancó y solo eso, sobre datos temporales propios, y que falla si el puerto ya está ocupado en lugar de reutilizar un servidor ajeno (06 §10).
+- **No manual test, no `PASS`.** If the track requires it and the verifier could not do it, the result is `BLOCKED`, not `PASS`: automated tests, even passing, do not replace it. In the AES sandbox, a verifier skipped it because "the acceptance tests already use real servers".
+- Manual testing uses **different data** from the automated tests.
+- Servers are started and stopped with a tool that **always** stops what it started and only that, on its own temporary data, and that fails if the port is already in use instead of reusing someone else's server (06 §10).
+- In a **re-verification** after a `FAIL` cycle, all the automated evidence is re-run, but the manual test covers what the cycle changed plus a short regression pass over the task's main flows.
 
-## 12. Qué ejecuta la CI en cada fase
+## 12. What CI runs in each phase
 
-La CI decide qué pruebas ejecutar según el tipo de rama y la rama destino (`dev` o `main`, 07 §7). El perfil fija los nombres de rama; la intención es esta:
+CI decides which tests to run by branch type and target branch (`dev` or `main`, 07 §7). The profile sets the branch names; the intent is this:
 
-| Fase | Qué ejecuta |
+| Phase | What it runs |
 |---|---|
-| Especificación de un T1 con comando de verificación | El comando, que **debe fallar** (RED), salvo «sin RED» aprobado |
-| Pruebas de aceptación de un elemento (`qa/<ID>`) | Las pruebas del elemento, que **deben ejecutarse y fallar** (RED, §2.2) |
-| Tarea | Guardián + validaciones + los criterios que declara la tarea (o el elemento completo, si es la última) + regresión |
-| Cierre del elemento | El elemento completo, que **debe ejecutarse y pasar**, + regresión |
-| `dev` y `main` | Regresión de todos los elementos cerrados en esa rama |
-| Release (`dev` → `main`) | Regresión completa + compuerta de estabilización + `main` contenido en `dev` (07 §8) |
-| Back-merge (`main` → `dev`) | Regresión completa de `dev` |
+| Specification of a T1 with a verification command | The command, which **must fail** (RED), unless "no RED" was approved |
+| An item's acceptance tests (`qa/<ID>`) | The item's tests, which **must run and fail** (RED, §2.2) |
+| Task | Guard + validations + the criteria the task declares (or the whole item, if it is the last task) + regression |
+| Item close | The whole item, which **must run and pass**, + regression |
+| `dev` and `main` | Regression of every item closed on that branch |
+| Release (`dev` → `main`) | Full regression + stabilization gate + `main` contained in `dev` (07 §8) |
+| Back-merge (`main` → `dev`) | Full regression of `dev` |
 
-Reglas:
+Rules:
 
-- El archivo de criterios de cada tarea se lee de la **rama protegida**, igual que la superficie de cambio.
-- La regresión incluye las pruebas de aceptación **y** los comandos de verificación de todos los elementos cerrados.
-- Un **comando de verificación** es un criterio que no se comprueba con una prueba de aceptación (configuración, herramientas, scripts, build). Es un script versionado en la ruta protegida del elemento, que termina con código 0 si el criterio se cumple. Se trata como una prueba protegida: lo escribe quien escribe las pruebas, lo aprueba el humano y la CI lo ejecuta desde la rama protegida.
-- Entre la integración de la última tarea de un elemento y la de su cierre no se integra nada más en esa rama (`dev`, o `main` en un hotfix): durante ese intervalo la regresión todavía no incluye el elemento.
-- La lista de elementos en regresión es un archivo versionado. Viaja con los releases y los back-merges, así que la regresión de `main` cubre lo liberado y la de `dev`, todo lo integrado.
+- Each task's criteria file is read from the **protected branch**, like the change surface.
+- The regression suite includes the acceptance tests **and** the verification commands of every closed item.
+- A **verification command** is a criterion that is not checked with an acceptance test (configuration, tools, scripts, build). It is a versioned script in the item's protected path that exits with code 0 if the criterion is met. It is treated as a protected test: whoever writes the tests writes it, the human approves it and CI runs it from the protected branch.
+- Between merging an item's last task and merging its close, nothing else is merged into that branch (`dev`, or `main` in a hotfix): during that interval the regression suite does not include the item yet.
+- The list of items in regression is a versioned file. It travels with releases and back-merges, so `main`'s regression covers what was released and `dev`'s, everything integrated.

@@ -1,10 +1,10 @@
 # Agentic Engineering Standard (AES)
 
-**Version:** 1.6.0 · **Status:** in use
+**Version:** 2.0.0 · **Status:** in use
 
 AES is an engineering process for building and maintaining software with AI coding agents **without having to read every line they write to trust the result**. It is harness-agnostic (Claude Code, OpenCode, others), model-agnostic and stack-agnostic, and it ships with a working reference implementation: agent contracts, hooks, CI gates, scripts and a backlog board.
 
-> **Language note.** This README and the [case study](docs/case-study.md) are in English. The normative text (`standard/`), templates, agent contracts and skills are still in Spanish; the full English translation is in progress and will ship as **AES 2.0.0**. Version 1.6.0 stays available in Spanish under the `v1.6.0` tag.
+> **Language.** AES is written in English. A project chooses the language its agents write in (`AES_LANG`: `en` or `es`), and the scripts read backlogs, task files and reports in either. The Spanish edition of AES stays available at the `v1.6.0` tag.
 
 ## The problem
 
@@ -78,7 +78,7 @@ The first item exposed real problems. The diagnosis showed they were **not the c
 
 ## The backlog board
 
-`docs/backlog.md` is the single source of truth. `.claude/scripts/aes-board.mjs` turns it into `.aes/board.html`: one self-contained file, no network or dependencies, regenerated after every `git pull` by a local git hook. It is read-only: the backlog changes through pull requests. Screenshots are from [aes-todo](https://github.com/KeylorBrenes/aes-todo) with its real data (the UI is in Spanish today).
+`docs/backlog.md` is the single source of truth. `.claude/scripts/aes-board.mjs` turns it into `.aes/board.html`: one self-contained file, no network or dependencies, regenerated after every `git pull` by a local git hook. It is read-only: the backlog changes through pull requests. Screenshots are from [aes-todo](https://github.com/KeylorBrenes/aes-todo) with its real data; that project is in Spanish (`AES_LANG=es`), so its board is too. With `AES_LANG=en` the same board is in English.
 
 **What to work on now.** The yellow "Next" sign shows the item to work on and why, plus the exact sentence to give the orchestrator, with a copy button. The side panel shows the stabilization gate and the other items ready to start. Every card stays visible and says whether it is ready, waiting on something specific, held by the gate, in progress or done.
 
@@ -110,7 +110,7 @@ bash aes-new.sh
 
 It asks a few questions, each with a default:
 
-1. **Repository:** confirms the folder, names the repository after it, and makes it public by default.
+1. **Repository:** confirms the folder, names the repository after it, makes it public by default, and asks for the project language (English or Spanish).
 2. **Agent identity:** the agents publish through their GitHub App, or in personal mode with your own `gh` session.
 3. **Where QA, programmer and mechanic run:** Claude Code or OpenCode, and which model.
 4. **Third-party skills:** whether to add them ([archify](https://github.com/tt-a1i/archify), [impeccable](https://github.com/pbakaus/impeccable)).

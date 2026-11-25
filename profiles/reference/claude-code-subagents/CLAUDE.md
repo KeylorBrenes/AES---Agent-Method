@@ -1,43 +1,44 @@
-# [Proyecto] — instrucciones del proyecto
+# [Project] — project instructions
 
-Proyecto gestionado con **AES 1.5.1** (https://github.com/KeylorBrenes/AES---Agent-Method).
+Project managed with **AES 2.0.0** (https://github.com/KeylorBrenes/AES---Agent-Method).
 
-## Al empezar cada sesión
-- **Si no existe `docs/backlog.md`, el proyecto todavía no tiene planeamiento:** antes de cualquier otra cosa, usa la skill `aes-inception` y pregúntale al humano por la idea (por bloques de preguntas concretas). No escribas código ni crees historias sin eso.
-- Si existe, sigue con lo que pida el humano; para avanzar un elemento del backlog, la skill `aes-cycle`.
+## At the start of each session
+- **If `docs/backlog.md` does not exist, the project has no planning yet:** before anything else, use the `aes-inception` skill and ask the human for the idea (in blocks of concrete questions). Do not write code or create stories without it.
+- If it exists, continue with what the human asks; to advance a backlog item, the `aes-cycle` skill.
+- Project language: `AES_LANG` in `.claude/aes.env`. Everything you and the roles write (stories, plans, reports, backlog, messages to the human) is in that language.
 
-## Ramas
-- `main`: lo liberado. `dev`: lo integrado y la base de todo el trabajo. A `main` solo llegan releases (`dev → main`) y hotfixes de defectos (`BUG-NNN`), y después de cada uno se hace un back-merge `main → dev` (merge commit).
-- El checkout principal se queda en `dev`; cada rol trabaja en su propio worktree (`.claude/scripts/aes-wt.sh`).
+## Branches
+- `main`: what is released. `dev`: what is integrated and the base of all work. Only releases (`dev → main`) and defect hotfixes (`BUG-NNN`) reach `main`, and after each one a back-merge `main → dev` is done (merge commit).
+- The main checkout stays on `dev`; each role works in its own worktree (`.claude/scripts/aes-wt.sh`).
 
 ## Roles
-- La **sesión principal** es el orquestador AES, en el modelo más capaz disponible (es el diseñador senior): para avanzar un elemento del backlog, usa la skill `aes-cycle`. Un elemento por sesión.
-- Los roles `qa`, `programmer`, `mechanic` y `verifier` siguen su propio contrato en `.claude/agents/`. Corren como subagentes de Claude Code o en OpenCode, según `AES_BIND_*` en `.claude/aes.env` (los de OpenCode se delegan con `.claude/scripts/aes-oc.sh`).
-- Skills del núcleo de AES en `.claude/skills/`: `aes-inception` (orquestador, al empezar el proyecto o ante una idea que no cabe en el backlog), `aes-cycle` (orquestador), `aes-design-note` (orquestador), `aes-debugging` y `aes-security-review` (programador). Las de terceros están en `docs/aes/skills.lock`; si está impeccable, la interfaz sigue `DESIGN.md`, y cambiar la dirección visual es una decisión del humano. Ninguna skill de flujo de terceros (planes, ejecución, cierre de ramas) se instala junto a ellas.
-- Hooks en `.claude/hooks/` restringen qué escribe cada rol. Si uno te bloquea, no lo rodees ni se lo pidas a otro agente: reporta BLOCKED para el humano.
+- The **main session** is the AES orchestrator, on the most capable model available (it is the senior designer): to advance a backlog item, use the `aes-cycle` skill. One item per session.
+- The `qa`, `programmer`, `mechanic` and `verifier` roles follow their own contract in `.claude/agents/`. They run as Claude Code subagents or in OpenCode, according to `AES_BIND_*` in `.claude/aes.env` (the OpenCode ones are delegated with `.claude/scripts/aes-oc.sh`).
+- AES core skills in `.claude/skills/`: `aes-inception` (orchestrator, when starting the project or on an idea that does not fit in the backlog), `aes-cycle` (orchestrator), `aes-design-note` (orchestrator), `aes-debugging` and `aes-security-review` (programmer). Third-party ones are in `docs/aes/skills.lock`; if impeccable is there, the interface follows `DESIGN.md`, and changing the visual direction is the human's decision. No third-party workflow skill (plans, execution, closing branches) is installed alongside them.
+- Hooks in `.claude/hooks/` restrict what each role writes. If one blocks you, do not get around it or ask another agent: report BLOCKED for the human.
 
-## Estructura
-- `src/`: [aplicación]. `tests/[unitarias]/`: pruebas técnicas (programador).
-- `tests/acceptance/`: pruebas de aceptación (**solo QA**).
-- `specs/<ID>/<ID>.md`: la historia, en lenguaje de cliente; se conserva. `specs/<ID>/plan.md`, `TASK-*`, `acceptance-test-plan.md`: el plan técnico, que se elimina en el cierre. `*.verify`: comandos de verificación, se conservan (**orquestador, QA y humano**).
-- `docs/backlog.md`: única fuente del backlog; el tablero `.aes/board.html` se genera desde ahí, solo, tras cada `git pull` (hook local; a mano: `node .claude/scripts/aes-board.mjs`).
-- `docs/`: brief, arquitectura, ADRs, catálogo de diseño, perfil, backlog (con severidad de defectos), hallazgos, `docs/aes/` (DoR/DoD).
+## Structure
+- `src/`: [application]. `tests/[unit]/`: technical tests (programmer).
+- `tests/acceptance/`: acceptance tests (**QA only**).
+- `specs/<ID>/<ID>.md`: the story, in the customer's language; it is kept. `specs/<ID>/plan.md`, `TASK-*`, `acceptance-test-plan.md`: the technical plan, deleted at close. `*.verify`: verification commands, kept (**orchestrator, QA and human**).
+- `docs/backlog.md`: the single source of the backlog; the board `.aes/board.html` is generated from it, by itself, after each `git pull` (local hook; by hand: `node .claude/scripts/aes-board.mjs`).
+- `docs/`: brief, architecture, ADRs, design catalogue, profile, backlog (with defect severity), findings, `docs/aes/` (DoR/DoD).
 
-## Comandos
-- Validaciones: `bash ci/validate.sh`
-- Aceptación de un elemento: `npm --prefix tests/acceptance test -- --grep "@US-001(?![\w-])"`
-- Guardián: `BASE_REF=origin/dev TASK_SCOPE_FILE=specs/<ID>/<TASK>.scope bash ci/aes-guard.sh`
-- Compuerta de estabilización: `BASE=origin/dev bash ci/defect-gate.sh start <ID>`
-- Servidores para pruebas manuales: `bash .claude/scripts/with-servers.sh [--web] -- <comando>`
+## Commands
+- Validations: `bash ci/validate.sh`
+- Acceptance of an item: `npm --prefix tests/acceptance test -- --grep "@US-001(?![\w-])"`
+- Guard: `BASE_REF=origin/dev TASK_SCOPE_FILE=specs/<ID>/<TASK>.scope bash ci/aes-guard.sh`
+- Stabilization gate: `BASE=origin/dev bash ci/defect-gate.sh start <ID>`
+- Servers for manual tests: `bash .claude/scripts/with-servers.sh [--web] -- <command>`
 
-## Rutas protegidas
+## Protected paths
 `tests/acceptance/`, `specs/`, `ci/`, `.github/`, `.claude/`, `.opencode/`, `docs/ci/`, `opencode.json`, `CLAUDE.md`.
 
-## Convenciones que el linter no detecta
-- [Una línea por convención real del proyecto: formato de fechas y montos en la API, errores, patrones prohibidos.]
-- Commits: `struct:` (sin cambio de comportamiento) o `feat:` / `fix:` / `test:` / `docs:` / `chore:`. Nunca se mezclan.
-- Historias atómicas y verticales, con título «Como… quiero… para…»; nada de código provisional ni «refactorizar después».
-- Pruebas de aceptación: etiqueta del elemento y del criterio (`{ tag: ['@US-001', '@US-001-AC-03'] }`) y el ID del criterio al inicio del título.
+## Conventions the linter does not catch
+- [One line per real project convention: date and amount formats in the API, errors, forbidden patterns.]
+- Commits: `struct:` (no behaviour change) or `feat:` / `fix:` / `test:` / `docs:` / `chore:`. Never mixed.
+- Atomic, vertical stories, with the title "As a… I want… so that…"; no provisional code and no "refactor later".
+- Acceptance tests: the item's and the criterion's tag (`{ tag: ['@US-001', '@US-001-AC-03'] }`) and the criterion ID at the start of the title.
 
-## Fallos observados
-[Una entrada por cada error real que valga la pena registrar (AES 09). Empieza vacío.]
+## Observed failures
+[One entry per real mistake worth recording (AES 09). Starts empty.]

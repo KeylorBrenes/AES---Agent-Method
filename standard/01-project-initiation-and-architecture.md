@@ -1,127 +1,128 @@
-# 01 — Inicio del proyecto y arquitectura
+# 01 — Project initiation and architecture
 
-## 1. Objetivo
+## 1. Goal
 
-Establecer una comprensión compartida del producto y una arquitectura suficiente para guiar los incrementos sin diseñar prematuramente todos sus detalles.
+Establish a shared understanding of the product and an architecture good enough to guide the increments, without designing every detail prematurely.
 
-## 2. Incepción: de la idea al backlog
+## 2. Inception: from idea to backlog
 
-Antes de escribir código, el responsable del producto y el orquestador **conversan en lenguaje natural** hasta que la idea es lo bastante clara para planificar. La incepción produce la visión, el backlog completo pero superficial, la arquitectura inicial y el stack. No produce criterios detallados, diseño de tareas ni código: eso llega cuando le toca a cada historia (02 §7).
+Before writing code, the product owner and the orchestrator **talk in natural language** until the idea is clear enough to plan. Inception produces the vision, the complete but shallow backlog, the initial architecture and the stack. It does not produce detailed criteria, task design or code: that comes when each story's turn comes (02 §7).
 
-La conduce el orquestador, en el modelo más capaz disponible (06 §11): de esta conversación salen el corte de las historias y las decisiones de arquitectura, que todo lo demás hereda.
+The orchestrator leads it, on the most capable model available (06 §11): this conversation produces the story split and the architecture decisions that everything else inherits.
 
-### 2.1 La entrevista
+### 2.1 The interview
 
-El orquestador pregunta **por temas, en bloques cortos de preguntas concretas**:
+The orchestrator asks **by topic, in short blocks of concrete questions**:
 
-| Tema | Qué tiene que quedar claro |
+| Topic | What must become clear |
 |---|---|
-| Problema y usuarios | Quién usa el producto, qué hace hoy sin él y qué le duele |
-| Lo que el usuario hace | Las acciones principales, de principio a fin (serán los Epics del mapa de historias) |
-| Datos y reglas | Qué se guarda, qué reglas lo limitan, qué pasa en los casos raros |
-| Restricciones | Privacidad, acceso, dispositivos, idioma, plazos, presupuesto, integraciones |
-| Stack y operación | Preferencias o restricciones tecnológicas, dónde corre, quién lo mantiene |
-| Primer release | Qué es lo mínimo que ya sirve, y qué puede esperar |
-| Interfaz (si la hay) | Tono de los textos, accesibilidad, marca y recursos que ya existen, restricciones visuales que no se discuten |
+| Problem and users | Who uses the product, what they do today without it and what hurts |
+| What the user does | The main actions, from start to finish (they will be the Epics of the story map) |
+| Data and rules | What is stored, which rules constrain it, what happens in the odd cases |
+| Constraints | Privacy, access, devices, language, deadlines, budget, integrations |
+| Stack and operation | Technology preferences or constraints, where it runs, who maintains it |
+| First release | What is the minimum that is already useful, and what can wait |
+| Interface (if any) | Tone of the copy, accessibility, existing brand and assets, non-negotiable visual constraints |
 
-Reglas de las preguntas:
+Rules for the questions:
 
-- **Un bloque es un tema**, con 2 a 5 preguntas. No se mezclan temas, y no se manda la entrevista entera de una vez.
-- **Cada pregunta es concreta y se responde en una o dos frases.** Cuando hay opciones razonables, el orquestador las propone con su recomendación, y el responsable elige o corrige. «¿Qué más necesitas?» o «¿Cómo te imaginas la app?» no son preguntas de AES: obligan al responsable a hacer el trabajo del orquestador.
-- **Se pregunta por comportamiento, no por tecnología**, salvo en el bloque de stack. «¿Una tarea puede tener fecha límite?», no «¿Guardamos un `DateOnly` nullable?».
-- **Cada bloque parte de las respuestas anteriores.** Antes del siguiente, el orquestador resume en tres o cuatro líneas lo que entendió, para que el responsable corrija a tiempo.
-- **Lo que el responsable no sabe no se inventa:** queda «por definir» en el brief (supuesto o incertidumbre, con cómo se resolverá), o se convierte en un Spike (§7).
+- **One block is one topic**, with 2 to 5 questions. Topics are not mixed, and the whole interview is not sent at once.
+- **Each question is concrete and is answered in one or two sentences.** When there are reasonable options, the orchestrator proposes them with its recommendation, and the owner chooses or corrects. "What else do you need?" or "How do you imagine the app?" are not AES questions: they make the owner do the orchestrator's job.
+- **Ask about behaviour, not technology**, except in the stack block. "Can a task have a due date?", not "Do we store a nullable `DateOnly`?".
+- **Each block builds on the previous answers.** Before the next one, the orchestrator summarizes in three or four lines what it understood, so the owner can correct it in time.
+- **What the owner does not know is not invented:** it stays "to be defined" in the brief (an assumption or uncertainty, with how it will be resolved), or it becomes a Spike (§7).
 
-### 2.2 Cuándo parar
+### 2.2 When to stop
 
-La entrevista termina cuando:
+The interview ends when:
 
-1. cada acción principal del usuario tiene historias con título en formato (02 §3), una línea de valor, `Requiere:` y una estimación aproximada;
-2. el primer release está delimitado: qué historias entran y qué resultado observable da;
-3. hay datos suficientes para elegir el stack y describir la arquitectura del esqueleto que camina;
-4. lo que falta está nombrado como «por definir» o como Spike, con quién y cuándo lo resolverá.
+1. each main user action has stories with a title in the standard format (02 §3), a value line, `Depends on:` and a rough estimate;
+2. the first release is bounded: which stories go in and what observable result it gives;
+3. there is enough information to choose the stack and describe the architecture of the walking skeleton;
+4. what is missing is named as "to be defined" or as a Spike, with who will resolve it and when.
 
-No se sigue preguntando para completar el detalle de historias lejanas. Ese detalle se pregunta en el refinamiento de cada historia, cuando lo que enseñaron las anteriores ya está a la vista.
+Questions do not continue in order to complete the detail of distant stories. That detail is asked during each story's refinement, when what the previous ones taught is already visible.
 
-### 2.3 Lo que produce
+### 2.3 What it produces
 
-1. **Project Brief:** problema, usuarios, objetivos, alcance, fuera de alcance, restricciones, supuestos e incertidumbres, riesgos, y los releases previstos.
-2. **Backlog inicial, completo pero superficial** (02 §7, §11): todas las historias que se conocen para llegar al producto, agrupadas por Epic y asignadas a un release. Las historias pasan el control de atomicidad (02 §3.1) desde el principio: dividir en la incepción es barato, dividir a media implementación no.
-3. **Architecture Overview** (§3) del esqueleto y las primeras historias, con un diagrama de componentes. El texto es la fuente; el diagrama es una vista y se regenera desde él.
-4. **ADR del stack** (§4): opciones consideradas y por qué se elige una.
-5. **Project Profile:** stack, entorno, comandos, convenciones, controles de calidad, agentes, permisos, skills y herramientas.
-6. **Quality Strategy:** niveles de prueba, CI y controles aplicables.
-7. **Dirección visual** (si hay interfaz): el sistema visual del producto (colores, tipografía, componentes, tono), elegido por el responsable humano entre opciones concretas, como el stack. El agente propone y el humano elige; el agente no la decide a partir de lo que le contestaron. EN-001 monta la interfaz ya con ella.
-8. **EN-001, el esqueleto que camina** (02 §3.2), primero en el backlog: la aplicación arrancando de punta a punta, con la CI en verde, sobre la que crecen las historias.
-9. **Copia local de las reglas que los agentes consultan:** como mínimo, las checklists de DoR y DoD (08) dentro del repositorio (por ejemplo, `docs/aes/`), con la versión de AES de la que salen. Un agente que solo tiene la referencia «AES 08» revisa la DoR de memoria.
+1. **Project brief:** problem, users, goals, scope, out of scope, constraints, assumptions and uncertainties, risks, and the planned releases.
+2. **Initial backlog, complete but shallow** (02 §7, §11): every known story needed to reach the product, grouped by Epic and assigned to a release. Stories pass the atomicity check (02 §3.1) from the start: splitting during inception is cheap, splitting halfway through implementation is not.
+3. **Architecture overview** (§3) of the skeleton and the first stories, with a component diagram. The text is the source; the diagram is a view and is regenerated from it.
+4. **Stack ADR** (§4): options considered and why one is chosen.
+5. **Project profile:** stack, environment, commands, conventions, quality controls, agents, permissions, skills, tools and the project language (`AES_LANG`).
+6. **Quality strategy:** test levels, CI and applicable controls.
+7. **Visual direction** (if there is an interface): the product's visual system (colours, typography, components, tone), chosen by the human owner among concrete options, like the stack. The agent proposes and the human chooses; the agent does not decide it from the answers it got. EN-001 builds the interface with it already in place.
+8. **EN-001, the walking skeleton** (02 §3.2), first in the backlog: the application running end to end, with CI green, on which the stories grow.
+9. **A local copy of the rules the agents consult:** at least the DoR and DoD checklists (08) inside the repository (for example, `docs/aes/`), with the AES version they come from. An agent that only has the reference "AES 08" reviews the DoR from memory.
+10. **The environment check** for the chosen stack (`AES_DOCTOR_CHECKS`), run before EN-001, so everything missing on the machine is requested in one round.
 
-### 2.4 Aprobación y revisión
+### 2.4 Approval and review
 
-Todo lo anterior entra en **un PR de incepción**, que aprueba el responsable humano. Hasta entonces, nada de lo producido es un compromiso; después, cambiarlo es normal y entra por PR como cualquier otro cambio del backlog.
+All of the above goes into **one inception PR**, approved by the human owner. Until then, nothing produced is a commitment; afterwards, changing it is normal and goes through a PR like any other backlog change.
 
-Cuando aparece una idea nueva que no cabe en el backlog (un Epic nuevo, un cambio de usuario o de alcance), el orquestador hace una **mini-incepción**: solo los bloques afectados, con las mismas reglas, y un PR que actualiza el brief, el backlog y, si hace falta, la arquitectura. Una historia nueva dentro de un Epic existente no necesita mini-incepción: se añade al backlog.
+When a new idea appears that does not fit the backlog (a new Epic, a change of users or scope), the orchestrator runs a **mini-inception**: only the affected blocks, with the same rules, and a PR that updates the brief, the backlog and, if needed, the architecture. A new story inside an existing Epic does not need a mini-inception: it is added to the backlog.
 
-### 2.5 Proyecto existente
+### 2.5 Existing project
 
-Si se trabaja sobre un proyecto existente, primero se inspecciona el repositorio y el comportamiento actual, y la entrevista empieza por lo que el código no dice (para qué es, quién lo usa, qué falta). No se asume que la documentación está actualizada ni que la arquitectura deseada coincide con la implementada.
+When working on an existing project, the repository and the current behaviour are inspected first, and the interview starts with what the code does not say (what it is for, who uses it, what is missing). It is not assumed that the documentation is up to date or that the desired architecture matches the implemented one.
 
-## 3. Contenido mínimo de arquitectura
+## 3. Minimum architecture content
 
-El documento de arquitectura DEBERÍA cubrir, en proporción al proyecto:
+The architecture document SHOULD cover, in proportion to the project:
 
-- propósito, límites del sistema y actores externos;
-- componentes/módulos y responsabilidades;
-- dependencias y dirección de dependencias;
-- stack tecnológico y versiones relevantes;
-- persistencia, entidades principales y propiedad de los datos;
-- autenticación, autorización y límites de confianza;
-- integraciones y contratos externos;
-- despliegue, configuración y observabilidad, si aplican;
-- restricciones no funcionales relevantes: rendimiento, disponibilidad, privacidad, accesibilidad, mantenibilidad y seguridad.
+- purpose, system boundaries and external actors;
+- components/modules and responsibilities;
+- dependencies and their direction;
+- technology stack and relevant versions;
+- persistence, main entities and data ownership;
+- authentication, authorization and trust boundaries;
+- integrations and external contracts;
+- deployment, configuration and observability, where they apply;
+- relevant non-functional constraints: performance, availability, privacy, accessibility, maintainability and security.
 
-No se exige definir clases, funciones, tablas o endpoints que todavía no se necesitan. El diseño detallado de una historia se realiza durante su refinamiento.
+Defining classes, functions, tables or endpoints that are not needed yet is not required. The detailed design of a story is done during its refinement.
 
-## 4. Decisiones de arquitectura (ADR)
+## 4. Architecture decisions (ADR)
 
-Se DEBERÍA crear un ADR para decisiones con impacto material, difícil reversión o efecto transversal, por ejemplo:
+An ADR SHOULD be created for decisions with material impact, hard reversal or cross-cutting effect, for example:
 
-- selección o sustitución de tecnología fundamental;
-- límites entre módulos o servicios;
-- estrategia de persistencia o migración de datos;
-- autenticación/autorización;
-- contratos de integración importantes;
-- decisiones de escalabilidad, seguridad o despliegue;
-- **convenciones que aplican a más de una historia**: cómo se valida, cómo se muestran los errores, qué control de UI se usa para cada tipo de dato, formato de fechas y montos. Si una convención se decide dentro de una historia y vale para las siguientes, sube a un ADR; si no, la siguiente historia vuelve a preguntarla, o la fija sin firma el primer agente que escribe una prueba.
+- choosing or replacing a fundamental technology;
+- boundaries between modules or services;
+- persistence or data-migration strategy;
+- authentication/authorization;
+- important integration contracts;
+- scalability, security or deployment decisions;
+- **conventions that apply to more than one story**: how input is validated, how errors are shown, which UI control is used for each data type, date and amount formats. If a convention is decided inside a story and applies to the next ones, it moves up to an ADR; otherwise the next story asks again, or the first agent that writes a test fixes it without anyone signing it.
 
-Un ADR debe resumir contexto, decisión, alternativas consideradas, consecuencias, riesgos, estado y fecha. No se crean ADRs para elecciones locales triviales.
+An ADR must summarize context, decision, alternatives considered, consequences, risks, status and date. ADRs are not created for trivial local choices.
 
-Los ADRs aceptados se consideran historial de decisiones. Si una decisión cambia, se crea un ADR que la sustituye; no se reescribe el pasado para ocultar el cambio.
+Accepted ADRs are the decision history. If a decision changes, a new ADR supersedes it; the past is not rewritten to hide the change.
 
-## 5. Evolución arquitectónica
+## 5. Architectural evolution
 
-La arquitectura es evolutiva. Antes de implementar una historia, el arquitecto/orquestador DEBE identificar si el cambio:
+Architecture is evolutionary. Before implementing a story, the architect/orchestrator MUST identify whether the change:
 
-- cabe dentro de los límites existentes;
-- cambia un contrato o dependencia;
-- introduce una tecnología o dependencia nueva;
-- afecta seguridad, datos, rendimiento o despliegue;
-- requiere una decisión humana.
+- fits within the existing boundaries;
+- changes a contract or a dependency;
+- introduces a new technology or dependency;
+- affects security, data, performance or deployment;
+- requires a human decision.
 
-Los cambios locales y reversibles pueden documentarse en la tarea o en el historial del cambio. Los cambios transversales requieren ADR y aprobación según el perfil del proyecto.
+Local, reversible changes can be documented in the task or in the change history. Cross-cutting changes require an ADR and approval according to the project profile.
 
-## 6. Regla contra la sobreingeniería
+## 6. Rule against over-engineering
 
-Un agente NO DEBE crear una abstracción, capa, servicio, microservicio, sistema genérico, framework interno, mecanismo de configuración o dependencia «por si acaso».
+An agent MUST NOT create an abstraction, layer, service, microservice, generic system, internal framework, configuration mechanism or dependency "just in case".
 
-Antes de proponerlo, debe demostrar:
+Before proposing one, it must show:
 
-1. qué requisito actual lo necesita;
-2. por qué la solución existente no basta;
-3. qué alternativas más simples se consideraron;
-4. qué coste de mantenimiento introduce.
+1. which current requirement needs it;
+2. why the existing solution is not enough;
+3. which simpler alternatives were considered;
+4. what maintenance cost it introduces.
 
-La opción por defecto es la solución más simple que satisface los requisitos aprobados y mantiene los límites arquitectónicos.
+The default option is the simplest solution that satisfies the approved requirements and keeps the architectural boundaries.
 
-## 7. Investigación y spikes
+## 7. Research and spikes
 
-Cuando existe incertidumbre técnica material, se puede crear un `Spike` de investigación. Un Spike tiene pregunta, límite de tiempo/esfuerzo establecido por el proyecto, método de evaluación y resultado esperado (decisión, prototipo desechable o evidencia). No se debe convertir automáticamente un Spike en implementación de producción.
+When there is material technical uncertainty, a research `Spike` can be created. A Spike has a question, a time/effort limit set by the project, an evaluation method and an expected result (a decision, a throwaway prototype or evidence). A Spike must not automatically become production implementation.
