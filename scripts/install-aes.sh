@@ -144,6 +144,12 @@ for line in .aes/ .claude/settings.local.json .claude/worktrees/; do
   grep -qxF "$line" "$target/.gitignore" || printf '%s\n' "$line" >> "$target/.gitignore"
 done
 
+# Tablero del backlog al día tras cada pull (hook local de git; no se versiona). Sin node, se omite.
+if git -C "$target" rev-parse --git-dir >/dev/null 2>&1 && command -v node >/dev/null; then
+  (cd "$target" && node .claude/scripts/aes-board.mjs --install-hook >/dev/null 2>&1) \
+    || echo "  Aviso: no pude instalar el hook del tablero (node .claude/scripts/aes-board.mjs --install-hook)." >&2
+fi
+
 # Scripts con LF en cualquier sistema: bash no acepta CRLF, y Windows con core.autocrlf lo pondría.
 touch "$target/.gitattributes"
 for line in '*.sh text eol=lf' '*.mjs text eol=lf'; do

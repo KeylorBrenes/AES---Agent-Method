@@ -1,4 +1,4 @@
-# Agentic Engineering Standard — AES Core 1.5.0
+# Agentic Engineering Standard — AES Core 1.5.1
 
 <!-- Archivo generado por scripts/build-core.sh a partir de standard/. No editar a mano. -->
 
