@@ -1,5 +1,4 @@
-# Valida el propio repositorio de AES: documento consolidado al día y scripts sin errores.
-# Versión 1.3.0. Para activarla, cópiala a .github/workflows/validate.yml (requiere tu cuenta).
+# Validates the AES repository itself: the consolidated document up to date and scripts without errors.
 name: validate
 
 on:
@@ -15,18 +14,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - name: AES-CORE.md al día
+      - name: AES-CORE.md up to date
         run: ./scripts/build-core.sh --check
-      - name: Skills de la referencia sincronizadas con skills/
+      - name: The reference's skills in sync with skills/
         run: ./scripts/sync-skills.sh --check
-      - name: Sintaxis de scripts
+      - name: Script syntax
         run: |
           shopt -s nullglob
           for f in scripts/*.sh profiles/reference/*/ci/*.sh profiles/reference/*/.claude/hooks/*.sh profiles/reference/*/.claude/scripts/*.sh; do
             bash -n "$f" || exit 1
             echo "ok $f"
           done
-          for f in profiles/reference/*/ci/*.mjs; do
+          for f in profiles/reference/*/ci/*.mjs profiles/reference/*/.claude/scripts/*.mjs profiles/reference/*/.opencode/plugin/*.js; do
             node --check "$f" || exit 1
             echo "ok $f"
           done
@@ -34,7 +33,7 @@ jobs:
         run: |
           shopt -s nullglob
           shellcheck scripts/*.sh profiles/reference/*/ci/*.sh profiles/reference/*/.claude/hooks/*.sh profiles/reference/*/.claude/scripts/*.sh
-      - name: JSON y YAML válidos
+      - name: Valid JSON and YAML
         run: |
           shopt -s nullglob
           for f in profiles/reference/*/opencode.json profiles/reference/*/.claude/*.json; do
