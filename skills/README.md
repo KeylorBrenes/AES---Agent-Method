@@ -1,35 +1,37 @@
-# Skills del núcleo de AES
+# AES core skills
 
-Skills propias de AES, escritas para sus gates, contratos y roles (`standard/06` §6.2), en el formato abierto de [Agent Skills](https://agentskills.io) (`SKILL.md` con `name` y `description`). No son obligatorias: un proyecto puede usar otras equivalentes si cumplen las reglas de 06 §6.2.
+AES's own skills, written for its gates, contracts and roles (`standard/06` §6.2), in the open [Agent Skills](https://agentskills.io) format (`SKILL.md` with `name` and `description`). They are not mandatory: a project can use other equivalent ones if they meet the rules of 06 §6.2.
 
-| Skill | Tipo | Rol | Cuándo |
+| Skill | Type | Role | When |
 |---|---|---|---|
-| [`aes-debugging`](aes-debugging/SKILL.md) | Técnica | Programador, mecánico; orquestador al clasificar | Ante cualquier fallo antes de arreglar: ciclo FAIL, defecto, prueba inestable |
-| [`aes-security-review`](aes-security-review/SKILL.md) | Herramienta | Programador; orquestador al clasificar | Antes de entregar una tarea sensible, ante un hallazgo de SAST en la CI |
-| [`aes-inception`](aes-inception/SKILL.md) | Técnica | Orquestador | Al empezar un proyecto (no hay backlog) o ante una idea que no cabe en el backlog (mini-incepción) |
-| [`aes-design-note`](aes-design-note/SKILL.md) | Técnica | Orquestador | Al dividir una historia en tareas; ante una pregunta de diseño |
+| [`aes-debugging`](aes-debugging/SKILL.md) | Technique | Programmer, mechanic; orchestrator when classifying | On any failure, before fixing: FAIL cycle, defect, flaky test |
+| [`aes-security-review`](aes-security-review/SKILL.md) | Tool | Programmer; orchestrator when classifying | Before delivering a sensitive task, on a SAST finding in CI |
+| [`aes-inception`](aes-inception/SKILL.md) | Technique | Orchestrator | When starting a project (no backlog) or on an idea that does not fit in the backlog (mini-inception) |
+| [`aes-design-note`](aes-design-note/SKILL.md) | Technique | Orchestrator | When splitting a story into tasks; on a design question |
 
-El flujo del ciclo no está aquí: es la skill del orquestador de cada implementación de referencia (por ejemplo, `profiles/reference/claude-code-subagents/.claude/skills/aes-cycle/`), porque depende del harness.
+The cycle's flow is not here: it is the orchestrator's skill of each reference implementation (for example, `profiles/reference/claude-code-subagents/.claude/skills/aes-cycle/`), because it depends on the harness.
 
-## Uso en un proyecto
+The skills are written in English; the artifacts they produce follow the project's language (`AES_LANG` in `.claude/aes.env`).
 
-El instalador las copia con todo lo demás, en la versión fija de AES de la que lo ejecutas:
+## Use in a project
+
+The installer copies them with everything else, at the fixed AES version you run it from:
 
 ```bash
-./scripts/install-aes.sh /ruta/al/proyecto
+./scripts/install-aes.sh /path/to/project
 ```
 
-Después, regístralas en el perfil del proyecto (origen, versión, quién las revisó, qué roles las usan). No las enlaces a una rama que cambie: una skill que cambia sola cambia las instrucciones de los agentes sin aprobación.
+Then register them in the project profile (origin, version, who reviewed them, which roles use them). Do not link them to a branch that changes: a skill that changes by itself changes the agents' instructions without approval.
 
-## Skills de terceros recomendadas
+## Recommended third-party skills
 
-No son parte de AES y no viajan en este repositorio. Si el proyecto las usa, el instalador las copia desde una carpeta local en la versión que tengas (`--vendor <carpeta>`) y anota su versión en `docs/aes/skills.lock`.
+They are not part of AES and do not travel in this repository. If the project uses them, the installer copies them from a local folder at the version you have (`--vendor <folder>`) and records their version in `docs/aes/skills.lock`.
 
-| Skill | Tipo | Licencia | Para qué en AES | Ajuste obligatorio |
+| Skill | Type | License | What for in AES | Mandatory adjustment |
 |---|---|---|---|---|
-| [impeccable](https://github.com/pbakaus/impeccable) | Técnica + herramienta | Apache-2.0 (se copian `LICENSE` y `NOTICE.md`) | Diseño de interfaz: contexto de producto (`PRODUCT.md`) y dirección visual (`DESIGN.md`) en la incepción, `shape` en el refinamiento de historias con interfaz, construcción y pulido por el programador dentro de la superficie, `audit` del verificador y el detector determinista en la CI | Telemetría, aviso de actualizaciones y hook por edición desactivados (`.impeccable/config.json` y variables en `settings.json`). Su catálogo de direcciones visuales no se puede desactivar: solo en la incepción, con el humano presente. Su motor se descarga en versión fija verificada por huella. Comandos por rol: ver los contratos de la referencia |
-| [archify](https://github.com/tt-a1i/archify) | Herramienta | MIT | Diagramas HTML validados desde JSON (arquitectura, flujo, secuencia, flujo de datos, ciclo de vida): el diagrama de componentes de la incepción, notas de diseño con flujo, ciclos de vida de una entidad | Desactivar su aviso de actualizaciones (`ARCHIFY_UPDATE_CHECK_DISABLED=1`, 06 §6.2). Se versiona el JSON; el HTML se genera en `.aes/` |
+| [impeccable](https://github.com/pbakaus/impeccable) | Technique + tool | Apache-2.0 (`LICENSE` and `NOTICE.md` are copied) | Interface design: product context (`PRODUCT.md`) and visual direction (`DESIGN.md`) at inception, `shape` when refining stories with an interface, building and polishing by the programmer inside the surface, the verifier's `audit` and the deterministic detector in CI | Telemetry, update notice and per-edit hook turned off (`.impeccable/config.json` and variables in `settings.json`). Its catalogue of visual directions cannot be turned off: only at inception, with the human present. Its engine is downloaded at a fixed version verified by checksum. Commands per role: see the reference's contracts |
+| [archify](https://github.com/tt-a1i/archify) | Tool | MIT | Validated HTML diagrams from JSON (architecture, workflow, sequence, data flow, lifecycle): the inception's component diagram, design notes with a flow, an entity's lifecycle | Turn off its update notice (`ARCHIFY_UPDATE_CHECK_DISABLED=1`, 06 §6.2). The JSON is versioned; the HTML is generated in `.aes/` |
 
-## Atribución
+## Attribution
 
-`aes-debugging` toma como referencia `systematic-debugging` de [obra/superpowers](https://github.com/obra/superpowers) (licencia MIT).
+`aes-debugging` takes `systematic-debugging` from [obra/superpowers](https://github.com/obra/superpowers) (MIT license) as its reference.
