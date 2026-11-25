@@ -1,33 +1,35 @@
 #!/usr/bin/env node
-// AES 1.6.0 — Vistas del backlog (standard/02 §11).
+// AES — Backlog views (standard/02 §11).
 //
-// El backlog vive en un archivo (docs/backlog.md) y es la única fuente de verdad. Este script
-// genera vistas en una sola dirección:
-//   - un tablero HTML autocontenido (sin ningún servicio), por defecto en .aes/board.html, a partir de
-//     la plantilla aes-board.html: letrero «Siguiente» (qué trabajar y la frase para el orquestador),
-//     compuerta de estabilización, todas las tarjetas con su estado de dependencias, detalle con la
-//     ruta de requisitos, releases, métricas (docs/harness-findings.md y .aes/costs.csv) y una guía;
-//   - JSON (--json), para que un adaptador lo publique en GitHub Projects, Trello, GitLab…
+// The backlog lives in a file (docs/backlog.md) and is the single source of truth. This script
+// generates views in one direction only:
+//   - a self-contained HTML board (no service at all), in .aes/board.html by default, from
+//     the aes-board.html template: a "Next" sign (what to work on and the phrase for the orchestrator),
+//     the stabilization gate, every card with its dependency status, a detail view with the
+//     path of requirements, releases, metrics (docs/harness-findings.md and .aes/costs.csv) and a guide;
+//   - JSON (--json), so that an adapter can publish it to GitHub Projects, Trello, GitLab…
 //
-// Uso: node .claude/scripts/aes-board.mjs [docs/backlog.md] [--json] [--out <archivo>]
-//      node .claude/scripts/aes-board.mjs --install-hook   regenera el tablero solo tras cada pull
-//      node .claude/scripts/aes-board.mjs --check-hook     ¿está instalado? (sale con 1 si no)
+// Usage: node .claude/scripts/aes-board.mjs [docs/backlog.md] [--json] [--out <file>]
+//        node .claude/scripts/aes-board.mjs --install-hook   regenerates the board by itself after each pull
+//        node .claude/scripts/aes-board.mjs --check-hook     is it installed? (exits with 1 if not)
 //
-// El hook (post-merge y post-rewrite de git, locales: no se versionan) solo actúa en el checkout
-// principal, nunca en los worktrees de los roles, y no hace nada si falta node o el backlog.
+// The hook (git post-merge and post-rewrite, local: not versioned) only acts in the main
+// checkout, never in the roles' worktrees, and does nothing if node or the backlog is missing.
 //
-// La tabla del backlog se reconoce por sus encabezados (en cualquier orden): ID, Tipo, Título,
-// Requiere, Puntos, Prioridad, Severidad, Estado y, opcionales, Epic y Release (02 §12). Solo ID,
-// Título y Estado son imprescindibles. El tablero filtra por release y muestra el avance de cada uno.
+// The backlog table is recognized by its headers (in any order), in English or Spanish: ID, Type,
+// Title, Depends on, Points, Priority, Severity, Status and, optionally, Epic and Release (02 §12). Only ID,
+// Title and Status are essential. The board filters by release and shows each one's progress.
 import { readFileSync, writeFileSync, mkdirSync, existsSync, chmodSync } from 'node:fs';
 import { dirname, resolve, join, relative } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 
-// --- Hook de git: tablero al día sin que nadie lo pida ------------------------------------------
-const HOOK_MARK = '# aes-board: regenera .aes/board.html';
+// --- Git hook: the board up to date without anyone asking ----------------------------------------
+// The mark installed before 2.0.0 is still recognized, so an existing hook is not added twice.
+const HOOK_MARK = '# aes-board: regenerates .aes/board.html';
+const HOOK_MARKS = [HOOK_MARK, '# aes-board: regenera .aes/board.html'];
 const HOOK = `#!/bin/sh
-${HOOK_MARK} tras actualizar el checkout principal (AES 02 §11).
+${HOOK_MARK} after updating the main checkout (AES 02 §11).
 [ "$(git rev-parse --git-dir)" = "$(git rev-parse --git-common-dir)" ] || exit 0
 [ -f docs/backlog.md ] && [ -f .claude/scripts/aes-board.mjs ] || exit 0
 command -v node >/dev/null 2>&1 || exit 0
@@ -41,13 +43,13 @@ if (process.argv.includes('--install-hook') || process.argv.includes('--check-ho
   for (const name of ['post-merge', 'post-rewrite']) {
     const f = join(hooksDir, name);
     const cur = existsSync(f) ? readFileSync(f, 'utf8') : '';
-    if (cur.includes(HOOK_MARK)) continue;
+    if (HOOK_MARKS.some((m) => cur.includes(m))) continue;
     if (process.argv.includes('--check-hook')) { missing++; continue; }
-    if (cur && !cur.startsWith('#!/bin/sh') && !cur.startsWith('#!/usr/bin/env')) { console.error(`aes-board: ${f} existe y no es un script de shell: no lo toco.`); missing++; continue; }
-    // Si ya hay un hook propio, se añade al final sin quitarle nada.
+    if (cur && !cur.startsWith('#!/bin/sh') && !cur.startsWith('#!/usr/bin/env')) { console.error(`aes-board: ${f} exists and is not a shell script: leaving it alone.`); missing++; continue; }
+    // If there is already a hook of one's own, it is appended without removing anything.
     const body = cur ? `${cur.replace(/\n?exit 0\s*$/, '')}\n${HOOK.split('\n').slice(1).join('\n')}` : HOOK;
     mkdirSync(hooksDir, { recursive: true }); writeFileSync(f, body); try { chmodSync(f, 0o755); } catch {}
-    console.log(`aes-board: hook ${name} instalado.`);
+    console.log(`aes-board: hook ${name} installed.`);
   }
   process.exit(missing ? 1 : 0);
 }
@@ -57,13 +59,13 @@ const json = args.includes('--json');
 const outIdx = args.indexOf('--out');
 const out = outIdx >= 0 ? args[outIdx + 1] : null;
 const src = args.find((a, i) => !a.startsWith('--') && (outIdx < 0 || i !== outIdx + 1)) ?? 'docs/backlog.md';
-const root = dirname(dirname(resolve(src)));   // docs/backlog.md → raíz del proyecto
+const root = dirname(dirname(resolve(src)));   // docs/backlog.md → project root
 const read = (p) => { try { return readFileSync(p, 'utf8'); } catch { return null; } };
 
-// --- Tablas markdown ------------------------------------------------------------------------------
+// --- Markdown tables -------------------------------------------------------------------------------
 const norm = (h) => h.trim().replace(/[`*]/g, '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 const cellsOf = (line) => line.split('|').slice(1, -1).map((c) => c.trim().replace(/^`|`$/g, '').replace(/`([^`]*)`/g, '$1'));
-/** Todas las tablas de un markdown, con la sección (## …) en la que están. */
+/** Every table in a markdown file, with the section (## …) it is in. */
 function tables(md) {
   const lines = md.split(/\r?\n/); const found = []; let section = '';
   for (let i = 0; i < lines.length; i++) {
@@ -85,7 +87,7 @@ const md = read(src);
 if (md === null) { console.error(`aes-board: no existe ${src}.`); process.exit(2); }
 const all = tables(md);
 const itemsTable = all.find((t) => col(t, 'id') >= 0 && col(t, 'titulo', 'title') >= 0 && col(t, 'estado', 'status', 'state') >= 0);
-if (!itemsTable) throw new Error(`No se encontró en ${src} una tabla con las columnas ID, Título y Estado (AES 02 §11).`);
+if (!itemsTable) throw new Error(`No table with the columns ID, Title and Status was found in ${src} (AES 02 §11).`);
 const C = {
   id: col(itemsTable, 'id'), tipo: col(itemsTable, 'tipo', 'type'), epic: col(itemsTable, 'epic', 'epica'),
   titulo: col(itemsTable, 'titulo', 'title'), requiere: col(itemsTable, 'requiere', 'requires', 'depends on'),
@@ -112,7 +114,7 @@ releases.sort((a, b) => a.id.localeCompare(b.id, 'es', { numeric: true }));
 const epicTable = all.find((t) => norm(t.section) === 'epics' && col(t, 'epic', 'epica') >= 0);
 const epics = epicTable ? epicTable.rows.map((r) => ({ id: blank(r[col(epicTable, 'epic', 'epica')] ?? ''), que: blank(r[1] ?? '') })).filter((e) => e.id) : [];
 
-// Notas: «- US-001: …» bajo «## Notas».
+// Notes: "- US-001: …" under "## Notes" (or "## Notas").
 const notes = {};
 const notesBlock = md.split(/^##\s+(?:Notas|Notes)\s*$/m)[1]?.split(/^##\s/m)[0] ?? '';
 for (const m of notesBlock.matchAll(/^\s*[-*]\s+([A-Z]{2,4}-\d+):\s*(.+)$/gm)) (notes[m[1]] ??= []).push(m[2].trim());
@@ -120,7 +122,7 @@ for (const m of notesBlock.matchAll(/^\s*[-*]\s+([A-Z]{2,4}-\d+):\s*(.+)$/gm)) (
 const visionM = md.match(/\*\*(?:Visi[oó]n|Vision):\*\*\s*(.+)/);
 const titleM = md.match(/^#\s+(.+)$/m);
 
-// --- Métricas, costos, compuerta ------------------------------------------------------------------
+// --- Metrics, costs, gate -------------------------------------------------------------------------
 const metrics = {};
 const hf = read(join(root, 'docs/harness-findings.md'));
 if (hf) {
@@ -150,7 +152,7 @@ const env = read(join(root, '.claude/aes.env')) ?? '';
 const minorLimit = Number(env.match(/^AES_MINOR_LIMIT="?(\d+)/m)?.[1] ?? 5);
 const exists = (p) => existsSync(join(root, p));
 
-// --- Derivados ------------------------------------------------------------------------------------
+// --- Derived --------------------------------------------------------------------------------------
 const DONE = new Set(['accepted', 'released']);
 const CLOSED = new Set(['accepted', 'released', 'rejected']);
 const OFF = new Set(['deferred', 'rejected']);
@@ -182,15 +184,15 @@ for (const it of items) {
   it.lista = !it.hecho && !OFF.has(lc(it.estado)) && it.pendientes.length === 0;
   it.frenadaPorCompuerta = it.lista && !gate.abierta && !EXEMPT.has(it.prefijo) && lc(it.estado) === 'draft';
 }
-// Siguiente: lo que ya está en curso; si la compuerta está cerrada, sus defectos; si no, lo listo por
-// prioridad, release y orden del backlog.
+// Next: what is already in progress; if the gate is closed, its defects; if not, what is ready by
+// priority, release and backlog order.
 const prio = (p) => { const m = /P(\d)/i.exec(p); return m ? Number(m[1]) : 9; };
 const relRank = (r) => { const i = releases.findIndex((x) => x.id === r); return i < 0 ? 99 : i; };
 const rank = (a, b) => prio(a.prioridad) - prio(b.prioridad) || relRank(a.release) - relRank(b.release) || a.order - b.order;
 const enCurso = items.filter((i) => ACTIVE.has(lc(i.estado))).sort(rank);
 const listas = items.filter((i) => i.lista && !ACTIVE.has(lc(i.estado)) && !i.frenadaPorCompuerta).sort(rank);
-// Idioma del proyecto (AES_LANG en .claude/aes.env): el de la interfaz y el de las frases.
-// Sin AES_LANG (proyectos anteriores a 2.0.0), se deduce de las columnas del backlog.
+// Project language (AES_LANG in .claude/aes.env): that of the interface and of the phrases.
+// Without AES_LANG (projects older than 2.0.0), it is deduced from the backlog's columns.
 const lang = (env.match(/^AES_LANG="?(es|en)/m)?.[1]) ?? (itemsTable.head.includes('titulo') ? 'es' : 'en');
 const M = {
   en: {
@@ -250,4 +252,4 @@ const html = readFileSync(new URL('./aes-board.html', import.meta.url), 'utf8')
   .replace('<title>Backlog</title>', () => `<title>Backlog · ${project.replace(/[<&]/g, '')}</title>`);
 mkdirSync(dirname(resolve(target)), { recursive: true });
 writeFileSync(target, html);
-console.log(`Tablero: ${target} (${pathToFileURL(resolve(target)).href})`);
+console.log(`${lang === 'es' ? 'Tablero' : 'Board'}: ${target} (${pathToFileURL(resolve(target)).href})`);

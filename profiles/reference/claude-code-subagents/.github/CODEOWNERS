@@ -1,11 +1,11 @@
-# AES — rutas protegidas: solo el responsable humano aprueba cambios. Sustituye @tu-usuario.
-/tests/acceptance/  @tu-usuario
-/specs/             @tu-usuario
-/ci/                @tu-usuario
-/docs/ci/           @tu-usuario
-/.github/           @tu-usuario
-/.claude/           @tu-usuario
-/.opencode/         @tu-usuario
-/opencode.json      @tu-usuario
-/AGENTS.md          @tu-usuario
-/CLAUDE.md          @tu-usuario
+# AES — protected paths: only the human owner approves changes. Replace @your-user.
+/tests/acceptance/  @your-user
+/specs/             @your-user
+/ci/                @your-user
+/docs/ci/           @your-user
+/.github/           @your-user
+/.claude/           @your-user
+/.opencode/         @your-user
+/opencode.json      @your-user
+/AGENTS.md          @your-user
+/CLAUDE.md          @your-user

@@ -43,7 +43,7 @@
   .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   svg.i { width: 1.1em; height: 1.1em; flex: none; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vertical-align: -.18em; }
 
-  /* Cabecera: el «poste» de señalética */
+  /* Header: the signpost */
   .shell { background: var(--shell); color: var(--shell-ink); display: flex; align-items: center; gap: 28px; padding: 0 24px; min-height: 56px; position: sticky; top: 0; z-index: 5; }
   .brand { display: flex; align-items: baseline; gap: 10px; white-space: nowrap; }
   .brand b { font-size: 1.07rem; letter-spacing: -.01em; }
@@ -58,7 +58,7 @@
   main { padding: 20px 24px 40px; }
   [role="tabpanel"][hidden] { display: none; }
 
-  /* El letrero «Siguiente» */
+  /* The "Next" sign */
   .wayfind { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 12px; margin-bottom: 18px; }
   .sign { background: var(--sign); color: var(--sign-ink); border-radius: var(--r); display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 20px; padding: 18px 22px 18px 18px; box-shadow: var(--shadow); }
   .sign .arrow { grid-row: span 3; width: 64px; height: 64px; border-radius: 8px; background: var(--sign-ink); color: var(--sign); display: grid; place-items: center; }
@@ -91,7 +91,7 @@
   .chip-btn { border: 1px solid #4a525b; background: transparent; color: var(--shell-ink); border-radius: 999px; padding: 2px 10px; font-size: .8rem; cursor: pointer; font-weight: 600; }
   .chip-btn:hover { border-color: var(--sign); color: var(--sign); }
 
-  /* Filtros */
+  /* Filters */
   .toolbar { display: flex; flex-wrap: wrap; align-items: end; gap: 10px 14px; margin-bottom: 14px; }
   .field { display: flex; flex-direction: column; gap: 3px; font-size: .8rem; color: var(--muted); font-weight: 600; }
   .field input[type="search"], .field select { background: var(--surface); border: 1px solid var(--line); border-radius: 5px; padding: 6px 9px; min-width: 150px; color: var(--ink); font-weight: 400; font-size: .93rem; }
@@ -104,7 +104,7 @@
   .seg button[aria-pressed="true"] { background: var(--shell); color: var(--shell-ink); }
   .count { margin-left: auto; color: var(--muted); font-size: .87rem; padding-bottom: 6px; }
 
-  /* Tablero */
+  /* Board */
   .board { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 12px; align-items: flex-start; }
   .lane { flex: 1 1 260px; min-width: 260px; max-width: 340px; background: var(--surface-2); border: 1px solid var(--line-2); border-radius: var(--r); padding: 10px; }
   .lane.wide { flex: 3 1 560px; max-width: none; }
@@ -136,7 +136,7 @@
   .ready.active { color: var(--info); background: var(--info-bg); }
   .nores { background: var(--surface); border: 1px dashed var(--line); border-radius: var(--r); padding: 26px; text-align: center; color: var(--muted); }
 
-  /* Panel de detalle (no modal: el tablero sigue usable) */
+  /* Detail panel (not modal: the board stays usable) */
   .detail { position: fixed; top: 0; right: 0; bottom: 0; width: min(460px, 100vw); background: var(--surface); border-left: 1px solid var(--line); box-shadow: var(--shadow-up); z-index: 10; transform: translateX(102%); transition: transform .22s cubic-bezier(.16, 1, .3, 1); display: flex; flex-direction: column; visibility: hidden; }
   .detail.open { transform: none; visibility: visible; }
   .detail header { padding: 16px 18px 12px; border-bottom: 1px solid var(--line-2); display: flex; gap: 10px; align-items: flex-start; }
@@ -160,7 +160,7 @@
   .detail .say code { background: none; border: 0; padding: 0; }
   .links { display: flex; gap: 14px; flex-wrap: wrap; font-size: .9rem; }
 
-  /* Releases, métricas, guía */
+  /* Releases, metrics, guide */
   .wrap { max-width: 1180px; }
   h2.sec { font-size: 1.25rem; margin: 6px 0 4px; letter-spacing: -.01em; }
   p.lede { color: var(--muted); margin: 0 0 18px; max-width: 78ch; }
@@ -252,7 +252,7 @@
 <script>
 const D = /*__AES_DATA__*/null;
 
-// --- Textos de la interfaz: el idioma del proyecto (AES_LANG en .claude/aes.env) ------------------
+// --- Interface copy: the project language (AES_LANG in .claude/aes.env) --------------------------
 const STR = {
   en: {
     tabBoard: 'Board', tabReleases: 'Releases', tabMetrics: 'Metrics', tabGuide: 'Guide', views: 'Views',
@@ -326,7 +326,7 @@ for (const el of document.querySelectorAll('[data-t]')) el.textContent = T[el.da
 for (const el of document.querySelectorAll('[data-t-ph]')) el.placeholder = T[el.dataset.tPh];
 for (const el of document.querySelectorAll('[data-t-aria]')) el.setAttribute('aria-label', T[el.dataset.tAria]);
 
-// Nombres de estado y de tipo en el idioma del proyecto (los valores del backlog son los de AES).
+// Status and type names in the project language (the backlog's values are AES's).
 const STATE_NAME = {
   en: { 'Draft': 'Draft', 'Ready': 'Ready', 'In Progress': 'In progress', 'In Review': 'In review', 'Blocked': 'Blocked', 'Ready for Acceptance': 'Ready for acceptance', 'Accepted': 'Accepted', 'Released': 'Released', 'Deferred': 'Deferred', 'Rejected': 'Rejected' },
   es: { 'Draft': 'Borrador', 'Ready': 'Lista (Ready)', 'In Progress': 'En curso', 'In Review': 'En revisión', 'Blocked': 'Bloqueada', 'Ready for Acceptance': 'Lista para aceptar', 'Accepted': 'Aceptada', 'Released': 'Liberada', 'Deferred': 'Pospuesta', 'Rejected': 'Rechazada' },
@@ -348,7 +348,7 @@ const ACTIVE = new Set(['in progress', 'in review', 'ready for acceptance', 'blo
 const base = D.base ? D.base.replace(/\/?$/, '/') : '../';
 const stName = (s) => ES[STATES.find((x) => lc(x) === lc(s))] || s;
 
-// Estado de arranque de cada tarjeta, en el vocabulario de la señalética.
+// Each card's readiness, in the signage vocabulary.
 function readiness(it) {
   if (it.hecho) return { k: 'done', i: 'check', t: stName(it.estado) };
   if (lc(it.estado) === 'deferred' || lc(it.estado) === 'rejected') return { k: 'done', i: 'pause', t: stName(it.estado) };
@@ -360,7 +360,7 @@ function readiness(it) {
 const sevChip = (it) => it.severidad ? `<span class="sev sev-${sevK(it.severidad)}">${esc(it.severidad)}</span>` : '';
 const typeLabel = (it) => it.tipo || TYPES[it.prefijo] || it.prefijo;
 
-// --- Cabecera y letrero ---------------------------------------------------------------------------
+// --- Header and sign ------------------------------------------------------------------------------
 $('#proj').textContent = D.project;
 document.title = `Backlog · ${D.project}`;
 const gen = new Date(D.generado);
@@ -407,7 +407,7 @@ const sayBlock = (text) => `<div class="say"><code>${esc(text)}</code><button cl
     ${activos.length ? `<div><h2>${ico('play')} ${T.inProgress}</h2><div class="alts">${activos.map((i) => `<button class="chip-btn" type="button" data-open="${esc(i.id)}">${esc(i.id)}</button>`).join('')}</div></div>` : ''}`;
 })();
 
-// --- Filtros y tablero ----------------------------------------------------------------------------
+// --- Filters and board ----------------------------------------------------------------------------
 const uniq = (a) => [...new Set(a.filter(Boolean))];
 const fill = (sel, vals, label = (v) => v) => { for (const v of vals) sel.append(new Option(label(v), v)); };
 fill($('#f-rel'), D.releases.map((r) => r.id));
@@ -457,7 +457,7 @@ function renderBoard() {
   if (!n) { $('#board').innerHTML = `<div class="nores">${T.noMatch} <button class="btn" type="button" id="clear">${T.clear}</button></div>`; $('#clear').onclick = clearFilters; return; }
   const shown = ls.filter((l) => l.items.length || !l.hideEmpty);
   const most = Math.max(...shown.map((l) => l.items.length));
-  // Una columna que acumula mucho más que las demás reparte sus tarjetas en cuadrícula.
+  // A column that piles up far more than the others lays its cards out in a grid.
   $('#board').innerHTML = shown.map((l) => `
     <section class="lane${l.items.length >= 8 && l.items.length === most && shown.length > 1 ? ' wide' : ''}" aria-label="${esc(l.name)}"><h3>${esc(l.name)}<span class="n num">${l.items.length}</span></h3>
       <div class="cards">${l.items.length ? l.items.sort(rank).map(card).join('') : `<div class="empty">${T.empty}</div>`}</div></section>`).join('');
@@ -483,9 +483,9 @@ board.addEventListener('mouseover', (e) => { const c = e.target.closest('.card')
 board.addEventListener('mouseleave', () => { if (!$('#detail').classList.contains('open')) highlight(null); });
 board.addEventListener('focusin', (e) => { const c = e.target.closest('.card'); if (c && !$('#detail').classList.contains('open')) highlight(c.dataset.id); });
 
-// --- Detalle --------------------------------------------------------------------------------------
+// --- Detail ---------------------------------------------------------------------------------------
 let opener = null;
-function route(it) { // requisitos pendientes, de lo más profundo a lo más cercano
+function route(it) { // pending prerequisites, from the deepest to the nearest
   const out = []; const seen = new Set();
   (function walk(i) { for (const r of i.requiere) { const x = byId.get(r); if (!x || seen.has(r)) continue; seen.add(r); walk(x); out.push(x); } })(it);
   return out;
@@ -527,7 +527,7 @@ document.addEventListener('click', (e) => {
 });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDetail(); });
 
-// --- Pestañas -------------------------------------------------------------------------------------
+// --- Tabs -----------------------------------------------------------------------------------------
 const tabs = [...document.querySelectorAll('[role="tab"]')];
 function showTab(id) {
   for (const t of tabs) { const on = t.id === id; t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1; $('#' + t.getAttribute('aria-controls')).hidden = !on; }
@@ -558,8 +558,8 @@ $('.tabs').addEventListener('keydown', (e) => {
   $('#rel').innerHTML = `<h2 class="sec">${T.relTitle}</h2><p class="lede">${T.relLede}</p>${rows || `<div class="nores">${T.relNone}</div>`}`;
 })();
 
-// --- Métricas -------------------------------------------------------------------------------------
-// «TASK-001: 2; TASK-002: 3» → 5; «0» → 0.
+// --- Metrics --------------------------------------------------------------------------------------
+// "TASK-001: 2; TASK-002: 3" → 5; "0" → 0.
 const fails = (t) => { if (!t) return 0; const per = [...t.matchAll(/:\s*(\d+)/g)]; return per.length ? per.reduce((n, m) => n + +m[1], 0) : Number(t.match(/\d+/)?.[0] || 0); };
 (function metrics() {
   const its = D.items.filter((i) => i.metricas || i.corridas);
@@ -573,7 +573,7 @@ const fails = (t) => { if (!t) return 0; const per = [...t.matchAll(/:\s*(\d+)/g
     <tfoot><tr><td colspan="2">${T.total}</td><td class="num">${tot.fail}</td><td></td><td></td><td class="n">${tot.runs}</td><td class="n">${tot.tok.toLocaleString(LANG)}</td><td class="n">${tot.usd.toFixed(4)}</td></tr></tfoot></table>`;
 })();
 
-// --- Guía -----------------------------------------------------------------------------------------
+// --- Guide ----------------------------------------------------------------------------------------
 const GUIDE = {
   en: {
     types: [
@@ -640,7 +640,7 @@ const GUIDE = {
 const initial = location.hash.slice(1);
 if (['rel', 'met', 'guide'].includes(initial)) showTab('t-' + initial);
 renderBoard();
-// Enlace directo al detalle de un elemento: board.html#d=US-009
+// Direct link to an item's detail: board.html#d=US-009
 if (initial.startsWith('d=')) openDetail(decodeURIComponent(initial.slice(2)));
 </script>
 </body>

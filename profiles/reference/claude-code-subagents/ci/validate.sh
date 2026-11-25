@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# AES — Validaciones del proyecto que el programador y el mecánico deben pasar antes de terminar
-# (las ejecuta .claude/hooks/subagent-gate.sh). Específico del stack: ejemplo .NET + React.
-# Mantén aquí los mismos comandos que la sección STACK del workflow.
+# AES — The project's validations the programmer and the mechanic must pass before finishing
+# (run by .claude/hooks/subagent-gate.sh). Stack-specific: a .NET + React example.
+# Keep here the same commands as the workflow's STACK section.
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
