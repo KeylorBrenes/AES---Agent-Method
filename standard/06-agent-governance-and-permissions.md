@@ -254,4 +254,15 @@ Un rol MAY correr en un harness distinto al del orquestador (por ejemplo, el orq
 8. **Plan del proveedor adecuado a la tarea:** un plan gratuito o con límite de uso corto MUST NOT usarse para tareas que compilan o duran más que su ventana; un corte a mitad de tarea deja trabajo sin compuerta. La fila de costo se registra también cuando el proveedor falla.
 9. **Datos fuera del proveedor principal:** el perfil registra a qué proveedor va el código y el contexto de cada rol, y sus condiciones de retención y entrenamiento. Un proyecto con datos sensibles no delega en un proveedor que retiene o entrena con ellos.
 
+### 12.1 Nivel de modelo por tarea
+
+El binding de un rol es un valor por defecto, no una obligación para todas sus tareas. Una tarea MAY pedir otro **nivel de modelo** (por ejemplo, «alto») o un binding concreto, cuando lo que pide supera lo que el modelo por defecto hace bien:
+- **contexto muy grande que hay que leer entero:** un esquema o una base de datos heredada, un módulo antiguo, un volcado de registros;
+- **razonamiento que cruza muchas piezas:** una migración de datos con reglas, un cambio de concurrencia, de seguridad o de un protocolo;
+- **fallos repetidos del nivel estándar** por defectos del código (no de la especificación): tras dos ciclos FAIL así, el orquestador MAY proponer el nivel alto para el siguiente.
+
+El orquestador propone el nivel en la especificación de la tarea, con el motivo, y el humano lo aprueba junto con las tareas. Sin motivo, una tarea usa el nivel estándar: el nivel alto cuesta más y gasta los límites del proveedor principal. El perfil define qué binding tiene cada nivel y para cada rol; el verificador de una tarea de nivel alto MAY subir también de nivel. Cuando el programador y el verificador quedan en la misma familia de modelos, el perfil lo anota como hueco del SHOULD de abajo.
+
+Si la tarea ve **datos reales** (una base de datos de producción o heredada, registros con datos personales), el nivel elegido MUST respetar el punto 9: si el proveedor de ese nivel retiene o entrena con lo que recibe, la tarea trabaja con el esquema y una muestra anonimizada, o se elige otro proveedor.
+
 El verificador SHOULD correr en una familia de modelos distinta a la del programador: un modelo que revisa su propio tipo de errores los detecta peor.

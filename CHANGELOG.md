@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.5.0] — 2026-11-25
+
+Nivel de modelo por tarea: el binding de un rol deja de ser el mismo para todas sus tareas. Cambio MINOR: una tarea sin el campo nuevo usa el binding de siempre.
+
+### Añadido
+- **06 §12.1, nivel de modelo por tarea.** Una tarea puede pedir el nivel `alto`, u otro binding concreto, con motivo: leer entero un contexto muy grande (p. ej. una base de datos heredada), razonar a través de muchas piezas, o dos ciclos FAIL por defectos del código en el nivel estándar. Lo propone el orquestador en la tarea y el humano lo aprueba con las tareas. Si la tarea ve datos reales, el proveedor del nivel debe poder recibirlos o se trabaja con el esquema y una muestra anonimizada.
+- Plantilla de tarea: campos «Nivel de modelo» y «Datos que ve el rol». Plantilla de perfil: tabla de niveles.
+- **`.claude/scripts/aes-bind.sh <rol> <rama>`:** binding efectivo de una tarea a partir de `AES_BIND_<ROL>_<NIVEL>` en `aes.env`. Acepta `claude:<sonnet|opus|haiku>`: el rol corre como subagente de Claude Code con ese modelo. `aes-oc.sh` lo usa para elegir el modelo; `aes-doctor.sh` comprueba todos los niveles; `aes-oc.sh report` separa el costo por modelo.
+- `aes-cycle`: resuelve el binding antes de cada delegación, propone el nivel al escribir las tareas y la subida a `alto` tras el segundo ciclo FAIL por un defecto del código.
+- `aes.env` de ejemplo: `AES_BIND_PROGRAMMER_ALTO="claude:sonnet"` y `AES_BIND_VERIFIER_ALTO="claude:opus"`.
+
+### Corregido
+- Workflow: el paso «main contenido en dev» tenía unas comillas de más (`fi"`) desde 1.3.0, y la CI de cada push a `dev` fallaba con un error de sintaxis de bash. Los PR no ejecutan ese paso, por eso no se vio antes.
+
 ## [1.4.1] — 2026-11-25
 
 Correcciones de la primera prueba real de 1.4.0 (EN-001 de aes-todo: Rust + React en Windows, roles en OpenCode con DeepSeek). Cambio PATCH: corrige la delegación a OpenCode y ajusta reglas que, aplicadas al pie de la letra, hacían gastar ciclos FAIL en detalles. En EN-001, la mayoría de los ciclos y del costo del orquestador vino de esto, no del modelo de los roles: el verificador dio PASS en todas sus corridas, y los ciclos salieron de hallazgos Menores y de huecos de la nota de diseño.
