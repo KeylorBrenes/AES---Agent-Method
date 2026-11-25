@@ -130,7 +130,9 @@ if (( ${#models[@]} > 0 )) && section opencode "OpenCode (${models[*]})"; then
   if ! command -v opencode >/dev/null; then
     bad "opencode is missing from the PATH"
   else
-    ver=$(opencode --version 2>/dev/null | tr -d '\r' || echo '?'); ver=${ver#v}
+    # Only the number: depending on the version and the install, it prints "2.2.7", "v2.2.7" or "opencode v2.2.7".
+    raw=$(opencode --version 2>/dev/null | tr -d '\r' || true)
+    ver=$(grep -oE '[0-9]+(\.[0-9]+)+' <<< "$raw" | head -n1); ver=${ver:-${raw:-?}}
     if [[ " ${AES_OC_TESTED:-} " == *" $ver "* ]]; then ok "opencode $ver (tested with AES)"
     else warn "opencode $ver is not among the tested versions (${AES_OC_TESTED:-none}); its options are checked"; fi
     help=$(opencode run --help 2>&1 || true); missing=""

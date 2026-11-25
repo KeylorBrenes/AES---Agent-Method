@@ -2,6 +2,12 @@
 
 Entries from 2.0.0 on are in English; earlier ones are kept in Spanish, as published.
 
+## [2.0.1] — 2026-11-25
+
+### Fixed
+- `aes-doctor.sh`: false "not among the tested versions" warning when `opencode --version` prints `opencode v2.2.7` (the 1.5.2 fix only removed a leading `v`). It now keeps only the version number.
+- `build-core.sh --check` failed on a Windows checkout with `core.autocrlf` (CRLF in the working copy); it now ignores CR, and `.gitattributes` keeps text files with LF.
+
 ## [2.0.0] — 2026-11-25
 
 AES is now written in English, and a project chooses the language its agents write in. MAJOR because every normative text, template, contract, skill and message changed language, and because the reference implementation's names (rulesets, CODEOWNERS placeholder, task field) changed; projects on 1.x keep working after `install-aes.sh --upgrade`, which keeps their language. The Spanish edition stays at the `v1.6.0` tag.
