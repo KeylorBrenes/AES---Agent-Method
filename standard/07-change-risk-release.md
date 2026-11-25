@@ -1,130 +1,130 @@
-# 07 — Cambios, riesgos y liberación
+# 07 — Change, risk and release
 
-## 1. Control de cambios
+## 1. Change control
 
-Una nueva información puede justificar cambiar una historia o decisión. El cambio se registra; no se reescribe el objetivo silenciosamente.
+New information can justify changing a story or a decision. The change is recorded; the goal is not silently rewritten.
 
-Un cambio de alcance o criterios después de `Ready` requiere:
+A change of scope or criteria after `Ready` requires:
 
-1. describir qué cambió y por qué;
-2. identificar impactos en arquitectura, tareas, pruebas, estimación y dependencias;
-3. actualizar los artefactos afectados;
-4. obtener la aprobación correspondiente;
-5. volver a ejecutar DoR para la parte afectada.
+1. describing what changed and why;
+2. identifying the impact on architecture, tasks, tests, estimate and dependencies;
+3. updating the affected artifacts;
+4. obtaining the corresponding approval;
+5. running the DoR again for the affected part.
 
-Correcciones editoriales sin cambio semántico no requieren un ciclo completo.
+Editorial corrections without a semantic change do not require a full cycle.
 
-## 2. Riesgo
+## 2. Risk
 
-Cada historia debe identificar riesgos relevantes. Como mínimo, evaluar si toca:
+Each story must identify its relevant risks. At least, evaluate whether it touches:
 
-- autenticación, autorización o límites de confianza;
-- datos personales, financieros o sensibles;
-- pagos, facturación o proveedores externos;
-- migraciones, borrado o integridad de datos;
-- APIs o contratos utilizados por otros sistemas;
-- concurrencia, rendimiento o disponibilidad;
-- despliegue, recuperación o continuidad.
+- authentication, authorization or trust boundaries;
+- personal, financial or sensitive data;
+- payments, billing or external providers;
+- migrations, deletion or data integrity;
+- APIs or contracts used by other systems;
+- concurrency, performance or availability;
+- deployment, recovery or continuity.
 
-El perfil puede usar niveles `Low`, `Medium`, `High` y `Critical`, con controles definidos. Los elementos High/Critical requieren revisión reforzada y aprobación humana según el tipo de riesgo, y se tratan como track T3 (02 §8): pruebas holdout obligatorias y revisión humana del código de las zonas de riesgo.
+The profile may use `Low`, `Medium`, `High` and `Critical` levels, with defined controls. High/Critical items require a reinforced review and human approval according to the type of risk, and are treated as track T3 (02 §8): mandatory holdout tests and human review of the code in the risk areas.
 
-## 3. Bloqueos y fallos
+## 3. Blockers and failures
 
-Cuando una validación falla, el orquestador detiene el avance del gate afectado, clasifica el fallo y asigna una corrección delimitada. No se continúa marcando como terminado el trabajo dependiente. Los fallos repetidos sobre la misma tarea activan el circuit breaker (04 §9).
+When a validation fails, the orchestrator stops the affected gate from advancing, classifies the failure and assigns a bounded fix. Dependent work is not marked as done. Repeated failures on the same task trigger the circuit breaker (04 §9).
 
-Un bloqueo debe incluir: qué falta, por qué bloquea, evidencia disponible, opciones y quién puede resolverlo.
+A blocker must include: what is missing, why it blocks, the available evidence, options and who can resolve it.
 
-Cuando una historia se bloquea porque necesita algo que no está en su alcance (otra historia, una decisión, una pieza técnica), el alcance **nunca se amplía en silencio**. El responsable humano elige entre:
+When a story is blocked because it needs something that is not in its scope (another story, a decision, a technical piece), the scope is **never widened silently**. The human owner chooses between:
 
-1. **ampliar** la historia por control de cambios (§1), si lo que falta es pequeño y del mismo resultado;
-2. marcarla `Blocked` por el elemento que falta, que pasa delante en el backlog;
-3. **dividirla**, entregando ahora la parte que no depende de lo que falta;
-4. abrir un **Spike** (01 §7), si lo que falta es conocimiento.
+1. **widening** the story through change control (§1), if what is missing is small and part of the same result;
+2. marking it `Blocked` by the missing item, which moves ahead in the backlog;
+3. **splitting** it, delivering now the part that does not depend on what is missing;
+4. opening a **Spike** (01 §7), if what is missing is knowledge.
 
-La elección es una decisión registrada en la historia (03 §8).
+The choice is a decision recorded in the story (03 §8).
 
-## 4. Integración
+## 4. Integration
 
-Cada cambio debe integrarse mediante el mecanismo del proyecto (pull request, merge request o equivalente). Se debe revisar:
+Every change must be integrated through the project's mechanism (pull request, merge request or equivalent). Review:
 
-- alcance del diff;
-- conflictos y compatibilidad;
-- pruebas y CI;
-- migraciones y rollback cuando aplique;
-- configuración y secretos;
-- documentación y observabilidad necesarias.
+- the scope of the diff;
+- conflicts and compatibility;
+- tests and CI;
+- migrations and rollback where they apply;
+- configuration and secrets;
+- the necessary documentation and observability.
 
-No se deben integrar cambios solo porque un agente terminó su tarea.
+Changes must not be merged just because an agent finished its task.
 
-Una tarea no se integra sin el `PASS` del verificador, aunque la CI esté en verde (06 §8). Antes de añadir commits a la rama de un PR, se comprueba que el PR sigue abierto: publicar en una rama ya integrada y borrada la recrea con trabajo que nadie revisará.
+A task is not merged without the verifier's `PASS`, even if CI is green (06 §8). Before adding commits to a PR's branch, check that the PR is still open: pushing to a branch that was already merged and deleted recreates it with work nobody will review.
 
-## 5. Liberación
+## 5. Release
 
-La liberación sigue el perfil del proyecto y el proceso de release (§8), y debe considerar, cuando aplique:
+Releasing follows the project profile and the release process (§8), and must consider, where they apply:
 
-- versión y notas de cambio;
-- migraciones y plan de recuperación;
-- configuración por entorno;
-- monitoreo y alertas;
-- estrategia de rollback o mitigación;
-- aprobación humana para cambios de riesgo alto.
+- version and change notes;
+- migrations and a recovery plan;
+- configuration per environment;
+- monitoring and alerts;
+- a rollback or mitigation strategy;
+- human approval for high-risk changes.
 
-La aceptación de una Historia de Usuario no implica automáticamente autorización para desplegar a producción.
+Accepting a user story does not automatically authorize deploying to production.
 
-## 6. Defectos
+## 6. Defects
 
-Los defectos se registran con severidad y se gestionan con la compuerta de estabilización (02 §9): un defecto Crítico detiene todo; uno Alto o Medio impide empezar la historia siguiente; los Menores se acumulan solo hasta el límite del perfil. Los defectos se corrigen en lotes de estabilización, en su propia sesión, sin mezclarse con funcionalidad nueva.
+Defects are recorded with a severity and managed with the stabilization gate (02 §9): a Critical defect stops everything; a High or Medium one prevents starting the next story; Minor ones accumulate only up to the profile's limit. Defects are fixed in stabilization batches, in their own session, without being mixed with new functionality.
 
-## 7. Ramas: `main` y `dev`
+## 7. Branches: `main` and `dev`
 
-Todo proyecto AES MUST tener dos ramas permanentes y protegidas:
+Every AES project MUST have two permanent, protected branches:
 
-| Rama | Contiene | Recibe |
+| Branch | Contains | Receives |
 |---|---|---|
-| `main` | Lo liberado: estable, verificado y aceptado como producto | Solo releases desde `dev` (§8) y hotfixes (§9) |
-| `dev` | Lo integrado: historias aceptadas, lotes y tareas terminadas, aún sin liberar | Las ramas de trabajo de cada elemento (especificación, pruebas, tareas, cierre) y los back-merges desde `main` (§9) |
+| `main` | What has been released: stable, verified and accepted as product | Only releases from `dev` (§8) and hotfixes (§9) |
+| `dev` | What has been integrated: accepted stories, batches and finished tasks, not yet released | Each item's work branches (specification, tests, tasks, close) and back-merges from `main` (§9) |
 
-Reglas:
+Rules:
 
-- La regla es la misma en proyectos pequeños y grandes. No hay variante «solo `main`» ni *feature flags* como sustituto: un flag es código condicional que un agente puede escribir mal, y revisar que algo queda apagado obliga a leer el código. El aislamiento lo da git.
-- `dev` MUST estar siempre en verde, con la misma CI y la misma protección que `main`. Es la base de todo el trabajo nuevo.
-- Las ramas de trabajo son **cortas**: nacen de `dev` (o de `main`, si son de un hotfix) y desaparecen al integrarse. No hay ramas permanentes de features ni de bugs: una rama larga se desfasa y vuelve a traer los conflictos que se querían evitar.
-- Una épica de muchas historias se construye en `dev` y sale a `main` cuando el responsable humano la libera. `main` nunca recibe una funcionalidad a medias.
-- La compuerta de estabilización (02 §9) se evalúa sobre `dev` para empezar historias, y sobre el candidato a release para liberar.
+- The rule is the same for small and large projects. There is no "`main` only" variant, and no *feature flags* as a substitute: a flag is conditional code an agent can write wrongly, and checking that something stays off requires reading the code. Git provides the isolation.
+- `dev` MUST always be green, with the same CI and the same protection as `main`. It is the base of all new work.
+- Work branches are **short-lived**: they start from `dev` (or from `main`, for a hotfix) and disappear when merged. There are no permanent feature or bug branches: a long-lived branch drifts and brings back the conflicts that were meant to be avoided.
+- An epic of many stories is built on `dev` and reaches `main` when the human owner releases it. `main` never receives half-finished functionality.
+- The stabilization gate (02 §9) is evaluated on `dev` to start stories, and on the release candidate to release.
 
 ## 8. Release (`dev` → `main`)
 
-Un release es un PR de `dev` a `main`. Es un gate humano propio, distinto de la aceptación de cada historia: aceptar una historia dice que cumple sus criterios; liberar dice que el conjunto se puede usar como producto.
+A release is a PR from `dev` to `main`. It is a human gate of its own, distinct from accepting each story: accepting a story says it meets its criteria; releasing says the whole can be used as a product.
 
-Antes de abrirlo:
+Before opening it:
 
-- se preparan las notas del release (plantilla `templates/release.md`): qué elementos salen, qué defectos conocidos quedan y cómo se vuelve atrás;
-- la compuerta de estabilización está abierta sobre `dev`;
-- `main` está contenido en `dev` (§9): todo hotfix previo ya volvió a `dev`.
+- the release notes are prepared (template `templates/release.md`): which items ship, which known defects remain and how to roll back;
+- the stabilization gate is open on `dev`;
+- `main` is contained in `dev` (§9): every previous hotfix is already back in `dev`.
 
-El PR de release:
+The release PR:
 
-- ejecuta la regresión completa de `dev`;
-- MUST fallar si `main` tiene commits que `dev` no tiene (en git: `main` no es ancestro de `dev`). Así un hotfix que no volvió a `dev` no puede perderse ni reintroducir el defecto;
-- se integra con **merge commit**, no con *squash*. Con *squash*, los commits de `main` dejan de existir en `dev`, la comprobación anterior falla siempre y cada release trae conflictos. El *squash* se reserva para las ramas de trabajo;
-- lo aprueba e integra el responsable humano. No hay un periodo mínimo de uso: el responsable usa `dev` todo lo que considere necesario, y su aprobación del PR es la evidencia de que lo hizo.
+- runs the full regression suite of `dev`;
+- MUST fail if `main` has commits that `dev` does not (in git: `main` is not an ancestor of `dev`). That way a hotfix that did not return to `dev` cannot be lost or reintroduce the defect;
+- is merged with a **merge commit**, not a *squash*. With a squash, `main`'s commits stop existing in `dev`, the previous check always fails and every release brings conflicts. Squash is reserved for work branches;
+- is approved and merged by the human owner. There is no minimum period of use: the owner uses `dev` as much as they consider necessary, and their approval of the PR is the evidence that they did.
 
-Después de integrarlo:
+After merging it:
 
-- los elementos incluidos pasan a `Released`;
-- se hace un back-merge de `main` a `dev` (§9), porque el commit del release solo existe en `main`;
-- la versión se marca según el perfil (por ejemplo, con un tag).
+- the included items become `Released`;
+- `main` is back-merged into `dev` (§9), because the release commit only exists in `main`;
+- the version is marked according to the profile (for example, with a tag).
 
-## 9. Hotfix y back-merge
+## 9. Hotfix and back-merge
 
-Un **hotfix** corrige un defecto de algo que ya está en `main`, sin pasar por lo que está en construcción en `dev`.
+A **hotfix** fixes a defect in something already in `main`, without going through what is under construction in `dev`.
 
-- El responsable humano decide la ruta de cada defecto de algo liberado, sea cual sea su severidad: **hotfix** (sale ya, desde `main`) o **`dev`** (sale con el próximo release). La decisión se registra en el defecto (03 §8). El orquestador propone; lo habitual es hotfix para lo Crítico o Alto, pero no es una regla.
-- Un hotfix es un elemento T1 (04 §10) cuyas ramas de trabajo nacen de `main` y se integran en `main`. Solo defectos (`BUG-NNN`) pueden ir por esta ruta: ninguna funcionalidad entra a `main` sin pasar por `dev`.
-- Su comprobación de reproducción entra a la regresión de `main` al cerrarlo, como la de cualquier elemento.
+- The human owner decides the route of each defect in something released, whatever its severity: **hotfix** (ships now, from `main`) or **`dev`** (ships with the next release). The decision is recorded in the defect (03 §8). The orchestrator proposes; hotfix is usual for Critical or High, but it is not a rule.
+- A hotfix is a T1 item (04 §10) whose work branches start from `main` and are merged into `main`. Only defects (`BUG-NNN`) can take this route: no functionality reaches `main` without going through `dev`.
+- Its reproduction check joins `main`'s regression suite when it closes, like any item's.
 
-El **back-merge** lleva `main` a `dev`. MUST hacerse justo después de cada integración en `main` (hotfix o release):
+The **back-merge** brings `main` into `dev`. It MUST be done right after every merge into `main` (hotfix or release):
 
-- es un PR de `main` a `dev`, integrado con **merge commit**, para que `dev` tenga exactamente los mismos commits. No se usa *cherry-pick* ni un segundo PR con el mismo arreglo: crean commits distintos con el mismo cambio y conflictos en el release siguiente;
-- si hay conflictos, se resuelven en ese PR, con la regresión de `dev` como evidencia;
-- la comprobación de reproducción del hotfix llega a `dev` con el back-merge: si `dev` no tuviera el arreglo, su propia CI se pondría roja.
+- it is a PR from `main` to `dev`, merged with a **merge commit**, so that `dev` has exactly the same commits. No *cherry-pick* or second PR with the same fix: they create different commits with the same change and conflicts in the next release;
+- if there are conflicts, they are resolved in that PR, with `dev`'s regression suite as evidence;
+- the hotfix's reproduction check reaches `dev` with the back-merge: if `dev` did not have the fix, its own CI would turn red.

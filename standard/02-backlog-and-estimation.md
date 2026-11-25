@@ -1,242 +1,243 @@
-# 02 — Backlog y estimación
+# 02 — Backlog and estimation
 
-## 1. Jerarquía
+## 1. Hierarchy
 
-AES utiliza esta jerarquía lógica:
+AES uses this logical hierarchy:
 
 `Product Goal / Vision → Epic → User Story → Task/Subtask → Test/Evidence`
 
-Los defectos (`Bug`), tareas técnicas (`Enabler`), tareas de mantenimiento (`Chore`), lotes de estabilización (§9.4) y actividades de investigación (`Spike`) pueden aparecer como tipos de elemento relacionados con el backlog. No deben disfrazarse de historias de usuario si no representan valor de usuario.
+Defects (`Bug`), technical items (`Enabler`), maintenance items (`Chore`), stabilization batches (§9.4) and research activities (`Spike`) can appear as item types related to the backlog. They must not be disguised as user stories if they do not represent user value.
 
-Los defectos, chores y hallazgos que se dejan para después son **elementos de primera clase** del backlog: tienen ID, criterio, track y, si son defectos, severidad. Una nota en un documento o en un comentario de PR no es un elemento del backlog y se pierde.
+Defects, chores and findings left for later are **first-class backlog items**: they have an ID, a criterion, a track and, if they are defects, a severity. A note in a document or in a PR comment is not a backlog item and gets lost.
 
-## 2. Product Goal y Epics
+## 2. Product goal and Epics
 
-- El **Product Goal** expresa el resultado general buscado.
-- Un **Epic** agrupa una capacidad amplia que debe descomponerse en historias entregables.
-- Un Epic puede tener hipótesis, riesgos, métricas y dependencias, pero no necesita tareas detalladas desde el inicio.
+- The **product goal** states the overall outcome sought.
+- An **Epic** groups a broad capability that must be broken down into deliverable stories.
+- An Epic may have hypotheses, risks, metrics and dependencies, but it does not need detailed tasks from the start.
 
-## 3. Historias de Usuario
+## 3. User stories
 
-Una Historia de Usuario representa una necesidad/comportamiento con valor identificable para un usuario o actor. Su **título** MUST tener este formato:
+A user story represents a need or behaviour with identifiable value for a user or actor. Its **title** MUST have this format:
 
-> Como [tipo de usuario], quiero [capacidad], para [beneficio].
+> As a [type of user], I want [capability], so that [benefit].
 
-> Como usuario, quiero registrar un pago pendiente, para no olvidarme de él.
+> As a user, I want to record a pending payment, so that I don't forget it.
 
-Otros elementos tienen su propio formato, porque no tienen un usuario que los pida:
+Other items have their own format, because no user asks for them:
 
-| Tipo | Formato del título | Ejemplo |
+| Type | Title format | Example |
 |---|---|---|
-| Enabler | Para [historia u objetivo], necesitamos [capacidad técnica] | Para que las historias de pagos se puedan probar de punta a punta, necesitamos la app arrancando con base de datos, API y web |
-| Defecto | [Comportamiento incorrecto, en una frase] | Un monto «abc» dice «obligatorio» en lugar de «inválido» |
-| Chore | [Cambio de mantenimiento] para [motivo] | Fijar las fuentes de paquetes para que la restauración no dependa de la máquina |
+| Enabler | To [story or goal], we need [technical capability] | For the payment stories to be testable end to end, we need the app running with database, API and web |
+| Defect | [Wrong behaviour, in one sentence] | An amount "abc" says "required" instead of "invalid" |
+| Chore | [Maintenance change] so that [reason] | Pin the package sources so that restoring does not depend on the machine |
 
-Cada historia incluye criterios de aceptación verificables y límites de alcance, y declara con `Requiere:` los elementos que deben estar terminados antes (por ejemplo, `Requiere: US-001`).
+Each story includes verifiable acceptance criteria and scope limits, and declares with `Depends on:` the items that must be finished before it (for example, `Depends on: US-001`).
 
-### 3.1 Historias atómicas
+### 3.1 Atomic stories
 
-Una historia MUST ser **atómica**: una sola capacidad del usuario que se puede demostrar por sí sola, y que no contiene otra capacidad que también se podría demostrar sola. No se mide por verbos: «crear tareas y verlas en mi lista» es una capacidad, porque crear sin ver no se puede comprobar; «registrarme y crear tareas» son dos.
+A story MUST be **atomic**: a single user capability that can be demonstrated on its own, and that does not contain another capability that could also be demonstrated on its own. It is not measured by verbs: "create tasks and see them in my list" is one capability, because creating without seeing cannot be checked; "sign up and create tasks" is two.
 
-- Un «y» que une dos objetivos del usuario en el «quiero» es la señal de que hay que dividirla.
-- Las épicas y las funcionalidades grandes existen, pero solo como agrupación: se implementan como historias atómicas, nunca de una sola vez.
-- Motivo: una historia atómica se puede verificar, auditar, medir y depurar. Una historia que implica muchas funcionalidades a la vez es más difícil de depurar, hace que el agente pierda el control del contexto y alucine, y retrasa el momento de comprobar que lo construido sirve.
+- An "and" joining two user goals in the "I want" is the signal that it must be split.
+- Epics and large features exist, but only as a grouping: they are implemented as atomic stories, never in one go.
+- Reason: an atomic story can be verified, audited, measured and debugged. A story that involves many features at once is harder to debug, makes the agent lose control of its context and hallucinate, and delays the moment of checking that what was built is useful.
 
-Una historia puede ser atómica para el usuario y aun así grande por dentro. Dos señales objetivas obligan a dividirla:
+A story can be atomic for the user and still be large inside. Two objective signals force it to be split:
 
-1. **Al estimar:** 8 puntos o más (§5).
-2. **Al diseñar:** si el orquestador no consigue dividirla en **3 tareas como máximo**, cada una dentro del presupuesto de diff de producción y dejando criterios en verde (04 §3). No se hacen tareas más grandes: se divide la historia (§10).
+1. **When estimating:** 8 points or more (§5).
+2. **When designing:** if the orchestrator cannot split it into **at most 3 tasks**, each within the production diff budget and turning criteria green (04 §3). Larger tasks are not made: the story is split (§10).
 
-### 3.2 Cortes verticales
+### 3.2 Vertical slices
 
-Cada historia es un **corte vertical completo**: la parte mínima de cada capa (datos, servidor, interfaz) para que la capacidad funcione de verdad y se pueda usar. No se construye una capa entera antes que la siguiente: «toda la base de datos, después todo el servidor, después toda la interfaz» tarda semanas en mostrar que algo no servía, y un corte vertical lo muestra el mismo día.
+Each story is a **complete vertical slice**: the minimum part of each layer (data, server, interface) for the capability to really work and be usable. A whole layer is not built before the next: "the whole database, then the whole server, then the whole interface" takes weeks to show that something was not useful, and a vertical slice shows it the same day.
 
-- El esquema de datos crece historia a historia: cada historia trae la migración que necesita, y nada más.
-- El primer elemento del proyecto es un **esqueleto que camina** (*walking skeleton*): un enabler que deja la aplicación arrancando de punta a punta con un caso trivial (por ejemplo, una página que muestra el estado de la API, que a su vez lee la base de datos), con la CI ya en verde. Las historias siguientes engrosan ese esqueleto.
-- Dentro de una historia vale lo mismo: primero el camino más delgado de punta a punta, después las reglas y los casos límite.
+- The data schema grows story by story: each story brings the migration it needs, and nothing more.
+- The project's first item is a **walking skeleton**: an enabler that leaves the application running end to end with a trivial case (for example, a page that shows the status of the API, which in turn reads the database), with CI already green. The following stories thicken that skeleton.
+- The same applies inside a story: first the thinnest end-to-end path, then the rules and the edge cases.
 
-## 4. Priorización
+## 4. Prioritization
 
-La prioridad y la estimación son dimensiones distintas. Cada proyecto DEBERÍA declarar una escala sencilla, por ejemplo `P0` crítica, `P1` alta, `P2` normal y `P3` baja. La prioridad representa orden/valor, no esfuerzo.
+Priority and estimation are different dimensions. Each project SHOULD declare a simple scale, for example `P0` critical, `P1` high, `P2` normal and `P3` low. Priority represents order/value, not effort.
 
-La priorización considera valor, urgencia, riesgo, dependencias y coste de demora cuando sean relevantes. Los agentes pueden recomendar prioridades, pero el responsable del producto aprueba cambios significativos.
+Prioritization considers value, urgency, risk, dependencies and cost of delay when relevant. Agents may recommend priorities, but the product owner approves significant changes.
 
-## 5. Estimación de Historias de Usuario
+## 5. Estimating user stories
 
-AES adopta Story Points relativos usando la secuencia Fibonacci:
+AES uses relative story points with the Fibonacci sequence:
 
 `1, 2, 3, 5, 8, 13`
 
-Los puntos expresan una combinación relativa de esfuerzo, complejidad e incertidumbre comparada con otras historias del mismo proyecto. NO representan horas, días, productividad individual ni una promesa de fecha.
+Points express a relative combination of effort, complexity and uncertainty compared with other stories of the same project. They do NOT represent hours, days, individual productivity or a date commitment.
 
-Guía orientativa:
+Guidance:
 
-- **1:** cambio muy pequeño, conocido y de bajo riesgo.
-- **2:** pequeño, con pocas dependencias y comportamiento claro.
-- **3:** complejidad moderada, alcance conocido.
-- **5:** varias partes o escenarios, pero entendidos.
-- **8:** demasiado grande para una historia atómica: MUST dividirse antes de refinarse (§3.1, §10).
-- **13:** demasiado grande o incierto para planificar con confianza: se divide o se investiga con un Spike.
+- **1:** a very small, known, low-risk change.
+- **2:** small, with few dependencies and clear behaviour.
+- **3:** moderate complexity, known scope.
+- **5:** several parts or scenarios, but understood.
+- **8:** too large for an atomic story: it MUST be split before refinement (§3.1, §10).
+- **13:** too large or uncertain to plan with confidence: it is split or investigated with a Spike.
 
-Una historia de 8 o más no pasa a refinamiento: se divide en historias con valor verificable, o se crea un Spike cuando la incertidumbre impide dividirla de forma responsable.
+A story of 8 or more does not go to refinement: it is split into stories with verifiable value, or a Spike is created when uncertainty prevents splitting it responsibly.
 
-La estimación debe basarse en el alcance aprobado y en referencias históricas del proyecto. No se debe usar para comparar personas, modelos o equipos.
+Estimation must be based on the approved scope and on the project's historical references. It must not be used to compare people, models or teams.
 
-## 6. Tamaño de tareas
+## 6. Task size
 
-Las tareas no necesitan Story Points obligatoriamente. Deben ser pequeñas, observables y verificables. Su tamaño se determina por la claridad del resultado, superficie de cambio, dependencias y facilidad de prueba, no por una duración ficticiamente precisa.
+Tasks do not need story points. They must be small, observable and verifiable. Their size is determined by the clarity of the result, the change surface, dependencies and ease of testing, not by an artificially precise duration.
 
-Una tarea SHOULD:
+A task SHOULD:
 
-- producir un resultado principal identificable;
-- tener un alcance y límites concretos;
-- poder implementarse y depurarse sin coordinar muchos cambios independientes;
-- tener una forma clara de validación;
-- evitar mezclar responsabilidades diferentes;
-- ser suficientemente pequeña para entender qué falló si su prueba falla.
+- produce one identifiable main result;
+- have a concrete scope and limits;
+- be implementable and debuggable without coordinating many independent changes;
+- have a clear way to be validated;
+- avoid mixing different responsibilities;
+- be small enough to understand what failed if its test fails.
 
-Una tarea MUST dividirse si contiene varios resultados independientes, combina responsabilidades no relacionadas, abarca demasiados componentes sin razón, tiene dependencias ocultas o no puede verificarse de forma focalizada.
+A task MUST be split if it contains several independent results, combines unrelated responsibilities, spans too many components without reason, has hidden dependencies or cannot be verified in a focused way.
 
-No se fija un límite universal en horas. Si una tarea parece grande, se divide por resultado verificable, no arbitrariamente en fragmentos que no tienen sentido por sí solos.
+No universal limit in hours is set. If a task looks large, it is split by verifiable result, not arbitrarily into fragments that make no sense on their own.
 
-Heurísticas específicas para tareas ejecutadas por agentes (el perfil las ajusta):
+Heuristics specific to tasks run by agents (the profile adjusts them):
 
-- la tarea SHOULD poder completarse en **una sola sesión con contexto nuevo**, sin compactación;
-- el diff resultante SHOULD ser revisable de una vez; el perfil fija un **presupuesto de diff orientativo** (por ejemplo, 300–400 líneas cambiadas). Superarlo no es un fallo automático, pero obliga a justificar por qué no se dividió;
-- el presupuesto se estima **por separado para código de producción y para pruebas**. El desvío que exige justificación es el de producción: un único número castiga probar bien (en el sandbox de AES, el 60 % de una tarea de 474 líneas eran pruebas unitarias);
-- la tarea SHOULD tocar una única superficie de cambio coherente (04 §2).
+- the task SHOULD be completable in **a single session with fresh context**, without compaction;
+- the resulting diff SHOULD be reviewable in one go; the profile sets an **indicative diff budget** (for example, 300–400 changed lines). Exceeding it is not an automatic failure, but it requires justifying why the task was not split;
+- the budget is estimated **separately for production code and for tests**. The deviation that requires justification is the production one: a single number punishes testing well (in the AES sandbox, 60% of a 474-line task were unit tests);
+- the task SHOULD touch a single coherent change surface (04 §2).
 
-## 7. Refinamiento continuo: planificación en dos niveles
+## 7. Continuous refinement: planning on two levels
 
-La planificación tiene dos niveles, y el detalle llega tarde a propósito:
+Planning has two levels, and the detail arrives late on purpose:
 
-1. **Al inicio del proyecto** (ligero, en la incepción, 01 §2): visión del producto, stack, y un **backlog completo pero superficial**: todas las historias que se conocen para llegar a la app completa, cada una con su título en formato, una línea de valor, `Requiere:`, una estimación aproximada y el release al que apunta. Nada de criterios detallados, diseño ni tareas.
-2. **Cuando le toca a cada historia** (detallado): criterios, decisiones, fuera de alcance, plan técnico y tareas. Solo entonces, porque es cuando se sabe lo que las historias anteriores enseñaron.
+1. **At the start of the project** (light, during inception, 01 §2): product vision, stack, and a **complete but shallow backlog**: every known story needed to reach the complete app, each with its title in the standard format, a value line, `Depends on:`, a rough estimate and the release it targets. No detailed criteria, design or tasks.
+2. **When each story's turn comes** (detailed): criteria, decisions, out of scope, technical plan and tasks. Only then, because that is when what the previous stories taught is known.
 
-El backlog inicial va a cambiar: reordenar, dividir, fusionar o descartar historias es parte del proceso, no un fallo de la planificación. Solo las historias próximas necesitan cumplir completamente la DoR.
+The initial backlog will change: reordering, splitting, merging or discarding stories is part of the process, not a planning failure. Only the upcoming stories need to fully meet the DoR.
 
-No se debe congelar un plan detallado de meses de trabajo si las historias posteriores dependen de descubrimientos aún no realizados.
+A detailed plan for months of work must not be frozen if the later stories depend on discoveries not yet made.
 
-## 8. Tracks proporcionales
+## 8. Proportional tracks
 
-AES no aplica el mismo proceso a todos los cambios. Una crítica conocida a las herramientas de spec-driven development es que convierten cambios pequeños en una cascada de documentos. AES evita ese coste clasificando cada elemento de trabajo en un **track** que fija los artefactos y gates mínimos.
+AES does not apply the same process to every change. A known criticism of spec-driven development tools is that they turn small changes into a cascade of documents. AES avoids that cost by classifying each work item into a **track** that sets the minimum artifacts and gates.
 
-| Track | Cuándo | Artefactos mínimos | Gate humano previo |
+| Track | When | Minimum artifacts | Prior human gate |
 |---|---|---|---|
-| **T0 — Trivial** | Errata, texto, configuración no funcional, actualización de parche sin cambio de API | Tarea + CI verde | Ninguno |
-| **T1 — Bug / chore** | Comportamiento existente incorrecto, o cambio pequeño con un criterio verificable (configuración funcional, herramienta, script) | Elemento con severidad (si es defecto) y criterio + comprobación de reproducción **protegida** que falla (RED): prueba de aceptación o comando de verificación (05 §12) + tarea. Camino corto en 04 §10 | Aprobar que la comprobación describe el comportamiento correcto |
-| **T2 — Historia** | Comportamiento nuevo de alcance conocido | Historia, criterios, contrato de interfaz (si hay frontera nueva), suite de aceptación con RED confirmado, tareas | Aprobar criterios y pruebas de aceptación |
-| **T3 — Alto riesgo** | Autenticación, autorización, datos sensibles, pagos, migraciones, cambio arquitectónico o de contrato público | Todo T2 + ADR + pruebas holdout obligatorias + Spike si hay incertidumbre | Criterios, pruebas, ADR; revisión humana del código de riesgo después |
+| **T0 — Trivial** | Typo, copy, non-functional configuration, patch update without an API change | Task + green CI | None |
+| **T1 — Bug / chore** | Wrong existing behaviour, or a small change with a verifiable criterion (functional configuration, tool, script) | Item with severity (if a defect) and criterion + a **protected** reproduction check that fails (RED): an acceptance test or a verification command (05 §12) + task. Short path in 04 §10 | Approve that the check describes the correct behaviour |
+| **T2 — Story** | New behaviour of known scope | Story, criteria, interface contract (if there is a new boundary), acceptance suite with confirmed RED, tasks | Approve criteria and acceptance tests |
+| **T3 — High risk** | Authentication, authorization, sensitive data, payments, migrations, architectural or public-contract change | All of T2 + ADR + mandatory holdout tests + Spike if there is uncertainty | Criteria, tests, ADR; human review of the risky code afterwards |
 
-Reglas:
+Rules:
 
-- El orquestador propone el track; el responsable humano puede cambiarlo.
-- **Subir** de track durante el trabajo es automático en cuanto aparece un riesgo nuevo. **Bajar** de track requiere justificación registrada.
-- Un T1 siempre empieza con una comprobación que reproduce el defecto (o la ausencia del cambio) y falla antes del arreglo. Si no existe ninguna comprobación que falle antes (por ejemplo, una configuración que ya funciona por casualidad en el entorno), el elemento lo declara como «sin RED», con el motivo, y el responsable humano lo aprueba de forma explícita.
-- Los defectos encontrados durante la verificación o la prueba manual agéntica (05 §11) que no pertenecen a lo que añade la tarea se registran como T1, con severidad (§9).
-- Los niveles de riesgo de 07 §2 se corresponden así: `Low` → T0/T1/T2 según el tipo; `Medium` → T2; `High`/`Critical` → T3.
+- The orchestrator proposes the track; the human owner may change it.
+- **Moving up** a track during the work is automatic as soon as a new risk appears. **Moving down** requires a recorded justification.
+- A T1 always starts with a check that reproduces the defect (or the absence of the change) and fails before the fix. If no check fails beforehand (for example, a configuration that already works by chance in the environment), the item declares it as "no RED", with the reason, and the human owner explicitly approves it.
+- Defects found during verification or agentic manual testing (05 §11) that do not belong to what the task adds are recorded as T1, with a severity (§9).
+- The risk levels of 07 §2 map as follows: `Low` → T0/T1/T2 by type; `Medium` → T2; `High`/`Critical` → T3.
 
-## 9. Defectos: severidad y compuerta de estabilización
+## 9. Defects: severity and the stabilization gate
 
-### 9.1 Severidad
+### 9.1 Severity
 
-La severidad mide el daño del defecto; la prioridad (§4), el orden en que se trabaja. Son independientes. Todo defecto registrado lleva una severidad:
+Severity measures the damage of the defect; priority (§4), the order in which it is worked on. They are independent. Every recorded defect has a severity:
 
-| Severidad | Cuándo | Ejemplos |
+| Severity | When | Examples |
 |---|---|---|
-| **Crítica** | Pérdida o corrupción de datos, fallo de seguridad, la aplicación no arranca, el flujo principal es inutilizable, o la CI de `dev` o de `main` está en rojo | Un gasto guardado se pierde; un usuario ve datos de otro; `main` no compila |
-| **Alta** | Un criterio de aceptación ya aceptado deja de cumplirse, o un flujo importante falla sin alternativa razonable. Una **prueba inestable** en la suite que corre en la rama principal es Alta: puede poner en rojo a todos | Editar un gasto no guarda; una prueba de regresión falla 1 de cada 3 corridas |
-| **Media** | Comportamiento incorrecto con alternativa, o en un flujo secundario; un mensaje o una respuesta de error que lleva al usuario a una conclusión equivocada | Un monto `abc` dice «obligatorio» en lugar de «inválido»; un cuerpo mal codificado responde `500` en lugar de `400` |
-| **Menor** | Cosmético o de presentación, sin efecto en los datos ni en las decisiones del usuario | Un separador de miles distinto; dos paneles abiertos a la vez sin consecuencia |
+| **Critical** | Data loss or corruption, a security flaw, the application does not start, the main flow is unusable, or CI on `dev` or `main` is red | A saved expense is lost; a user sees another user's data; `main` does not compile |
+| **High** | An already accepted acceptance criterion stops being met, or an important flow fails with no reasonable workaround. A **flaky test** in the suite that runs on the main branch is High: it can turn everyone red | Editing an expense does not save; a regression test fails 1 in 3 runs |
+| **Medium** | Wrong behaviour with a workaround, or in a secondary flow; a message or an error response that leads the user to a wrong conclusion | An amount `abc` says "required" instead of "invalid"; a badly encoded body returns `500` instead of `400` |
+| **Minor** | Cosmetic or presentational, with no effect on data or on the user's decisions | A different thousands separator; two panels open at once with no consequence |
 
-El orquestador propone la severidad con la evidencia del hallazgo; el responsable humano la confirma o la cambia. Bajar la severidad de un defecto ya registrado es una decisión registrada (03 §8), con motivo.
+The orchestrator proposes the severity with the evidence of the finding; the human owner confirms or changes it. Lowering the severity of an already recorded defect is a recorded decision (03 §8), with a reason. Projects written in Spanish may use the Spanish names (Crítica, Alta, Media, Menor); the tools accept both.
 
-### 9.2 Compuerta de estabilización
+### 9.2 Stabilization gate
 
-Una historia o enabler nuevo (T2/T3) **no puede pasar a `Ready`** mientras exista en el backlog algún defecto abierto de severidad **Crítica, Alta o Media**, ni mientras el número de defectos **Menores** abiertos supere el límite del perfil (por defecto, 5).
+A new story or enabler (T2/T3) **cannot become `Ready`** while the backlog has any open defect of **Critical, High or Medium** severity, or while the number of open **Minor** defects exceeds the profile's limit (5 by default).
 
-- Un defecto **Crítico** detiene además todo el trabajo en curso, incluida la historia activa: no se integra ningún cambio de código en `dev` ni en `main` salvo su corrección. Excepción: si el defecto es de la propia tarea en curso, se trata como ciclo `FAIL` de esa tarea (04 §9).
-- Un defecto **Alto o Medio** encontrado durante una historia no la detiene: la historia termina, y la siguiente no empieza hasta corregirlo.
-- Los defectos **Menores** pueden quedar abiertos dentro del límite. Cuando se supera, se corrigen en lote antes de seguir.
-- Un defecto «abierto» es cualquiera que no está `Accepted` (corregido y aceptado) ni `Rejected` (no era un defecto). `Deferred` cuenta como abierto: posponer un defecto no lo corrige.
-- Las únicas formas de abrir la compuerta son corregir los defectos o una excepción documentada (00 §4). Absorber un defecto dentro de la historia siguiente es una excepción, no un camino normal: mezcla la corrección de lo viejo con la construcción de lo nuevo.
+- A **Critical** defect also stops all work in progress, including the active story: no code change is merged into `dev` or `main` except its fix. Exception: if the defect belongs to the task in progress, it is treated as a `FAIL` cycle of that task (04 §9).
+- A **High or Medium** defect found during a story does not stop it: the story finishes, and the next one does not start until it is fixed.
+- **Minor** defects may stay open within the limit. When it is exceeded, they are fixed in a batch before continuing.
+- An "open" defect is any that is not `Accepted` (fixed and accepted), `Released` or `Rejected` (it was not a defect). `Deferred` counts as open: postponing a defect does not fix it.
+- The only ways to open the gate are fixing the defects or a documented exception (00 §4). Absorbing a defect into the next story is an exception, not a normal path: it mixes fixing the old with building the new.
 
-La misma compuerta se evalúa al **liberar** (07 §8): un release no sale con defectos Críticos, Altos o Medios abiertos, ni con más Menores que el límite. Un defecto de algo ya liberado puede corregirse por hotfix o por `dev`, a elección del responsable humano (07 §9).
+The same gate is evaluated when **releasing** (07 §8): a release does not ship with open Critical, High or Medium defects, or with more Minor ones than the limit. A defect in something already released can be fixed through a hotfix or through `dev`, at the human owner's choice (07 §9).
 
-El perfil puede endurecer la compuerta (por ejemplo, un límite menor de defectos menores), nunca relajarla sin excepción documentada. La compuerta SHOULD implementarse en la CI (L3), leyendo el backlog desde la rama protegida; la implementación de referencia lo hace.
+The profile may tighten the gate (for example, a lower limit for minor defects), never relax it without a documented exception. The gate SHOULD be implemented in CI (L3), reading the backlog from the protected branch; the reference implementation does so.
 
-### 9.3 Qué es un defecto y qué no
+### 9.3 What is a defect and what is not
 
-- Un `FAIL` del verificador, o un check rojo de la CI, es un ciclo `FAIL` de la tarea (04 §9).
-- Tras un `PASS`, cada hallazgo trae **origen** (de la tarea o preexistente) y **tipo** (defecto: incumple algo escrito; hueco de la especificación: nada escrito lo decide). La regla por defecto:
+- A verifier `FAIL`, or a red CI check, is a `FAIL` cycle of the task (04 §9).
+- After a `PASS`, each finding comes with an **origin** (from the task or pre-existing) and a **type** (defect: it breaks something written; specification gap: nothing written decides it). The default rule:
 
-  | Hallazgo tras un PASS | Qué se hace |
+  | Finding after a PASS | What is done |
   |---|---|
-  | De la tarea, defecto, severidad **Media o mayor** | Ciclo `FAIL` de la tarea, antes de integrar |
-  | De la tarea, defecto **Menor** | Defecto del backlog (`BUG-NNN`, de la historia en curso). El humano puede pedir corregirlo ahora como ciclo `FAIL` |
-  | De la tarea, **hueco de la especificación** | No es un ciclo. Se corrige la especificación: la nota en el cierre y el catálogo de diseño. Si el comportamiento debe cambiar, es un defecto Menor del backlog o un criterio de una historia posterior |
-  | Preexistente | Defecto del backlog con severidad |
+  | From the task, a defect, **Medium or higher** severity | A `FAIL` cycle of the task, before merging |
+  | From the task, a **Minor** defect | A backlog defect (`BUG-NNN`, of the story in progress). The human may ask to fix it now as a `FAIL` cycle |
+  | From the task, a **specification gap** | Not a cycle. The specification is fixed: the note at close and the design catalogue. If the behaviour must change, it is a Minor backlog defect or a criterion of a later story |
+  | Pre-existing | A backlog defect with a severity |
 
-- Un hallazgo Menor que aparece **en una reverificación**, fuera de lo que cambió el último ciclo, va al backlog: no abre otro ciclo. Así una tarea no gasta sus 3 ciclos puliendo detalles mientras la compuerta de estabilización (§9.2) ya limita cuántos Menores se acumulan.
-- Un hallazgo sobre comportamiento **ya aceptado o preexistente** es un defecto: se registra con ID, severidad, historia de origen, reproducción y criterio, aunque se encuentre durante otra historia.
-- El responsable humano puede reemplazar esta regla en el perfil por una **regla permanente** propia. El orquestador la aplica, registra cada clasificación como decisión y se la muestra al humano, que puede cambiarla antes de integrar.
+- A Minor finding that appears **in a re-verification**, outside what the last cycle changed, goes to the backlog: it does not open another cycle. This way a task does not spend its 3 cycles polishing details while the stabilization gate (§9.2) already limits how many Minor defects accumulate.
+- A finding about **already accepted or pre-existing** behaviour is a defect: it is recorded with an ID, severity, story of origin, reproduction and criterion, even if it is found during another story.
+- The human owner may replace this rule in the profile with a **permanent rule** of their own. The orchestrator applies it, records each classification as a decision and shows it to the human, who may change it before merging.
 
-### 9.4 Lote de estabilización
+### 9.4 Stabilization batch
 
-Los defectos que cierran la compuerta se corrigen juntos en un **lote de estabilización**: un elemento del backlog (por ejemplo, `ST-NNN`) que agrupa los defectos de una historia y los asociados a ella.
+The defects that close the gate are fixed together in a **stabilization batch**: a backlog item (for example, `ST-NNN`) that groups the defects of a story and those associated with it.
 
-- Un lote se trabaja en **una sola sesión** del orquestador, sin mezclar funcionalidad nueva.
-- Sigue el camino T1 (04 §10): un PR de especificación con los defectos, su severidad y su criterio; las comprobaciones de reproducción con RED; tareas agrupadas por superficie de cambio; verificación; cierre.
-- Las comprobaciones de reproducción del lote pasan a la regresión al cerrarlo, como las de una historia.
-- Un defecto que el lote no logra corregir sigue abierto y la compuerta sigue cerrada.
+- A batch is worked on in **a single orchestrator session**, without mixing in new functionality.
+- It follows the T1 path (04 §10): a specification PR with the defects, their severity and their criterion; the reproduction checks with RED; tasks grouped by change surface; verification; close.
+- The batch's reproduction checks join the regression suite when it closes, like those of a story.
+- A defect the batch fails to fix stays open, and the gate stays closed.
 
-## 10. Cómo dividir una historia
+## 10. How to split a story
 
-Formas de dividir una historia grande, de la más habitual a la menos. Cada parte resultante sigue siendo atómica, vertical y con valor propio.
+Ways to split a large story, from the most common to the least. Each resulting part is still atomic, vertical and has value of its own.
 
-| Forma | Cuándo | Ejemplo |
+| Way | When | Example |
 |---|---|---|
-| **Camino feliz primero, reglas después** | La historia tiene validaciones, errores y casos límite | «Registrarme con email y contraseña y entrar con la sesión iniciada» primero; «ver un aviso si el email ya existe» después |
-| **Por variación de datos o de reglas** | La misma capacidad aplica a varios tipos, monedas, canales o roles | Un tipo de pago ahora, los demás después |
-| **Por pasos del flujo** | El usuario completa etapas por separado | «Agregar un pago» y «marcar un pago como hecho» |
-| **Por operación** | Crear, ver, editar y eliminar pueden demostrarse por separado | «Registrar un gasto» y «editar un gasto» |
-| **Lo no funcional después** | Rendimiento, caché, paginación, exportación | «Ver mis pagos» primero; «ver mis pagos paginados» cuando sean muchos |
-| **Spike** | Lo grande es la incertidumbre, no el trabajo | Averiguar cómo autenticar contra un proveedor antes de planificar el inicio de sesión |
-| **Enabler** | Una pieza técnica es inevitable y la necesitan varias historias | La infraestructura de autenticación, con un criterio verificable propio (un comando o un caso mínimo de punta a punta), nunca «toda la base de datos» |
+| **Happy path first, rules later** | The story has validations, errors and edge cases | "Sign up with email and password and land signed in" first; "see a warning if the email already exists" later |
+| **By data or rule variation** | The same capability applies to several types, currencies, channels or roles | One payment type now, the others later |
+| **By flow steps** | The user completes stages separately | "Add a payment" and "mark a payment as done" |
+| **By operation** | Create, view, edit and delete can be demonstrated separately | "Record an expense" and "edit an expense" |
+| **Non-functional later** | Performance, caching, pagination, export | "See my payments" first; "see my payments paginated" when there are many |
+| **Spike** | The big thing is the uncertainty, not the work | Find out how to authenticate against a provider before planning sign-in |
+| **Enabler** | A technical piece is unavoidable and several stories need it | The authentication infrastructure, with its own verifiable criterion (a command or a minimal end-to-end case), never "the whole database" |
 
-Una historia dividida conserva su orden con `Requiere:`. Si ninguna forma la deja en 3 tareas o menos, el problema suele ser de diseño o de incertidumbre: se pregunta al responsable humano o se abre un Spike.
+A split story keeps its order with `Depends on:`. If no way leaves it at 3 tasks or fewer, the problem is usually design or uncertainty: ask the human owner or open a Spike.
 
-## 11. El backlog como archivo y sus vistas
+## 11. The backlog as a file, and its views
 
-El backlog vive en **un archivo del repositorio** (por ejemplo, `docs/backlog.md`), que es la única fuente de verdad. No depende de ningún servicio, viaja con el código y pasa por PR, así que cada cambio lleva la firma del responsable humano. La CI lo lee (la compuerta de estabilización, 02 §9) y los agentes lo leen sin herramientas externas.
+The backlog lives in **a file in the repository** (for example, `docs/backlog.md`), which is the single source of truth. It does not depend on any service, travels with the code and goes through PRs, so every change carries the human owner's signature. CI reads it (the stabilization gate, 02 §9) and agents read it without external tools.
 
-El formato MUST ser una tabla con estas columnas, en cualquier orden:
+The format MUST be a table with these columns, in any order:
 
-| Columna | Contenido |
+| Column | Content |
 |---|---|
 | `ID` | `US-NNN`, `EN-NNN`, `BUG-NNN`, `CH-NNN`, `ST-NNN`, `SP-NNN`, `REL-NNN` |
-| `Tipo` | Historia, Enabler, Defecto, Chore, Lote, Spike, Release |
-| `Título` | En el formato de su tipo (§3) |
-| `Requiere` | IDs separados por coma, o `—` |
-| `Puntos` | Fibonacci (§5), o `—` |
-| `Prioridad` | Escala del perfil (§4) |
-| `Severidad` | Solo defectos (§9.1); el resto, `—` |
-| `Estado` | 00 §6 |
+| `Type` | Story, Enabler, Defect, Chore, Batch, Spike, Release |
+| `Title` | In the format of its type (§3) |
+| `Depends on` | Comma-separated IDs, or `—` |
+| `Points` | Fibonacci (§5), or `—` |
+| `Priority` | The profile's scale (§4) |
+| `Severity` | Defects only (§9.1); the rest, `—` |
+| `Status` | 00 §6 |
 
-Dos columnas son opcionales y SHOULD usarse desde la incepción: `Epic`, la acción del usuario a la que pertenece la historia (§2), y `Release` (por ejemplo, `REL-001`), el release al que apunta (§12). Con ellas, el backlog es también el mapa de historias: Epics en una dimensión, releases en la otra.
+Two columns are optional and SHOULD be used from inception: `Epic`, the user action the story belongs to (§2), and `Release` (for example, `REL-001`), the release it targets (§12). With them, the backlog is also the story map: Epics on one axis, releases on the other.
 
-Para el responsable humano, una tabla en un archivo no es la mejor forma de ver dónde va el proyecto. Las **vistas** (un tablero) se generan desde el archivo, en una sola dirección:
+A project written in Spanish may use the Spanish column names (`Tipo`, `Título`, `Requiere`, `Puntos`, `Prioridad`, `Severidad`, `Estado`); the tools accept both. The status values are always the ones in 00 §6.
 
-- la implementación de referencia genera un tablero HTML autocontenido, sin ningún servicio;
-- adaptadores opcionales publican el mismo backlog en GitHub Projects, Trello, GitLab u otro tablero. Cambiar de herramienta es cambiar de adaptador, no de metodología;
-- lo que se mueve en una vista no vuelve solo al archivo: se le pide al orquestador y entra por PR.
+For the human owner, a table in a file is not the best way to see where the project is going. **Views** (a board) are generated from the file, in one direction only:
 
-## 12. Releases como horizonte de planificación
+- the reference implementation generates a self-contained HTML board, with no service at all;
+- optional adapters publish the same backlog to GitHub Projects, Trello, GitLab or another board. Changing tools means changing the adapter, not the methodology;
+- what is moved in a view does not flow back to the file: it is requested from the orchestrator and goes through a PR.
 
-AES planifica por **releases**, no por sprints. Un release es un conjunto de historias que, juntas, dan un resultado que el usuario puede usar, y se libera cuando está completo y la compuerta de estabilización lo permite (§9.2, 07 §8). No hay una duración fija: con agentes, el ritmo lo marcan la aprobación humana y la CI, no el calendario.
+## 12. Releases as the planning horizon
 
-- **La incepción define los releases** (01 §2): el primero es lo mínimo que ya sirve; los siguientes, lo que se sabe que viene después. Cada uno tiene un objetivo de una frase y una lista de historias.
-- **Solo el release en curso está comprometido.** Los siguientes son una previsión: se reordenan con lo que enseñe el primero.
-- **Mover una historia de release** es un cambio del backlog y entra por PR. Si el release en curso crece, lo normal es mover historias al siguiente, no esperar.
-- Los puntos aceptados por release (§5) sirven para prever los siguientes. No son una meta ni se comparan entre proyectos.
+AES plans by **releases**, not sprints. A release is a set of stories that together give a result the user can use, and it is released when it is complete and the stabilization gate allows it (§9.2, 07 §8). There is no fixed duration: with agents, the pace is set by human approval and CI, not by the calendar.
 
+- **Inception defines the releases** (01 §2): the first one is the minimum that is already useful; the following ones, what is known to come next. Each has a one-sentence goal and a list of stories.
+- **Only the release in progress is committed.** The following ones are a forecast: they are reordered with what the first one teaches.
+- **Moving a story to another release** is a backlog change and goes through a PR. If the release in progress grows, the normal thing is to move stories to the next one, not to wait.
+- The points accepted per release (§5) help forecast the next ones. They are not a target and are not compared across projects.

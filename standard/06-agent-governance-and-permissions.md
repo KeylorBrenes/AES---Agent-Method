@@ -1,268 +1,271 @@
-# 06 — Gobierno de agentes y permisos
+# 06 — Agent governance and permissions
 
-## 1. Objetivo
+## 1. Goal
 
-Separar responsabilidades, limitar el contexto y restringir las acciones de cada agente para reducir desviaciones, conflictos, filtraciones y autoaprobación.
+Separate responsibilities, limit context and restrict each agent's actions to reduce drift, conflicts, leaks and self-approval.
 
-## 2. Roles base
+## 2. Base roles
 
-### Responsable humano del producto
+### Human product owner
 
-- aprueba visión, prioridades y criterios de producto;
-- resuelve ambigüedades materiales;
-- aprueba cambios materiales de alcance, arquitectura transversal, seguridad y decisiones irreversibles;
-- acepta el producto/funcionalidad según el perfil del proyecto.
+- approves the vision, priorities and product criteria;
+- resolves material ambiguities;
+- approves material changes of scope, cross-cutting architecture, security and irreversible decisions;
+- accepts the product/feature according to the project profile.
 
-### Orquestador
+### Orchestrator
 
-- mantiene el estado del backlog y del ciclo;
-- asigna agentes y les entrega contexto mínimo suficiente;
-- verifica que la tarea cumple DoR;
-- controla dependencias, límites y gates;
-- agrega evidencias y comunica bloqueos;
-- no altera requisitos para acomodar una implementación;
-- es el **diseñador senior**: decide los patrones del nivel 2 de cada tarea en una nota de diseño, a partir de hechos y no del relato de otro agente (10 §5).
+- keeps the state of the backlog and the cycle;
+- assigns agents and gives them the minimum sufficient context;
+- checks that the task meets the DoR;
+- controls dependencies, limits and gates;
+- aggregates evidence and reports blockers;
+- does not alter requirements to accommodate an implementation;
+- is the **senior designer**: it decides each task's level-2 patterns in a design note, from facts and not from another agent's account (10 §5).
 
-### Arquitecto
+### Architect
 
-- inspecciona arquitectura actual;
-- identifica impactos, alternativas y riesgos;
-- propone cambios y ADRs;
-- no impone cambios materiales sin aprobación.
+- inspects the current architecture;
+- identifies impacts, alternatives and risks;
+- proposes changes and ADRs;
+- does not impose material changes without approval.
 
-### QA / Diseñador de pruebas
+### QA / Test designer
 
-- deriva escenarios desde criterios aprobados;
-- crea y mantiene la suite protegida en un espacio/flujo autorizado;
-- comprueba trazabilidad y casos negativos;
-- no implementa la funcionalidad que está definiendo como aceptación.
+- derives scenarios from approved criteria;
+- creates and maintains the protected suite in an authorized space/flow;
+- checks traceability and negative cases;
+- does not implement the functionality it is defining as acceptance.
 
-### Programador
+### Programmer
 
-- implementa tareas asignadas;
-- añade pruebas técnicas permitidas;
-- no modifica contratos de aceptación ni aprueba su trabajo;
-- reporta supuestos, desviaciones y bloqueos.
+- implements assigned tasks;
+- adds the technical tests it is allowed to;
+- does not modify acceptance contracts or approve its own work;
+- reports assumptions, deviations and blockers.
 
-### Mecánico (opcional)
+### Mechanic (optional)
 
-- ejecuta tareas mecánicas dentro de una superficie de cambio: configuración no funcional, renombres, formato, consolidación de notas y métricas;
-- tiene los permisos del programador, limitados a su tarea;
-- si la tarea exige decidir comportamiento o diseñar, se detiene con `BLOCKED`: esa tarea no es mecánica.
+- runs mechanical tasks within a change surface: non-functional configuration, renames, formatting, consolidating notes and metrics;
+- has the programmer's permissions, limited to its task;
+- if the task requires deciding behaviour or designing, it stops with `BLOCKED`: that task is not mechanical.
 
-### Verificador
+### Verifier
 
-- inspecciona la especificación, el diff y las evidencias;
-- ejecuta o revisa pruebas según permisos;
-- busca incumplimientos, regresiones, riesgos y sobreingeniería;
-- es de solo lectura respecto al código bajo revisión;
-- no cambia el alcance ni corrige silenciosamente el trabajo.
+- inspects the specification, the diff and the evidence;
+- runs or reviews tests according to its permissions;
+- looks for non-compliance, regressions, risks and over-engineering;
+- is read-only with respect to the code under review;
+- does not change the scope or silently fix the work.
 
-## 3. Matriz base de permisos
+## 3. Base permission matrix
 
-La aplicación exacta se define en el perfil, pero la intención no debe cambiar:
+The exact enforcement is defined in the profile, but the intent must not change:
 
-| Recurso/acción | Orquestador | Arquitecto | QA | Programador | Verificador |
+| Resource/action | Orchestrator | Architect | QA | Programmer | Verifier |
 |---|---|---|---|---|---|
-| Leer repositorio | Sí | Sí | Sí | Sí | Sí |
-| Proponer requisitos | Sí | Consulta | Consulta | No | No |
-| Aprobar alcance de producto | No, recomienda | No | No | No | No |
-| Proponer ADR | Sí | Sí | No | Puede sugerir | Puede señalar |
-| Aprobar ADR reservado | No | No | No | No | No |
-| Escribir pruebas de aceptación protegidas | No, coordina | No | Sí, flujo autorizado | No | No |
-| Modificar código de producción | Según necesidad/configuración | No por defecto | No | Sí, dentro de tarea | No |
-| Modificar pruebas unitarias/integración | No por defecto | No | Puede revisar | Sí, dentro de tarea | No |
-| Escribir/leer pruebas holdout | Coordina, no lee | No | Sí, flujo autorizado | **No** (ni lectura) | Ejecuta |
-| Publicar superficie de cambio de una tarea | Sí, en rama protegida | Consulta | No | No | No |
-| Modificar CI/protecciones | No sin autorización | No | No | No | No |
-| Modificar `AGENTS.md`, hooks, skills, permisos | Propone; requiere aprobación humana | No | No | No | No |
-| Ejecutar pruebas | Sí | Sí | Sí | Sí | Sí |
-| Aprobar su propio trabajo | No | No | No | No | No |
-| Emitir informe de verificación | No sustituye | Puede aportar | Puede aportar | No | Sí |
+| Read the repository | Yes | Yes | Yes | Yes | Yes |
+| Propose requirements | Yes | Advises | Advises | No | No |
+| Approve product scope | No, recommends | No | No | No | No |
+| Propose an ADR | Yes | Yes | No | May suggest | May point out |
+| Approve a reserved ADR | No | No | No | No | No |
+| Write protected acceptance tests | No, coordinates | No | Yes, authorized flow | No | No |
+| Modify production code | As needed/configured | Not by default | No | Yes, within the task | No |
+| Modify unit/integration tests | Not by default | No | May review | Yes, within the task | No |
+| Write/read holdout tests | Coordinates, does not read | No | Yes, authorized flow | **No** (not even read) | Runs them |
+| Publish a task's change surface | Yes, on the protected branch | Advises | No | No | No |
+| Modify CI/protections | Not without authorization | No | No | No | No |
+| Modify `AGENTS.md`, hooks, skills, permissions | Proposes; needs human approval | No | No | No | No |
+| Run tests | Yes | Yes | Yes | Yes | Yes |
+| Approve its own work | No | No | No | No | No |
+| Issue a verification report | Does not replace it | May contribute | May contribute | No | Yes |
 
-El mecánico, cuando existe, tiene la columna del programador.
+The mechanic, when there is one, has the programmer's column.
 
-## 4. Aislamiento del verificador
+## 4. Verifier isolation
 
-El verificador debe iniciar una ejecución separada y recibir directamente:
+The verifier must start a separate run and receive directly:
 
-- petición original relevante;
-- Historia de Usuario aprobada y criterios de aceptación;
-- ADRs/contratos aplicables;
-- diff real y commit/branch inspeccionados;
-- resultados originales de CI y pruebas;
-- instrucciones de verificación.
+- the relevant original request;
+- the approved user story and acceptance criteria;
+- the applicable ADRs/contracts;
+- the real diff and the inspected commit/branch;
+- the original CI and test results;
+- verification instructions.
 
-No debe recibir como fuente de verdad el razonamiento privado, la autoevaluación ni el resumen promocional del programador. Puede leer el código y los artefactos necesarios para comprobar el resultado.
+It must not receive, as a source of truth, the programmer's private reasoning, self-assessment or promotional summary. It may read the code and the artifacts it needs to check the result.
 
-La independencia depende principalmente de la separación de permisos, contexto y evidencia. Usar otro proveedor/modelo puede aportar diversidad, pero no sustituye esos controles.
+Independence depends mainly on the separation of permissions, context and evidence. Using another provider/model can add diversity, but it does not replace those controls.
 
-El orquestador puede añadir **puntos de atención**: hechos concretos y comprobables (un commit, un archivo, un cambio de comportamiento que notó), nunca conclusiones. El verificador los trata como hipótesis que comprueba él mismo.
+The orchestrator may add **points of attention**: concrete, checkable facts (a commit, a file, a behaviour change it noticed), never conclusions. The verifier treats them as hypotheses it checks itself.
 
-La verificación ocurre **antes de integrar**. Verificar después (por ejemplo, porque se integró por error) es un incidente que se registra, y pierde información: con integración por *squash*, el verificador ya no ve los commits individuales.
+Verification happens **before merging**. Verifying afterwards (for example, because something was merged by mistake) is an incident that is recorded, and it loses information: with squash merges, the verifier no longer sees the individual commits.
 
-El verificador MUST volver a ejecutar las validaciones en lugar de aceptar las del programador, ejecutar las pruebas holdout cuando existan y realizar la prueba manual agéntica que corresponda al track (05 §11). Además vigila las señales de desvío que Kent Beck describe en *Augmented Coding: Beyond the Vibes*:
+The verifier MUST re-run the validations instead of accepting the programmer's, run the holdout tests when they exist and perform the agentic manual test that corresponds to the track (05 §11). It also watches for the drift signals Kent Beck describes in *Augmented Coding: Beyond the Vibes*:
 
-1. bucles: código repetitivo o innecesario, o el agente atascado repitiendo intentos;
-2. funcionalidad no pedida, aunque parezca el siguiente paso razonable;
-3. cualquier indicio de trampa, como desactivar, borrar o debilitar pruebas.
+1. loops: repetitive or unnecessary code, or the agent stuck repeating attempts;
+2. functionality nobody asked for, even if it looks like the reasonable next step;
+3. any sign of cheating, such as disabling, deleting or weakening tests.
 
-Cualquiera de las tres es motivo suficiente para `FAIL`.
+Any of the three is reason enough for `FAIL`.
 
-## 5. Contexto mínimo suficiente
+Each finding the verifier reports carries an origin, a **type** (a defect: it breaks something written, citing the rule; or a specification gap: nothing written decides it) and a proposed severity. What is done with it is decided by the rule of 02 §9.3, not by the verifier. In a **re-verification**, the manual test is limited to what the cycle changed plus a short regression pass (05 §11).
 
-El orquestador debe entregar información relevante, no todo el historial del chat o el repositorio indiscriminadamente. El paquete suele incluir: tarea, historia, criterios relacionados, arquitectura/ADRs pertinentes, contratos y convenciones, rutas relevantes y comandos de validación.
+## 5. Minimum sufficient context
 
-Los agentes deben indicar qué información falta. No deben rellenar vacíos inventando APIs, estructuras o reglas.
+The orchestrator must deliver relevant information, not the whole chat history or the repository indiscriminately. The package usually includes: task, story, related criteria, relevant architecture/ADRs, contracts and conventions, relevant paths and validation commands.
 
-El contexto entregado SHOULD ser **estructural** (comandos exactos, rutas, superficie de cambio, pruebas afectadas, contratos) y no **procedimental genérico** (04 §2).
+Agents must state what information is missing. They must not fill gaps by inventing APIs, structures or rules.
 
-### 5.1 Instrucciones persistentes (`AGENTS.md`, `CLAUDE.md` y equivalentes)
+The context delivered SHOULD be **structural** (exact commands, paths, change surface, affected tests, contracts) and not **generic procedural** (04 §2).
 
-- MUST NOT contener instrucciones de proceso genéricas («usa TDD», «escribe código limpio», «ejecuta las pruebas relevantes»). No añaden información y consumen contexto.
-- SHOULD ser breves y contener: comandos de build/prueba/lint, rutas prohibidas, restricciones arquitectónicas, convenciones que un linter no detecta y fallos observados del agente.
-- SHOULD empezarse tarde y crecer **una entrada por cada error real** que valga la pena registrar (09).
-- En repositorios grandes SHOULD apuntar a los archivos relevantes en lugar de copiar su contenido.
-- Están en rutas protegidas: el programador no puede modificarlas.
+### 5.1 Persistent instructions (`AGENTS.md`, `CLAUDE.md` and equivalents)
 
-## 6. Herramientas, MCP, skills y hooks
+- MUST NOT contain generic process instructions ("use TDD", "write clean code", "run the relevant tests"). They add no information and consume context.
+- SHOULD be brief and contain: build/test/lint commands, forbidden paths, architectural constraints, conventions a linter does not catch and observed agent failures.
+- SHOULD start late and grow **one entry per real mistake** worth recording (09).
+- In large repositories they SHOULD point to the relevant files instead of copying their content.
+- They live in protected paths: the programmer cannot modify them.
 
-- **Harness:** ejecuta el ciclo del agente y controla contexto/herramientas.
-- **MCP:** expone herramientas o recursos externos.
-- **Skills:** instrucciones/procedimientos reutilizables para un agente.
-- **Hooks:** automatizan acciones ante eventos definidos.
-- **CLI/API:** permiten delegar a otro proceso o servicio.
+## 6. Tools, MCP, skills and hooks
 
-El perfil del proyecto define implementaciones concretas. Una skill no concede permisos. Un MCP no debe exponer más privilegios de los necesarios. Los hooks no sustituyen CI ni revisión.
+- **Harness:** runs the agent's loop and controls context/tools.
+- **MCP:** exposes external tools or resources.
+- **Skills:** reusable instructions/procedures for an agent.
+- **Hooks:** automate actions on defined events.
+- **CLI/API:** allow delegating to another process or service.
+
+The project profile defines the concrete implementations. A skill does not grant permissions. An MCP server must not expose more privileges than needed. Hooks do not replace CI or review.
 
 Skills:
 
-- SHOULD construirse **después** de evaluar al agente en tareas representativas y observar dónde falla, no por anticipado (09).
-- MUST instalarse solo desde fuentes confiables. Las de terceros se auditan antes de usarlas: archivos incluidos, scripts, dependencias y cualquier instrucción que conecte con redes externas no confiables.
+- SHOULD be built **after** evaluating the agent on representative tasks and seeing where it fails, not in advance (09).
+- MUST be installed only from trusted sources. Third-party ones are audited before use: included files, scripts, dependencies and any instruction that connects to untrusted external networks.
 
-### 6.1 Acciones denegadas y rodeo por delegación
+### 6.1 Denied actions and workarounds by delegation
 
-Cuando un permiso, un hook o un clasificador del harness deniega una acción a un agente, el agente puede intentar conseguirla por otra vía: otro comando, o pedirle a otro agente que la haga. Lo segundo es un **rodeo por delegación**, y ningún control técnico lo detecta: en el sandbox de AES, dos subagentes pidieron al orquestador que detuviera procesos que a ellos se les había denegado detener.
+When a permission, a hook or a harness classifier denies an action to an agent, the agent may try to get it another way: another command, or asking another agent to do it. The latter is a **workaround by delegation**, and no technical control detects it: in the AES sandbox, two subagents asked the orchestrator to stop processes they had been denied permission to stop.
 
-Reglas:
+Rules:
 
-- Una acción denegada es `BLOCKED` **para el responsable humano**, con la acción exacta que hace falta.
-- Ningún agente ejecuta una acción que se le denegó a otro rol, aunque él sí tenga permiso.
-- El orquestador registra el caso y se lo pasa al humano; no lo resuelve.
+- A denied action is `BLOCKED` **for the human owner**, with the exact action that is needed.
+- No agent performs an action that was denied to another role, even if it does have the permission.
+- The orchestrator records the case and passes it to the human; it does not resolve it.
 
-### 6.2 Tipos de skill y núcleo de AES
+### 6.2 Skill types and the AES core
 
-Las skills potencian la metodología si encajan en ella, y la paralizan si compiten con ella. AES distingue tres tipos:
+Skills strengthen the methodology if they fit into it, and paralyse it if they compete with it. AES distinguishes three types:
 
-| Tipo | Qué es | Regla |
+| Type | What it is | Rule |
 |---|---|---|
-| **Técnica** | Cómo hacer bien una actividad: depurar, revisar seguridad, escribir una nota de diseño | Se asigna a los roles que hacen esa actividad. MUST NOT contradecir un gate, un contrato ni un permiso de AES |
-| **Herramienta** | Envuelve un análisis determinista (análisis estático, grafo de código) | Lo que la herramienta detecta de forma determinista SHOULD ejecutarse en la CI (L3); la skill ayuda a interpretar y corregir, no es el control |
-| **Flujo** | Orquesta el ciclo completo: planes, ejecución, revisión, cierre de ramas | MUST NOT instalarse junto a AES. Dos metodologías dando instrucciones sobre lo mismo hacen que el agente elija una distinta cada vez |
+| **Technique** | How to do an activity well: debugging, security review, writing a design note | Assigned to the roles that do that activity. It MUST NOT contradict an AES gate, contract or permission |
+| **Tool** | Wraps a deterministic analysis (static analysis, code graph) | What the tool detects deterministically SHOULD run in CI (L3); the skill helps interpret and fix, it is not the control |
+| **Workflow** | Orchestrates the whole cycle: plans, execution, review, closing branches | MUST NOT be installed alongside AES. Two methodologies giving instructions about the same thing make the agent pick a different one each time |
 
-Reglas para toda skill:
+Rules for every skill:
 
-- **Versión fija y revisada:** se copia al repositorio en una versión concreta, dentro de una ruta protegida, y la revisa el responsable humano. Nada de plugins o skills que se actualizan solos: una actualización silenciosa cambia las instrucciones de los agentes sin aprobación.
-- **Registrada en el perfil:** origen, versión o commit, licencia, quién la revisó y qué roles la usan.
-- **Sin consultas de red propias:** los avisos de actualización, las actualizaciones automáticas y la telemetría de una skill se desactivan en el proyecto (variable de entorno o configuración). Una actualización es un cambio de versión, y entra por PR como cualquier otro. Se aceptan las descargas que el propio paquete fija en su versión y verifica con huellas incluidas en él, como un lockfile. Una consulta que no se puede desactivar (por ejemplo, un catálogo de opciones) se registra en el perfil, se usa solo con el responsable humano presente y nunca envía código ni datos del proyecto.
-- **Sin servidores ni procesos que queden vivos** al terminar el paso que los abrió (§10). Si la skill los arranca, el paso termina deteniéndolos.
-- **Se instala con AES:** el instalador de AES copia el núcleo y las skills de terceros registradas, en su versión fija, para que ninguna se quede atrás al instalar o actualizar AES.
-- **Hooks y scripts incluidos** se revisan como código propio, y respetan las demás reglas (por ejemplo, no dejar procesos vivos entre roles, 06 §10).
-- **Su salida no es evidencia** salvo que ejecute un comando y muestre la salida real (00 §7).
-- **Pocas por rol:** cada skill disponible ocupa contexto; un rol carga las que su trabajo necesita.
+- **Pinned and reviewed version:** it is copied into the repository at a specific version, inside a protected path, and the human owner reviews it. No plugins or skills that update themselves: a silent update changes the agents' instructions without approval.
+- **Registered in the profile:** origin, version or commit, licence, who reviewed it and which roles use it.
+- **No network calls of its own:** a skill's update notices, auto-updates and telemetry are disabled in the project (environment variable or configuration). An update is a version change, and it goes through a PR like any other. Downloads the package itself pins in its version and verifies with hashes it ships, like a lockfile, are accepted. A call that cannot be disabled (for example, a catalogue of options) is recorded in the profile, used only with the human owner present, and never sends the project's code or data.
+- **No servers or processes left alive** after the step that opened them finishes (§10). If the skill starts them, the step ends by stopping them.
+- **Installed with AES:** the AES installer copies the core and the registered third-party skills, at their pinned version, so that none is left behind when AES is installed or upgraded.
+- **Included hooks and scripts** are reviewed as the project's own code, and follow the other rules (for example, no processes left alive between roles, 06 §10).
+- **Its output is not evidence** unless it runs a command and shows the real output (00 §7).
+- **Few per role:** each available skill takes up context; a role loads the ones its work needs.
 
-AES mantiene un **núcleo de skills propias** (`skills/` en el repositorio de AES), escritas para sus gates y contratos, en el formato abierto de Agent Skills. No son obligatorias: un proyecto puede usar otras equivalentes si cumplen las reglas anteriores. Cuando una skill de terceros es buena pero de tipo flujo, o depende de otras de su paquete, se escribe una propia tomándola como referencia, con atribución y respetando su licencia.
+AES keeps a **core of its own skills** (`skills/` in the AES repository), written for its gates and contracts, in the open Agent Skills format. They are not mandatory: a project may use equivalent ones if they meet the rules above. When a third-party skill is good but of the workflow type, or depends on others from its package, an own skill is written using it as a reference, with attribution and respecting its licence.
 
-## 7. Secretos y entornos
+## 7. Secrets and environments
 
-Los agentes no deben imprimir, copiar a reportes ni incluir en commits secretos, credenciales, tokens, datos personales reales o archivos de entorno. Los entornos de prueba deben usar datos sintéticos o anonimizados cuando sea posible. Los agentes reciben credenciales solo si su tarea las necesita y con privilegio mínimo.
+Agents must not print, copy into reports or include in commits secrets, credentials, tokens, real personal data or environment files. Test environments must use synthetic or anonymized data when possible. Agents receive credentials only if their task needs them, with least privilege.
 
-## 8. Aprobaciones humanas obligatorias
+## 8. Mandatory human approvals
 
-Requieren aprobación humana previa:
+The following require prior human approval:
 
-- cambio material de visión, alcance o comportamiento de producto;
-- decisión arquitectónica transversal o difícil de revertir;
-- cambio en autenticación, autorización, seguridad o manejo de datos sensibles;
-- migración destructiva o acción irreversible sobre datos;
-- coste externo significativo o nuevo servicio de pago;
-- cambio de políticas de permisos, CI o suite protegida;
-- excepción a un control fundamental;
-- aceptación final de una funcionalidad/producto cuando el perfil lo requiera.
+- a material change of vision, scope or product behaviour;
+- a cross-cutting or hard-to-reverse architectural decision;
+- a change in authentication, authorization, security or the handling of sensitive data;
+- a destructive migration or an irreversible action on data;
+- a significant external cost or a new paid service;
+- a change to the permission policies, CI or protected suite;
+- an exception to a fundamental control;
+- final acceptance of a feature/product when the profile requires it.
 
-Los detalles rutinarios, locales y reversibles pueden delegarse si respetan la arquitectura y las convenciones.
+Routine, local and reversible details can be delegated if they respect the architecture and the conventions.
 
-Cuando la aprobación se expresa en la CI (por ejemplo, con una etiqueta en el PR que autoriza dependencias o marcadores), la CI SHOULD comprobar **quién** la dio: una persona autorizada, no la identidad de los agentes. Una etiqueta que la identidad de los agentes puede poner no es una aprobación. Si la plataforma no permite comprobarlo, se usa una revisión aprobada en su lugar.
+When the approval is expressed in CI (for example, with a PR label that authorizes dependencies or markers), CI SHOULD check **who** gave it: an authorized person, not the agents' identity. A label the agents' identity can apply is not an approval. If the platform does not allow checking it, an approved review is used instead.
 
-La **verificación independiente** es una condición de integración que no debe depender de la memoria de nadie. El `PASS` del verificador SHOULD quedar como evidencia que la CI o la protección de rama exigen antes de integrar una tarea (por ejemplo, una etiqueta de verificación que solo puede poner el responsable humano tras leer el informe, comprobada como en el párrafo anterior). En el sandbox de AES, una tarea se integró antes del `PASS` cuando el aviso del orquestador no lo recordaba, y la regla se cumplió en la historia siguiente solo porque el aviso lo decía.
+**Independent verification** is a merge condition that must not depend on anyone's memory. The verifier's `PASS` SHOULD remain as evidence that CI or branch protection requires before merging a task (for example, a verification label that only the human owner can apply after reading the report, checked as in the previous paragraph). In the AES sandbox, a task was merged before the `PASS` when the orchestrator's prompt did not mention it, and the rule was followed in the next story only because the prompt said so.
 
-## 9. Modelo de controles en capas
+## 9. Layered control model
 
-Un permiso del harness no equivale a un control que el agente no puede esquivar. Ejemplo: en OpenCode, el permiso `edit` cubre las herramientas de edición, escritura y parche, pero una terminal permisiva puede escribir el mismo archivo con `sed` o una redirección.
+A harness permission is not the same as a control the agent cannot bypass. Example: in OpenCode, the `edit` permission covers the edit, write and patch tools, but a permissive terminal can write the same file with `sed` or a redirection.
 
-Un control solo se considera **técnico** (principio 8) si el agente **no puede desactivarlo ni esquivarlo desde su propio entorno de ejecución**. AES distingue tres capas:
+A control is only considered **technical** (principle 8) if the agent **cannot disable or bypass it from its own execution environment**. AES distinguishes three layers:
 
-| Capa | Dónde vive | Qué hace | ¿Puede esquivarla el agente? |
+| Layer | Where it lives | What it does | Can the agent bypass it? |
 |---|---|---|---|
-| **L1 — Harness** | Permisos del harness (por ejemplo `opencode.json`, permisos de Claude Code) | Niega edición de rutas, limita comandos. | Parcialmente (terminal, configuración editable). Es **fricción**, no garantía. |
-| **L2 — Hooks** | Hooks del harness (`PreToolUse`, `Stop`, plugins) | Bloquea escrituras a rutas protegidas; impide terminar con pruebas rojas. | Solo si puede editar la configuración de hooks, que debe estar protegida en L1 y L3. |
-| **L3 — Fuera del agente** | CI desde ref confiable, protección de rama, CODEOWNERS, montajes de solo lectura, repositorios separados | Ejecuta la suite protegida desde la rama principal; verifica integridad, superficie y marcadores de trampa. | **No.** Es la única capa que cuenta como gate. |
+| **L1 — Harness** | Harness permissions (for example `opencode.json`, Claude Code permissions) | Denies editing paths, limits commands. | Partially (terminal, editable configuration). It is **friction**, not a guarantee. |
+| **L2 — Hooks** | Harness hooks (`PreToolUse`, `Stop`, plugins) | Blocks writes to protected paths; prevents finishing with red tests. | Only if it can edit the hook configuration, which must be protected in L1 and L3. |
+| **L3 — Outside the agent** | CI from a trusted ref, branch protection, CODEOWNERS, read-only mounts, separate repositories | Runs the protected suite from the main branch; checks integrity, surface and cheating markers. | **No.** It is the only layer that counts as a gate. |
 
-Reglas:
+Rules:
 
-- Los controles fundamentales (protección de la suite de aceptación, independencia de verificación, rutas protegidas, superficie de cambio) MUST existir en L3.
-- La configuración del harness, los hooks, la CI y las instrucciones persistentes MUST estar en rutas que el programador no puede editar (L1) y cuya modificación hace fallar la CI (L3).
-- El programador SHOULD trabajar en un worktree o contenedor donde la suite holdout no existe y la suite visible está montada en solo lectura.
-- Si la CI se define en archivos del propio repositorio, una rama puede modificar su propio workflow para saltarse el guardián. Las credenciales con las que se publican ramas de programador MUST NOT tener permiso para modificar workflows (en GitHub, un token sin el permiso *Workflows*), o la plataforma MUST imponer el workflow desde fuera de la rama (por ejemplo, workflows obligatorios a nivel de organización).
-- MUST NOT presentarse L1 o L2 como suficientes para un control fundamental.
-- Si el responsable humano necesita poder integrar sus propios cambios (nadie puede aprobar su propio PR), el permiso de saltarse la aprobación MUST NOT alcanzar a los checks obligatorios. En GitHub: dos rulesets, uno con los checks y sin bypass, otro con la aprobación y un bypass solo para PR. Un único ruleset con bypass permite integrar con la CI en rojo; en el sandbox de AES pasó.
-- Los agentes publican con una **identidad propia**, distinta de la del humano, y sus commits llevan esa misma autoría. Así la aprobación del humano es real y el historial distingue quién escribió qué.
-- **Aislamiento del sistema de archivos:** la terminal de un agente puede escribir fuera del repositorio, y ninguna de las tres capas lo detecta. Si el disco tiene algo sensible, los roles que escriben SHOULD trabajar en un entorno aislado (contenedor, máquina virtual o el aislamiento de terminal del harness); si no, el perfil lo declara como excepción.
+- The fundamental controls (protection of the acceptance suite, verification independence, protected paths, change surface) MUST exist in L3.
+- The harness configuration, the hooks, CI and the persistent instructions MUST live in paths the programmer cannot edit (L1) and whose modification makes CI fail (L3).
+- The programmer SHOULD work in a worktree or container where the holdout suite does not exist and the visible suite is mounted read-only.
+- If CI is defined in files of the repository itself, a branch can modify its own workflow to skip the guard. The credentials used to publish programmer branches MUST NOT have permission to modify workflows (on GitHub, a token without the *Workflows* permission), or the platform MUST impose the workflow from outside the branch (for example, organization-level required workflows). Workflow changes are applied by the human, with their own identity.
+- L1 or L2 MUST NOT be presented as sufficient for a fundamental control.
+- If the human owner needs to be able to merge their own changes (nobody can approve their own PR), the permission to skip the approval MUST NOT reach the required checks. On GitHub: two rulesets, one with the checks and no bypass, another with the approval and a bypass for PRs only. A single ruleset with a bypass allows merging with CI red; in the AES sandbox it happened.
+- Agents publish with an **identity of their own**, different from the human's, and their commits carry that same authorship. That way the human's approval is real and the history distinguishes who wrote what.
+- **File-system isolation:** an agent's terminal can write outside the repository, and none of the three layers detects it. If the disk holds something sensitive, the roles that write SHOULD work in an isolated environment (container, virtual machine or the harness's terminal sandbox); otherwise the profile declares it as an exception.
 
-`profiles/reference/` contiene una implementación de referencia de las tres capas.
+`profiles/reference/` contains a reference implementation of the three layers.
 
-## 10. Estado entre roles
+## 10. State between roles
 
-Un rol no debe dejar nada que el siguiente pueda tomar como propio: servidores escuchando, procesos, datos de prueba o archivos temporales dentro del repositorio. Si la aceptación reutiliza un servidor que dejó vivo otro rol, puede pasar contra código viejo; en el sandbox de AES, los servidores de un verificador bloquearon la compilación del programador siguiente.
+A role must not leave anything the next one could take as its own: listening servers, processes, test data or temporary files inside the repository. If the acceptance suite reuses a server another role left alive, it can pass against old code; in the AES sandbox, a verifier's servers blocked the next programmer's build.
 
-Cada rol que lee o escribe una rama de trabajo SHOULD hacerlo en un **checkout propio** de esa rama (por ejemplo, un *worktree* de git), no en el checkout del orquestador:
+Each role that reads or writes a work branch SHOULD do so in **its own checkout** of that branch (for example, a git *worktree*), not in the orchestrator's checkout:
 
-- el orquestador se queda en `dev` y no cambia de rama; los roles no heredan sus archivos sin versionar ni él los suyos;
-- el verificador revisa una copia limpia de la rama, no la que acaba de usar el programador;
-- los archivos locales que un rol necesita y no están versionados (credenciales de su identidad, configuración local) se copian al checkout de forma explícita, nunca se versionan;
-- si varios roles trabajan a la vez, cada checkout necesita sus propios puertos y datos; hasta que el perfil lo resuelva, los roles se ejecutan de uno en uno.
+- the orchestrator stays on `dev` and does not switch branches; the roles do not inherit its unversioned files, nor it theirs;
+- the verifier reviews a clean copy of the branch, not the one the programmer just used;
+- local files a role needs that are not versioned (its identity's credentials, local configuration) are copied into the checkout explicitly, never versioned;
+- if several roles work at the same time, each checkout needs its own ports and data; until the profile solves it, roles run one at a time.
 
-- Los servidores se arrancan con una herramienta que los detiene siempre al terminar y que **no reutiliza** un servidor ajeno: si el puerto está ocupado, falla.
-- Al terminar cada rol, un control comprueba que no quedó nada escuchando en los puertos del proyecto (L2 en la implementación de referencia; en la CI, cada ejecución empieza limpia).
-- Si un agente no puede detener algo que arrancó, es una acción denegada (§6.1).
+- Servers are started with a tool that always stops them when it finishes and that **does not reuse** someone else's server: if the port is in use, it fails.
+- When each role finishes, a control checks that nothing was left listening on the project's ports (L2 in the reference implementation; in CI, every run starts clean).
+- If an agent cannot stop something it started, it is a denied action (§6.1).
 
-## 11. Modelo y harness por rol
+## 11. Model and harness per role
 
-El perfil declara qué harness y qué modelo ocupa cada rol. El **orquestador** MUST correr en el modelo más capaz disponible: decide el diseño (10 §5), clasifica tracks, severidades y hallazgos, y es el único rol que ve el ciclo completo. Los demás roles pueden usar modelos más baratos porque reciben instrucciones desglosadas y su trabajo se verifica. La evidencia de cada elemento (09 §6) registra el modelo **real** de cada rol en esa ejecución, no el declarado: si cambian, las comparaciones de costo y calidad entre elementos no valen.
+The profile declares which harness and which model each role uses. The **orchestrator** MUST run on the most capable model available: it decides the design (10 §5), classifies tracks, severities and findings, and is the only role that sees the whole cycle. The other roles can use cheaper models because they receive broken-down instructions and their work is verified. The evidence of each item (09 §6) records the **actual** model of each role in that run, not the declared one: if they change, cost and quality comparisons between items are not valid.
 
-## 12. Roles en otro harness
+## 12. Roles in another harness
 
-Un rol MAY correr en un harness distinto al del orquestador (por ejemplo, el orquestador en Claude Code y el programador en OpenCode con otro proveedor), siempre que el perfil lo declare en su tabla de roles (§11) y se cumpla lo siguiente:
+A role MAY run in a different harness from the orchestrator's (for example, the orchestrator in Claude Code and the programmer in OpenCode with another provider), as long as the profile declares it in its role table (§11) and the following hold:
 
-1. **El mismo contrato.** El rol recibe las mismas instrucciones que en el harness principal, desde el mismo archivo; no hay una segunda versión que se desfase.
-2. **L1 equivalente** (§9): permisos del harness que niegan las rutas protegidas, la publicación (push, PR), la red que el rol no necesita y las preguntas interactivas. En una ejecución sin interfaz, una acción que pediría confirmación MUST rechazarse, nunca aprobarse sola.
-3. **L2 equivalente o hueco declarado:** las mismas comprobaciones que los hooks del harness principal, preferiblemente ejecutando los mismos scripts. Si el harness no permite alguna, el perfil la registra como hueco conocido.
-4. **L3 sin cambios:** la CI y la compuerta de fin de rol (servidores, guardián, validaciones) se aplican igual, porque no dependen del harness.
-5. **Sin credenciales de publicación** en el entorno del rol: publica el orquestador (§10).
-6. **Costo por delegación:** cada ejecución registra modelo, tokens (entrada, salida, razonamiento, caché) y costo estimado con el precio de lista del proveedor, incluidos los recargos por horario, aunque el modelo se use gratis. La retrospectiva del elemento resume el costo por rol (09 §6).
-7. **Versión probada y entorno comprobado:** el perfil registra con qué versiones del otro harness se probó la delegación, y antes de delegar se comprueba que el harness acepta lo que la delegación usa y que el modelo responde. Un cambio de versión del harness no debe descubrirse como un rol que no se ejecutó.
-8. **Plan del proveedor adecuado a la tarea:** un plan gratuito o con límite de uso corto MUST NOT usarse para tareas que compilan o duran más que su ventana; un corte a mitad de tarea deja trabajo sin compuerta. La fila de costo se registra también cuando el proveedor falla.
-9. **Datos fuera del proveedor principal:** el perfil registra a qué proveedor va el código y el contexto de cada rol, y sus condiciones de retención y entrenamiento. Un proyecto con datos sensibles no delega en un proveedor que retiene o entrena con ellos.
+1. **The same contract.** The role receives the same instructions as in the main harness, from the same file; there is no second version that drifts.
+2. **Equivalent L1** (§9): harness permissions that deny the protected paths, publishing (push, PR), the network the role does not need and interactive questions. In a headless run, an action that would ask for confirmation MUST be rejected, never approved on its own.
+3. **Equivalent L2 or a declared gap:** the same checks as the main harness's hooks, preferably by running the same scripts. If the harness does not allow one, the profile records it as a known gap.
+4. **Unchanged L3:** CI and the end-of-role gate (servers, guard, validations) apply the same way, because they do not depend on the harness.
+5. **No publishing credentials** in the role's environment: the orchestrator publishes (§10).
+6. **Cost per delegation:** each run records the model, tokens (input, output, reasoning, cache) and estimated cost at the provider's list price, including time-of-day surcharges, even if the model is used for free. The item's retrospective summarizes cost per role (09 §6).
+7. **Tested version and checked environment:** the profile records which versions of the other harness the delegation was tested with, and before delegating it is checked that the harness accepts what the delegation uses and that the model responds. A harness version change must not be discovered as a role that never ran.
+8. **A provider plan suited to the task:** a free plan, or one with a short usage window, MUST NOT be used for tasks that compile or last longer than its window; a cut halfway through a task leaves work without a gate. The cost row is recorded even when the provider fails.
+9. **Data outside the main provider:** the profile records which provider receives each role's code and context, and its retention and training terms. A project with sensitive data does not delegate to a provider that retains or trains on it.
 
-### 12.1 Nivel de modelo por tarea
+### 12.1 Model level per task
 
-El binding de un rol es un valor por defecto, no una obligación para todas sus tareas. Una tarea MAY pedir otro **nivel de modelo** (por ejemplo, «alto») o un binding concreto, cuando lo que pide supera lo que el modelo por defecto hace bien:
-- **contexto muy grande que hay que leer entero:** un esquema o una base de datos heredada, un módulo antiguo, un volcado de registros;
-- **razonamiento que cruza muchas piezas:** una migración de datos con reglas, un cambio de concurrencia, de seguridad o de un protocolo;
-- **fallos repetidos del nivel estándar** por defectos del código (no de la especificación): tras dos ciclos FAIL así, el orquestador MAY proponer el nivel alto para el siguiente.
+A role's binding is a default, not an obligation for all of its tasks. A task MAY request another **model level** (for example, "high") or a specific binding, when what it asks exceeds what the default model does well:
 
-El orquestador propone el nivel en la especificación de la tarea, con el motivo, y el humano lo aprueba junto con las tareas. Sin motivo, una tarea usa el nivel estándar: el nivel alto cuesta más y gasta los límites del proveedor principal. El perfil define qué binding tiene cada nivel y para cada rol; el verificador de una tarea de nivel alto MAY subir también de nivel. Cuando el programador y el verificador quedan en la misma familia de modelos, el perfil lo anota como hueco del SHOULD de abajo.
+- **a very large context that has to be read in full:** a legacy schema or database, an old module, a dump of records;
+- **reasoning across many pieces:** a data migration with rules, a concurrency, security or protocol change;
+- **repeated failures at the standard level** caused by code defects (not by the specification): after two such FAIL cycles, the orchestrator MAY propose the high level for the next one.
 
-Si la tarea ve **datos reales** (una base de datos de producción o heredada, registros con datos personales), el nivel elegido MUST respetar el punto 9: si el proveedor de ese nivel retiene o entrena con lo que recibe, la tarea trabaja con el esquema y una muestra anonimizada, o se elige otro proveedor.
+The orchestrator proposes the level in the task's specification, with the reason, and the human approves it together with the tasks. Without a reason, a task uses the standard level: the high level costs more and uses up the main provider's limits. The profile defines which binding each level has for each role; the verifier of a high-level task MAY also move up a level. When the programmer and the verifier end up in the same model family, the profile notes it as a gap in the SHOULD below.
 
-El verificador SHOULD correr en una familia de modelos distinta a la del programador: un modelo que revisa su propio tipo de errores los detecta peor.
+If the task sees **real data** (a production or legacy database, records with personal data), the chosen level MUST respect point 9: if the provider of that level retains or trains on what it receives, the task works with the schema and an anonymized sample, or another provider is chosen.
+
+The verifier SHOULD run on a model family different from the programmer's: a model reviewing its own kind of mistakes catches them less well.

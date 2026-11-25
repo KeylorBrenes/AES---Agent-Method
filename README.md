@@ -1,6 +1,6 @@
 # Agentic Engineering Standard (AES)
 
-**Version:** 1.6.0 · **Status:** in use
+**Version:** 2.0.0 · **Status:** in use
 
 AES is an engineering process for building and maintaining software with AI coding agents **without having to read every line they write to trust the result**. It is harness-agnostic (Claude Code, OpenCode, others), model-agnostic and stack-agnostic, and it ships with a working reference implementation: agent contracts, hooks, CI gates, scripts and a backlog board.
 

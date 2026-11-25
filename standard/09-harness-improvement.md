@@ -1,72 +1,73 @@
-# 09 — Mejora continua del harness
+# 09 — Continuous improvement of the harness
 
-## 1. Objetivo
+## 1. Goal
 
-Convertir los fallos observados de los agentes en controles permanentes, de modo que el mismo error no dependa de que alguien lo recuerde ni de que se repita una instrucción en cada sesión.
+Turn the agents' observed failures into permanent controls, so that the same mistake does not depend on someone remembering it or on repeating an instruction in every session.
 
-Anthropic recomienda construir skills **después** de evaluar: ejecutar el agente en tareas representativas, observar dónde falla y cerrar esas brechas de forma incremental. Simon Willison describe el mismo principio como el «paso compuesto»: cada proyecto termina con una retrospectiva que mejora las instrucciones de las ejecuciones siguientes. AES formaliza ambos.
+Anthropic recommends building skills **after** evaluating: running the agent on representative tasks, observing where it fails and closing those gaps incrementally. Simon Willison describes the same principle as the "compound step": each project ends with a retrospective that improves the instructions of the following runs. AES formalizes both.
 
-## 2. Registro de fallos de agentes
+## 2. Agent failure log
 
-Cada proyecto MUST mantener `docs/agent-failure-log.md` (plantilla en `templates/agent-failure-log.md`).
+Each project MUST keep `docs/agent-failure-log.md` (template in `templates/agent-failure-log.md`).
 
-Se registra un fallo cuando un agente:
+A failure is recorded when an agent:
 
-- implementa funcionalidad no pedida o sale de su superficie de cambio;
-- intenta debilitar, omitir o modificar pruebas;
-- afirma resultados que no ejecutó;
-- entra en bucles de corrección o activa el circuit breaker (04 §9);
-- inventa APIs, estructuras o requisitos;
-- introduce complejidad, dependencias o abstracciones injustificadas;
-- comete un error de convención del proyecto que se repite.
+- implements functionality nobody asked for or leaves its change surface;
+- tries to weaken, skip or modify tests;
+- claims results it did not run;
+- enters fix loops or triggers the circuit breaker (04 §9);
+- invents APIs, structures or requirements;
+- introduces unjustified complexity, dependencies or abstractions;
+- repeats a project-convention mistake.
 
-Cada entrada describe síntoma, cómo se detectó, causa probable y el control que se añadió. No se registran juicios sobre el modelo, sino hechos observables.
+Each entry describes the symptom, how it was detected, the probable cause and the control that was added. Judgements about the model are not recorded, only observable facts.
 
-## 3. Retrospectiva compuesta
+## 3. Compound retrospective
 
-Al cerrar cada historia T2/T3 y cada lote de estabilización, y al menos una vez por cada grupo de trabajo T0/T1, el orquestador MUST:
+When each T2/T3 story and each stabilization batch closes, and at least once per group of T0/T1 work, the orchestrator MUST:
 
-1. revisar las entradas nuevas del registro;
-2. identificar patrones (un fallo repetido dos veces es un patrón);
-3. proponer **un control por patrón**, eligiendo el más duro que sea razonable, en este orden:
-   1. prueba o chequeo en CI (L3);
-   2. hook (L2);
-   3. permiso del harness (L1);
-   4. skill con un procedimiento específico;
-   5. una línea en `AGENTS.md`/`CLAUDE.md`;
-4. presentar la propuesta al responsable humano, que la aprueba o la rechaza (06 §8);
-5. tras aplicarla, registrar en qué tarea posterior se verificó que el fallo no se repite.
+1. review the new entries in the log;
+2. identify patterns (a failure repeated twice is a pattern);
+3. **attribute each FAIL cycle** to its origin before proposing anything: a code defect, a gap in the specification or design note, or the harness/environment. "The model is too weak" is a conclusion the records must support, not the first hypothesis;
+4. propose **one control per pattern**, choosing the hardest reasonable one, in this order:
+   1. a test or check in CI (L3);
+   2. a hook (L2);
+   3. a harness permission (L1);
+   4. a template section or a skill with a specific procedure;
+   5. a line in `AGENTS.md`/`CLAUDE.md`;
+5. present the proposal to the human owner, who approves or rejects it (06 §8);
+6. after applying it, record in which later task it was verified that the failure does not repeat.
 
-Una línea en las instrucciones persistentes es el control más débil: el agente puede ignorarla o perderla al compactar contexto. Se usa cuando no hay forma razonable de automatizar la detección.
+A line in the persistent instructions is the weakest control: the agent can ignore it or lose it when context is compacted. It is used when there is no reasonable way to automate the detection.
 
-La retrospectiva es breve: patrones, un control por patrón y decisiones abiertas. El detalle ya está en el registro de hallazgos y en el de fallos; copiarlo a la retrospectiva duplica el costo de redacción del orquestador.
+The retrospective is brief: patterns, one control per pattern and open decisions. The detail is already in the findings log and the failure log; copying it into the retrospective doubles the orchestrator's writing cost.
 
-## 4. Evaluación de cambios al harness
+## 4. Evaluating harness changes
 
-Los cambios a instrucciones persistentes, skills, hooks o permisos SHOULD comprobarse con al menos una tarea representativa antes de darse por buenos. Una instrucción que no cambia el comportamiento observado se elimina: ocupa contexto sin aportar.
+Changes to persistent instructions, skills, hooks or permissions SHOULD be checked with at least one representative task before being considered good. An instruction that does not change the observed behaviour is removed: it takes up context without contributing.
 
-## 5. Higiene de las instrucciones persistentes
+## 5. Hygiene of the persistent instructions
 
-- Revisar periódicamente `AGENTS.md`/`CLAUDE.md` y eliminar entradas que ya cubre un control más duro.
-- Mantener el archivo breve; si crece, mover procedimientos a skills y dejar solo el puntero.
-- No acumular reglas contradictorias: una entrada nueva que contradice otra la sustituye explícitamente.
+- Periodically review `AGENTS.md`/`CLAUDE.md` and remove entries already covered by a harder control.
+- Keep the file brief; if it grows, move procedures into skills and leave only the pointer.
+- Do not accumulate contradictory rules: a new entry that contradicts another explicitly replaces it.
 
-## 6. Evidencia del proceso y métricas
+## 6. Process evidence and metrics
 
-Además del registro de fallos, cada proyecto SHOULD mantener un **registro de hallazgos del proceso** (`docs/harness-findings.md`, plantilla en `templates/harness-findings.md`): fricciones, confirmaciones de que un control funcionó, huecos de control y costos. Es la materia prima de las retrospectivas y de las propuestas de cambio a AES.
+Besides the failure log, each project SHOULD keep a **process findings log** (`docs/harness-findings.md`, template in `templates/harness-findings.md`): friction, confirmations that a control worked, control gaps and costs. It is the raw material of the retrospectives and of the change proposals to AES.
 
-Por cada elemento cerrado (historia, enabler, lote) se registra una fila de métricas:
+For each closed item (story, enabler, batch) a metrics row is recorded:
 
-| Elemento | Inicio | Fin | Modelo real por rol | Ciclos FAIL | Intervenciones humanas | Bloqueos de controles | Costo | Tiempo |
-|---|---|---|---|---|---|---|---|---|
+| Item | Start | End | Actual model per role | FAIL cycles | Human interventions | Control blocks | Cost | API time | Total time |
+|---|---|---|---|---|---|---|---|---|---|
 
-- **Modelo real por rol:** el que ejecutó, no el que declara el perfil (06 §11).
-- **Intervenciones humanas:** cada vez que el humano decidió, aprobó, corrigió o desbloqueó algo.
-- **Bloqueos de controles:** de hooks, permisos y clasificadores del harness, por separado. Un control que nunca bloquea puede estar funcionando o no estar probado; un control que bloquea mucho puede estar mal calibrado.
-- **Costo:** el que reporta el harness. Si solo el humano puede consultarlo, el orquestador se lo pide al cerrar.
+- **Actual model per role:** the one that ran, not the one the profile declares (06 §11).
+- **Human interventions:** every time the human decided, approved, corrected or unblocked something.
+- **Control blocks:** from hooks, permissions and harness classifiers, separately. A control that never blocks may be working or may be untested; a control that blocks a lot may be badly calibrated.
+- **Cost:** the one the harness reports, per model. If only the human can look it up, the orchestrator asks for it at close.
 
-## 7. Notas durante el ciclo
+## 7. Notes during the cycle
 
-- Los hallazgos, fallos y decisiones se anotan **en el momento**, con la hora real que da un comando, no con una hora escrita por el agente. En el sandbox de AES, el orquestador escribió horas estimadas, algunas por delante del reloj.
-- Las notas en curso viven fuera del control de versiones (por ejemplo, `.aes/`) y se consolidan en los registros versionados en el cierre del elemento. Así no se cuelan en los PR de tareas, donde el guardián las rechazaría por estar fuera de la superficie.
-- La creación y el vaciado de las notas los hace un script, no un rol: si un rol no puede escribir en esa carpeta, la consolidación no debe depender de que pueda.
+- Findings, failures and decisions are noted **at the moment**, with the real time a command gives, not a time written by the agent. In the AES sandbox, the orchestrator wrote estimated times, some ahead of the clock.
+- Notes in progress live outside version control (for example, `.aes/`) and are consolidated into the versioned logs when the item closes. That way they do not slip into task PRs, where the guard would reject them for being outside the surface.
+- Creating and clearing the notes is done by a script, not a role: if a role cannot write to that folder, consolidation must not depend on it being able to.
