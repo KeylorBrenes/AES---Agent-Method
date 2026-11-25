@@ -141,6 +141,46 @@ Sin preguntas, para automatizar: `scripts/setup-repo.sh <dueño/repo> [--create 
 
 Instalar AES en un proyecto que ya existe, sin `setup-repo.sh`: `./scripts/install-aes.sh <proyecto>` (con `--upgrade` actualiza y con `--check` comprueba).
 
+## El tablero del backlog
+
+`docs/backlog.md` es la única fuente del backlog. A partir de él, `.claude/scripts/aes-board.mjs` genera `.aes/board.html`: un solo archivo, sin red ni dependencias, que se regenera solo tras cada `git pull` (hook local de git) y se abre en cualquier navegador. Es de solo lectura: el backlog cambia por PR. Las capturas son del proyecto de prueba [aes-todo](https://github.com/KeylorBrenes/aes-todo), con sus datos reales.
+
+**Qué trabajar ahora.**
+
+![Tablero: letrero «Siguiente» con US-001, la frase para el orquestador y el botón de copiar; a la derecha, la compuerta de estabilización abierta y las otras tareas listas; abajo, filtros y columnas por estado](docs/img/tablero/tablero.png)
+
+- **Letrero «Siguiente».** Es el elemento que conviene trabajar y por qué. Primero va lo que ya está en curso; con la compuerta cerrada, los defectos; si no, lo que está listo, por prioridad, release y orden del backlog.
+- **Frase para el orquestador.** Se copia con un clic y se pega en Claude Code.
+- **Panel lateral.** El estado de la compuerta de estabilización (Menores abiertos frente al límite) y las demás tareas listas para empezar.
+- **Todas las tarjetas a la vista.** Cada una dice si está lista, en espera de algo concreto, frenada por la compuerta, en curso o hecha. Se filtran por texto, release, epic o tipo, y se agrupan por estado, epic o release.
+
+**El detalle de un elemento.**
+
+![Detalle de US-009: espera a US-008, frase para el orquestador, la ruta de cinco requisitos pendientes desde EN-001 y las dos historias que esperan a esta; en el tablero se iluminan sus requisitos](docs/img/tablero/detalle.png)
+
+- **Cómo se abre.** Con un clic en una tarjeta, o con un enlace directo (`board.html#d=US-009`). No es modal: el tablero sigue usable.
+- **Ruta hasta aquí.** Todo lo que falta antes de poder empezarlo, en orden.
+- **Lo que depende de él.** Los elementos que esperan a este.
+- **Notas y métricas.** Las notas del backlog, las métricas y los enlaces a la especificación y la retrospectiva.
+- **En el tablero.** Se iluminan sus requisitos y lo que depende de él.
+
+**Releases y métricas.**
+
+![Releases: avance de REL-001 a REL-003 por puntos y elementos, con los IDs de cada uno](docs/img/tablero/releases.png)
+
+![Métricas por elemento: ciclos FAIL, costo y duración de EN-001 y ST-001](docs/img/tablero/metricas.png)
+
+- **Releases.** El avance de cada release por puntos y por elementos, lo que está en curso y los defectos abiertos.
+- **Métricas.** Las que consolida el cierre de cada elemento (`docs/harness-findings.md`), más las corridas, tokens y costo estimado de los roles en OpenCode de esa máquina (`.aes/costs.csv`).
+
+**La guía.** La nomenclatura de AES en una página: tipos de ID y la frase para pedir cada uno, estados, marcas de las tarjetas, tracks, severidad y compuerta, prioridad, etiquetas de los PR, ramas y nivel de modelo.
+
+![Guía: tipos de elemento con la frase para pedir cada uno, estados y marcas de las tarjetas](docs/img/tablero/guia.png)
+
+**Modo oscuro**, según el sistema, y todo el tablero se usa con el teclado: pestañas con flechas, Esc cierra el detalle y los filtros se recuerdan.
+
+![El tablero en modo oscuro](docs/img/tablero/oscuro.png)
+
 ## Versionado
 
 AES utiliza versionado semántico:
