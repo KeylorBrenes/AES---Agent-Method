@@ -63,7 +63,7 @@ The names may change with the tools, but the responsibilities must be kept:
 - **Architect:** analyses structure and technical consequences; proposes decisions and ADRs. The orchestrator may take this role.
 - **Test designer / QA:** turns approved criteria into acceptance scenarios and tests; protects their integrity.
 - **Programmer:** implements bounded tasks and the technical tests it is allowed to write.
-- **Mechanic (optional):** makes mechanical, bounded changes (non-functional configuration, renames, formatting, consolidating notes) with no new logic. It allows that work to be assigned to a cheaper model.
+- **Mechanic (optional):** makes mechanical, bounded changes (non-functional configuration, renames, formatting) with no new logic. It allows that work to be assigned to a cheaper model.
 - **Independent verifier:** checks the result against requirements and evidence; does not modify the code under review.
 - **CI and deterministic tools:** run repeatable controls. Their results are kept as evidence.
 

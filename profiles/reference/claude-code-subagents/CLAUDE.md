@@ -1,6 +1,6 @@
 # [Project] — project instructions
 
-Project managed with **AES 2.0.0** (https://github.com/KeylorBrenes/AES---Agent-Method).
+Project managed with **AES 2.1.0** (https://github.com/KeylorBrenes/AES---Agent-Method).
 
 ## At the start of each session
 - **If `docs/backlog.md` does not exist, the project has no planning yet:** before anything else, use the `aes-inception` skill and ask the human for the idea (in blocks of concrete questions). Do not write code or create stories without it.

@@ -56,7 +56,7 @@ Every change must be integrated through the project's mechanism (pull request, m
 
 Changes must not be merged just because an agent finished its task.
 
-A task is not merged without the verifier's `PASS`, even if CI is green (06 §8). Before adding commits to a PR's branch, check that the PR is still open: pushing to a branch that was already merged and deleted recreates it with work nobody will review.
+A task is not merged without the verifier's `PASS`, even if CI is green (06 §8). A task's PR is merged with a **merge commit**, so its commit plan (04 §2) reaches `dev` as it was reviewed: one commit per criterion or piece, which `git log` and `git bisect` can still tell apart. Specification and close PRs, which are documentation, can be squashed. Before adding commits to a PR's branch, check that the PR is still open: pushing to a branch that was already merged and deleted recreates it with work nobody will review.
 
 ## 5. Release
 

@@ -18,8 +18,9 @@ Every task ready to run MUST specify:
 - constraints and permissions;
 - **exact validation commands** (not descriptions such as "run the relevant tests");
 - **affected regression tests** (test map), when they can be generated or inferred;
-- **criteria it turns green**: the criterion (or defect) IDs this task satisfies. The task's CI runs only those plus the regression suite; the **last** task of the story runs the whole story (05 §12);
-- indicative diff budget, separate for production and tests (02 §6);
+- **criteria it turns green**: the criterion (or defect) IDs this task satisfies. The task's CI runs only those plus the regression suite; the **last** task of the story runs the whole story (05 §12). A single-layer task (§3) declares `none` and turns green the technical tests its design note lists;
+- **production budget**, a limit (02 §6), and an estimate for tests;
+- **commit plan**: the order of the commits, one per criterion or per piece of the design note, each with its tests, so that each can be reviewed on its own;
 - **model level** (06 §12.1): standard by default, or a higher level with its reason;
 - **design note** (10 §5) in T2/T3: pieces, responsibilities, pattern (or absence of a pattern) and what is not done;
 - if the task introduces a **state** (error, loading, editing), the transitions that create it and those that clear it;
@@ -37,7 +38,9 @@ A task is small enough if an agent can understand its goal, implement it, inspec
 
 A story has **at most 3 tasks**. If it does not fit, the story is too large and is split (02 §3.1, §10), instead of making larger tasks.
 
-Tasks are split **by criteria** (vertical slices that turn criteria green), not by technical layers. An "API only" task and a "UI only" task cannot turn green separately if the acceptance spans both. Without per-criterion CI, every story ends up as one large task: in the AES sandbox, the first two stories ended in single tasks of 300 to 500 lines.
+Tasks are split **by criteria** by default (vertical slices that turn criteria green). When a criterion does not fit in the production budget end to end, it is split **by layer**: the earlier tasks (for example, the server) turn green the technical tests their design note lists, with `none` in their criteria file, and the task that completes the slice turns the criterion green. Without that option, a criterion with an interface forced server and web into a single task: in aes-todo, US-001's first task reached 2075 lines (FL-007).
+
+The production budget is a limit (02 §6). The orchestrator estimates it **per piece** of the design note, both ends of a new function included (server and web) and the test cases the note requires; if the sum goes over the limit, the task is split before `Ready`, not justified afterwards.
 
 Signals to split:
 
@@ -145,4 +148,4 @@ A T1 that, while being worked on, turns out to touch new behaviour or a T3 risk 
 ## 11. Orchestrator sessions
 
 - The orchestrator works on **one story, enabler or batch per session**. Carrying the context of another item makes every turn more expensive and mixes decisions; in the AES sandbox, accumulated context was most of the cost of each story.
-- Mechanical writing (consolidating notes, metrics tables) SHOULD be delegated to a cheap role (the mechanic).
+- Mechanical writing (consolidating notes, metrics tables) SHOULD be done by a script; what cannot be scripted, by a cheap role (the mechanic). The orchestrator does not do it (09 §6–7).

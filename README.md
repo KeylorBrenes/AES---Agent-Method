@@ -1,6 +1,6 @@
 # Agentic Engineering Standard (AES)
 
-**Version:** 2.0.1 · **Status:** in use
+**Version:** 2.1.0 · **Status:** in use
 
 AES is an engineering process for building and maintaining software with AI coding agents **without having to read every line they write to trust the result**. It is harness-agnostic (Claude Code, OpenCode, others), model-agnostic and stack-agnostic, and it ships with a working reference implementation: agent contracts, hooks, CI gates, scripts and a backlog board.
 
@@ -72,7 +72,7 @@ The first item exposed real problems. The diagnosis showed they were **not the c
 
 - **L1, permissions:** what each role may run or read (no network, no publishing credentials for agents).
 - **L2, hooks:** what each role may write. The programmer cannot touch acceptance tests, specs or CI; violations are blocked, not just discouraged.
-- **L3, CI:** the guard checks the change surface, RED-before-GREEN, holdout tests, approvals by label (`aes:verified`, `aes:deps-approved`) and the stabilization gate. Agents publish through a GitHub App **without** workflow permissions, so no agent can change the CI that judges it.
+- **L3, CI:** the guard checks the change surface, the production budget, RED-before-GREEN, holdout tests, approvals by label (`aes:deps-approved`, `aes:budget-approved`) and the stabilization gate. Agents publish through a GitHub App **without** workflow permissions, so no agent can change the CI that judges it.
 
 **Multi-model by design.** Each role has a binding (`claude`, `claude:<model>` or `opencode:<provider>/<model>`), and each task can request a higher model level with a stated reason, for example "read this whole legacy database schema". Every OpenCode run is costed per task, peak-hour pricing included.
 

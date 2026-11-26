@@ -66,8 +66,11 @@ For each closed item (story, enabler, batch) a metrics row is recorded:
 - **Control blocks:** from hooks, permissions and harness classifiers, separately. A control that never blocks may be working or may be untested; a control that blocks a lot may be badly calibrated.
 - **Cost:** the one the harness reports, per model. If only the human can look it up, the orchestrator asks for it at close.
 
+The row is **computed by a script** from what the harness already records (run events, costs, CI runs), with what only the harness or the human knows passed in as data (Claude's cost, FAIL cycles, interventions). The orchestrator does not compute times or costs by hand: in aes-todo it spent three extra commits of the most expensive model on US-001's close breaking down times and costs per subagent.
+
 ## 7. Notes during the cycle
 
 - Findings, failures and decisions are noted **at the moment**, with the real time a command gives, not a time written by the agent. In the AES sandbox, the orchestrator wrote estimated times, some ahead of the clock.
 - Notes in progress live outside version control (for example, `.aes/`) and are consolidated into the versioned logs when the item closes. That way they do not slip into task PRs, where the guard would reject them for being outside the surface.
-- Creating and clearing the notes is done by a script, not a role: if a role cannot write to that folder, consolidation must not depend on it being able to.
+- Creating, consolidating and clearing the notes is done by a script, not a role: transcribing rows into the versioned logs is mechanical, and if a role cannot write to that folder, consolidation must not depend on it being able to. Only the decisions stay for the orchestrator, who numbers them in the item.
+- A note is never its own PR in the middle of a cycle: it waits for the close.

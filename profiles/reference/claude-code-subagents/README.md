@@ -1,6 +1,6 @@
 # Reference implementation — Claude Code with subagents
 
-An implementation of AES 2.0.0 with **Claude Code** as the orchestrator's harness: the main session is the orchestrator (on the most capable model available, because it also decides each task's design) and the `qa`, `programmer`, `mechanic` and `verifier` roles are subagents with their own context, model and permissions, or, according to the binding, they run in **OpenCode** with another provider (section "Roles in OpenCode"). GitHub hosts the repository, the CI and the branch protection.
+An implementation of AES 2.1.0 with **Claude Code** as the orchestrator's harness: the main session is the orchestrator (on the most capable model available, because it also decides each task's design) and the `qa`, `programmer`, `mechanic` and `verifier` roles are subagents with their own context, model and permissions, or, according to the binding, they run in **OpenCode** with another provider (section "Roles in OpenCode"). GitHub hosts the repository, the CI and the branch protection.
 
 It comes out of the [aes-sandbox-gastos](https://github.com/KeylorBrenes/aes-sandbox-gastos) experiment, an expense-tracking app in .NET 10 + React where AES was applied with real agents on four items (EN-001, US-001, CH-001, US-002), and was hardened in [aes-todo](https://github.com/KeylorBrenes/aes-todo) (Rust + React). What says "tested" was used there; what says "simulation" was tested with test repositories and data when publishing a version, but not yet in a real cycle.
 
@@ -22,16 +22,17 @@ It is a starting point, not a prescriptive profile. The stack-specific parts (.N
 | `.claude/scripts/aes-outline.sh` | — | Structural outline (files and public signatures, without implementations) so the orchestrator decides the design with facts | Simulation |
 | `.claude/scripts/aes-wt.sh` | — | Each role's own checkout (worktrees): `open`, `close`, `run`, `delegate`. The main checkout stays on `dev` | Tested |
 | `.claude/hooks/worktree-create.sh`, `worktree-remove.sh` | L2 | The subagent with `isolation: worktree` works on the real work branch (the one the orchestrator named with `delegate`); with no branch named, it does not start | Tested |
-| `.claude/scripts/aes-note.sh` | — | The orchestrator's notes with the real time; `clear` empties them after the close | Tested (`clear`: simulation) |
+| `.claude/scripts/aes-note.sh` | — | The orchestrator's notes with the real time; `consolidate` moves them into `docs/` at close; `clear` empties them after it | Notes: tested; `consolidate`: simulation |
+| `.claude/scripts/aes-metrics.mjs` | — | The item's metrics row from the records (OpenCode runs, costs, CI runs) with what only the human knows passed in; `--write` appends it to `docs/harness-findings.md` | Simulation |
 | `.claude/scripts/gh-app-token.sh`, `git-credential-aes-app.sh`, `agent-gh.sh` | L3 | The agents' identity: a GitHub App without the workflows permission | Tested |
 | `.claude/scripts/aes-workflow.sh` | L3 | The human runs it: applies on a branch the workflow the orchestrator prepared in `docs/ci/`, with the human's identity | Tested |
 | `.claude/scripts/aes-bind.sh` | — | A role's effective binding for a task: the "Model level" of its specification (`standard`, `high`, or a concrete binding) resolved with `AES_BIND_<ROLE>_<LEVEL>` from `aes.env` | Simulation |
 | `.claude/scripts/aes-doctor.sh` | — | Environment check before delegating: tools, the app's permissions, OpenCode (version, options, that the model answers) and the stack (`AES_DOCTOR_CHECKS`, with minimal builds) | Tested |
-| `.claude/skills/aes-cycle/SKILL.md` | — | The orchestrator's procedure, with delegation templates | Tested (T1 and batch paths: simulation) |
+| `.claude/skills/aes-cycle/` | — | The orchestrator's procedure: a short core with the templates, and `references/` for OpenCode, T1/T0 and release/hotfix, read only when needed | Tested (T1 and batch paths: simulation) |
 | `.claude/skills/aes-{inception,debugging,security-review,design-note}/` | — | AES core skills, copied from `skills/` at the root of the AES repo (not edited here) | Inception and design note: tested |
 | `.claude/aes.env` | — | The project language, ports and server commands, role bindings, environment checks | — |
-| `ci/aes-guard.sh` | L3 | Guard: protected paths, surface, dependencies, deleted tests, markers | Tested |
-| `ci/red-check.mjs` | L3 | Confirmed RED (all run and failing) and criterion → test traceability | Tested |
+| `ci/aes-guard.sh` | L3 | Guard: protected paths, surface, dependencies, deleted tests, markers, production budget (2.1) | Tested (budget: simulation) |
+| `ci/red-check.mjs` | L3 | Confirmed RED (all run and failing), criterion → test traceability and the generated matrix | Tested (matrix: simulation) |
 | `ci/aes-ctx.sh` | L3 | What CI runs by branch and target: valid routes to `dev` and `main`, the task's criteria, regression, verification commands, release and back-merge | Per criterion: tested; the rest: simulation |
 | `ci/defect-gate.sh` | L3 | Stabilization gate: reads the defects' severity from the target branch's backlog; `release` phase to release | Tested |
 | `ci/run-verify.sh` | L3 | Verification commands: RED in the specification, green in tasks, close and regression | Simulation |
@@ -163,10 +164,10 @@ It is also the manual for doing it by hand.
    - Repositories set up before 2.0.0 have the same rulesets under their Spanish names (`ramas-ci`, `aprobacion-dev`, `aprobacion-main`); the script recognizes them and does not duplicate them.
 
    A single ruleset with a bypass allows merging with CI red: the bypass skips all its rules. It happened in the sandbox (FL-003).
-8. **Labels** `aes:deps-approved`, `aes:markers-approved` and `aes:verified` (only you put them on) and the **variable** `AES_APPROVERS`. The other variables are optional (*Settings → Secrets and variables → Actions → Variables*):
+8. **Labels** `aes:deps-approved`, `aes:markers-approved`, `aes:budget-approved` and `aes:verified` (only you put them on) and the **variable** `AES_APPROVERS`. The other variables are optional (*Settings → Secrets and variables → Actions → Variables*):
    - `AES_APPROVERS`: the authorized logins, comma-separated. CI accepts a label only if the last time it was put on by one of these people, never by a `[bot]`.
    - `AES_MINOR_LIMIT` (5 by default): open Minor defects allowed.
-   - `AES_REQUIRE_VERIFIED` (`1` by default): requires `aes:verified` on tasks.
+   - `AES_REQUIRE_VERIFIED` (`0` by default since 2.1): `1` requires `aes:verified` on tasks besides your merge.
    - `AES_SAST` (`0` turns it off) and `AES_SAST_CONFIG` (`p/owasp-top-ten` by default): the SAST step.
    - `AES_UI_DETECT`: the interface detector, if impeccable is installed. By default it only annotates the PR; `block` makes findings fail the task; `0` turns it off.
 9. **The app's access** to the repository (`PUT /user/installations/<id>/repositories/<repo>`; by hand: *Settings → Applications → your app → Configure → Repository access*) and a check of its token.
@@ -177,10 +178,10 @@ Work branches start from `dev` and go to `dev`. A hotfix's (`BUG-NNN`) start fro
 
 | Branch | Who | What CI runs |
 |---|---|---|
-| `spec/<ID>` | orchestrator | build/test, RED of the new verification commands, regression |
-| `qa/<ID>` | orchestrator + QA | gate (start), build/test, RED and traceability of the tests of `<ID>`, RED of the new commands |
-| `task/<ID>/<TASK>` | programmer or mechanic | gate (Critical only), guard, build/test, the task's criteria (`<TASK>.criteria`; without it, the whole item), verification commands, regression, `aes:verified` |
-| `spec/<ID>-close` | orchestrator + mechanic | build/test, the whole item (it must run and pass), regression |
+| `qa/<ID>` | orchestrator + QA | the story PR: gate (start), build/test, RED and traceability of the tests of `<ID>`, RED of the new commands |
+| `spec/<ID>` | orchestrator | amendments and harness changes: build/test, RED of the new verification commands, regression |
+| `task/<ID>/<TASK>` | programmer or mechanic | gate (Critical only), guard (surface, production budget), build/test, the task's criteria (`<TASK>.criteria`; without it, the whole item; `none`, only the technical tests), verification commands, regression |
+| `spec/<ID>-close` | orchestrator | build/test, the whole item (it must run and pass), regression |
 | `dev` → `main` (release) | the orchestrator opens it, you merge with a merge commit | gate (no exemptions), "main contained in dev", full regression |
 | `main` → `dev` (back-merge) | the orchestrator opens it, you merge with a merge commit | full regression |
 | push to `dev` or `main` | — | build/test, regression, gate report; on `dev`, a warning if a back-merge is missing |
@@ -278,16 +279,19 @@ graphify hook install               # rebuilds it in the background after each c
 - Do not install its assistant integration (`graphify install`) without testing it first: it adds its own read hook to Claude Code, which has to coexist with AES's. That is what remains to be checked in the sandbox.
 - Register it in the profile like any third-party skill or tool.
 
-## Flow of a task with verification in L3
+## Flow of a story
 
 ```
-programmer → PR task/<ID>/<TASK>
-CI: everything green except "Verifier PASS approved"   ← expected, not a FAIL cycle
-orchestrator → verifier → PASS
-you: read the report → put on aes:verified
-CI restarts (labeled event) → green → you merge
-a new commit on the branch → CI removes aes:verified (and the other approvals) → it must be verified again
+orchestrator ⇄ you: the story and its questions, in one round, in the conversation
+PR qa/<ID>: story + decisions + acceptance tests (RED) + tasks   ← you sign all of it at once
+for each task (3 at most, each within its production budget):
+  programmer → PR task/<ID>/<TASK>, one commit per criterion or piece
+  CI green → verifier → PASS → the orchestrator publishes the report on the PR
+  you: read the report → merge (merge commit)  ← merging is the approval; the commits stay
+PR spec/<ID>-close: notes and metrics by script, retrospective, catalogue
 ```
+
+With `AES_REQUIRE_VERIFIED=1`, CI also requires the `aes:verified` label on tasks (the 2.0 behaviour): you put it on after reading the report, and a new commit removes it.
 
 ## Verification commands
 

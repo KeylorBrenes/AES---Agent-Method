@@ -82,6 +82,8 @@ The **orchestrator** decides level 2 and acts as the team's senior designer. Tha
 - which level-2 pattern is used, with its present reason;
 - **what is not done**, explicitly ("no interface is created for X: there is a single implementation"), with the same weight as what is;
 - how level 1 is applied where it is not obvious (for example, where the logic ends and input/output begins);
+- **which existing tests the task obliges to change:** each test that exercises a piece the task modifies, or that asserts a count or a list of something the task adds (migrations, routes, catalogue keys), goes into the change surface with what may change in it, or the note says why it does not change. In aes-todo, missing that sent the programmer to `BLOCKED` twice in the same story (FL-006);
+- **the commit plan:** one commit per criterion or per piece, each with its tests, in the order they are built;
 - **the decisions the verifier will test**, so the programmer does not improvise them: for tasks that add or change API routes, the **API edges** (what an unsupported method, an unknown route and the trailing slash return for each prefix, with which error body, and which fallback covers them); for tasks with an interface, the **dynamic behaviour** (where focus goes after each state transition, which live regions exist from page load, which focus ring each type of element shows, whether a message reserves space, and which responses the technical tests must cover, including a success with an unexpected body).
 
 The note goes in the task's specification and the human owner approves it with the rest of the tests-and-tasks PR. A decision that applies to more than one story moves up to an ADR (01 §4).
