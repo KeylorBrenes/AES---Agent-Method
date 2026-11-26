@@ -2,6 +2,34 @@
 
 Entries from 2.0.0 on are in English; earlier ones are kept in Spanish, as published.
 
+## [2.1.0] — 2026-11-26
+
+The process, cut with the five-step algorithm (question, delete, simplify, accelerate, automate) using US-001's records from aes-todo: 3 h 50 min for a story with 0 FAIL cycles, most of it serial waits, and a 2075-line PR. Details and trade-offs in `docs/rfc/RFC-005-aes-2.1.0.md`.
+
+### Changed
+- **One PR per story** for story, decisions, acceptance tests and tasks (`qa/<ID>`); the questions are answered in conversation first (03 §8).
+- **QA assumptions by impact:** visible ones go to the human; the orchestrator decides the internal ones and lists them in the PR for veto (03 §5).
+- **Merging is the approval** of a verified task: the orchestrator publishes the verifier's report on the PR. `aes:verified` is optional (`AES_REQUIRE_VERIFIED=1`; default `0`) (06 §8).
+- **Production budget is a limit** (02 §6): the guard fails above it plus `AES_BUDGET_TOLERANCE` (25 %), here and in the end-of-role gate; `aes:budget-approved` is the exception.
+- **Single-layer tasks:** a task can write `none` in its `.criteria` and turn green the technical tests of its design note; the next task turns the criterion green (04 §3).
+- **Commit plan:** one commit per criterion or piece, each with its tests, in the task template, the design note, the programmer and the verifier.
+- The design note lists the **tests the task obliges to change**, which go into the surface (10 §5, FL-006).
+- `aes-cycle` is a short core plus `references/` (OpenCode, T1/T0, release/hotfix); the orchestrator drafts design notes while QA works.
+- QA and the programmer run only the criterion they are touching while working (05 §2.2).
+- The mechanic no longer consolidates notes at close.
+
+### Added
+- `aes-metrics.mjs`: an item's metrics row from the records (`--ci`, `--write`).
+- `aes-note.sh consolidate <ID>`: notes into `docs/harness-findings.md` and FL-NNN entries.
+- `red-check.mjs` prints the criterion → test matrix; QA no longer writes it by hand.
+- Label `aes:budget-approved` (`setup-repo.sh`).
+
+### Fixed
+- A criterion checked only by a verification command can be listed in a `.criteria`: `aes-ctx.sh` and the workflow agree on `<ID>-AC-NN.verify` or `AC-NN.verify` (aes-todo P4).
+
+### Upgrading
+`install-aes.sh <project> --upgrade`. Adapted seeds get `.aes-new`: the workflow (`.github/workflows/aes.yml.aes-new`, applied by the human with `aes-workflow.sh`) carries the budget label and the optional verification. Until it is applied, the old workflow keeps requiring `aes:verified`; set the repository variable `AES_REQUIRE_VERIFIED=0` to stop it right away. Run `setup-repo.sh` again, or create the label `aes:budget-approved` by hand.
+
 ## [2.0.1] — 2026-11-25
 
 ### Fixed

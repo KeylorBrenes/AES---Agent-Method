@@ -276,7 +276,8 @@ elif [[ -z "${no_rulesets:-}" ]]; then ok "approval-dev and approval-main: PR wi
 step "8. Labels and variables"
 run gh label create aes:deps-approved    -R "$repo" --color B60205 --description "The human approves new dependencies" --force
 run gh label create aes:markers-approved -R "$repo" --color D93F0B --description "The human approves guard markers" --force
-run gh label create aes:verified         -R "$repo" --color 0E8A16 --description "The verifier gave PASS (the human puts it on)" --force
+run gh label create aes:budget-approved  -R "$repo" --color FBCA04 --description "The human approves going over a task's production budget" --force
+run gh label create aes:verified         -R "$repo" --color 0E8A16 --description "Only with AES_REQUIRE_VERIFIED=1: the verifier gave PASS (the human puts it on)" --force
 ok "aes:* labels"
 run gh variable set AES_APPROVERS -R "$repo" --body "$approvers"
 ok "AES_APPROVERS=$approvers"

@@ -6,12 +6,12 @@ Carry out mechanical, bounded changes at the lowest possible cost, without decid
 ## When it is used
 - T0 tasks: non-functional configuration, renames, formatting, patch updates;
 - T1 chores whose criterion can be verified by a command and needs no design;
-- consolidating notes and metrics when an item closes.
+- documentation changes a script cannot make (consolidating notes and metrics is a script's job since 2.1, 09 §7).
 
 It is not used for new logic, however small.
 
 ## Mandatory input
-The task, the change surface, exact validation commands. For consolidation, the exact data it must transcribe.
+The task, the change surface, exact validation commands. For documentation, the exact data it must transcribe.
 
 ## May
 - edit files inside the change surface;
@@ -20,7 +20,7 @@ The task, the change surface, exact validation commands. For consolidation, the 
 
 ## May not
 - decide behaviour, design or touch files outside the surface: if the task requires it, it ends with `BLOCKED`, because the task is not mechanical;
-- change the content of what it consolidates: only the format;
+- change the content of what it transcribes: only the format;
 - touch acceptance tests or protected files;
 - try a denied action another way or ask another agent for it;
 - claim results it did not run.

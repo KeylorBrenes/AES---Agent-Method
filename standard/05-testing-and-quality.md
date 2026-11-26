@@ -43,6 +43,10 @@ Confirmed RED also requires:
 - that the check is made by a **tool**, the same one in QA's environment and in CI, over the run's report. "I ran them separately" is not evidence: in the AES sandbox, QA reported a RED with two tests that never ran, and the tool caught it;
 - a single exception, the **bootstrap RED**: when the base has no application code yet (the first enabler), it is accepted that no test runs because there is nothing to start. The tool only allows it if the base has no code.
 
+The criterion → test matrix is **generated** by the same tool from the test titles and tags, together with each test's result against the base and the first line of its failure. QA pastes that output into the test plan and does not write the matrix by hand (2.1): a hand-written matrix repeated what the tool already knew and could drift from it.
+
+While working, QA and the programmer run **only the criterion they are touching** (by its tag, for example `@US-001-AC-03`) and the item's full suite once, at the end. In aes-todo, each run of US-001's suite took 3.5 minutes and was repeated several times: running commands took 28 of the 41 minutes of OpenCode work, against 13 of the model generating.
+
 ### 2.3 Visible and holdout tests
 
 The acceptance suite SHOULD be split (MUST in T3) into:
@@ -213,7 +217,7 @@ CI decides which tests to run by branch type and target branch (`dev` or `main`,
 |---|---|
 | Specification of a T1 with a verification command | The command, which **must fail** (RED), unless "no RED" was approved |
 | An item's acceptance tests (`qa/<ID>`) | The item's tests, which **must run and fail** (RED, §2.2) |
-| Task | Guard + validations + the criteria the task declares (or the whole item, if it is the last task) + regression |
+| Task | Guard + validations + the criteria the task declares (or the whole item, if it is the last task; with `none`, only the technical tests and the regression, 04 §3) + regression |
 | Item close | The whole item, which **must run and pass**, + regression |
 | `dev` and `main` | Regression of every item closed on that branch |
 | Release (`dev` → `main`) | Full regression + stabilization gate + `main` contained in `dev` (07 §8) |
@@ -223,6 +227,6 @@ Rules:
 
 - Each task's criteria file is read from the **protected branch**, like the change surface.
 - The regression suite includes the acceptance tests **and** the verification commands of every closed item.
-- A **verification command** is a criterion that is not checked with an acceptance test (configuration, tools, scripts, build). It is a versioned script in the item's protected path that exits with code 0 if the criterion is met. It is treated as a protected test: whoever writes the tests writes it, the human approves it and CI runs it from the protected branch.
+- A **verification command** is a criterion that is not checked with an acceptance test (configuration, tools, scripts, build). It is a versioned script in the item's protected path that exits with code 0 if the criterion is met. It is treated as a protected test: whoever writes the tests writes it, the human approves it and CI runs it from the protected branch. Its name says which criterion it checks: `<ID>.verify` (the whole item), `<ID>-AC-NN.verify` or `AC-NN.verify` (one criterion, which can then be listed in a task's criteria file) and `BUG-NNN.verify` (one defect).
 - Between merging an item's last task and merging its close, nothing else is merged into that branch (`dev`, or `main` in a hotfix): during that interval the regression suite does not include the item yet.
 - The list of items in regression is a versioned file. It travels with releases and back-merges, so `main`'s regression covers what was released and `dev`'s, everything integrated.

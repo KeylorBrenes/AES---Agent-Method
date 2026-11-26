@@ -46,7 +46,7 @@ Separate responsibilities, limit context and restrict each agent's actions to re
 
 ### Mechanic (optional)
 
-- runs mechanical tasks within a change surface: non-functional configuration, renames, formatting, consolidating notes and metrics;
+- runs mechanical tasks within a change surface: non-functional configuration, renames, formatting, documentation a script cannot produce;
 - has the programmer's permissions, limited to its task;
 - if the task requires deciding behaviour or designing, it stops with `BLOCKED`: that task is not mechanical.
 
@@ -196,7 +196,7 @@ Routine, local and reversible details can be delegated if they respect the archi
 
 When the approval is expressed in CI (for example, with a PR label that authorizes dependencies or markers), CI SHOULD check **who** gave it: an authorized person, not the agents' identity. A label the agents' identity can apply is not an approval. If the platform does not allow checking it, an approved review is used instead.
 
-**Independent verification** is a merge condition that must not depend on anyone's memory. The verifier's `PASS` SHOULD remain as evidence that CI or branch protection requires before merging a task (for example, a verification label that only the human owner can apply after reading the report, checked as in the previous paragraph). In the AES sandbox, a task was merged before the `PASS` when the orchestrator's prompt did not mention it, and the rule was followed in the next story only because the prompt said so.
+**Independent verification** is a merge condition. The orchestrator publishes the verifier's report on the task's PR (a comment with the result, the evidence and the findings with their classification), and the human owner's merge is the approval: merging says they read the `PASS`. The profile MAY also require it in CI (for example, a verification label only the human can apply, checked as in the previous paragraph); since 2.1 that is optional, because it doubled the owner's actions on every task without catching anything in aes-todo. In the AES sandbox, a task was merged before the `PASS` when the orchestrator's prompt did not mention it: the orchestrator MUST NOT ask the human to merge a task without the report published on the PR.
 
 ## 9. Layered control model
 

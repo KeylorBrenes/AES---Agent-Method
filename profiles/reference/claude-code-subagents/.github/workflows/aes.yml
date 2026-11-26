@@ -8,7 +8,7 @@
 #                     and of its new verification commands
 #   task/<ID>/<TASK>  invalidate old approvals + gate (Critical only) + guard (from the base)
 #                     + build/test + SAST of what is new + the task's criteria (.criteria; without it, the whole item)
-#                     + regression + approved verification (aes:verified label)
+#                     + regression (+ the aes:verified label, only if AES_REQUIRE_VERIFIED=1)
 #   spec/<ID>-close   build/test + the whole item (it must run and pass) + regression
 #   dev → main        release: gate (no exemptions) + main contained in dev + full regression
 #   main → dev        back-merge: full regression
@@ -37,7 +37,7 @@ concurrency:
 env:
   AES_APPROVERS: ${{ vars.AES_APPROVERS }}          # logins that can approve, comma-separated
   AES_MINOR_LIMIT: ${{ vars.AES_MINOR_LIMIT || '5' }}
-  AES_REQUIRE_VERIFIED: ${{ vars.AES_REQUIRE_VERIFIED || '1' }}
+  AES_REQUIRE_VERIFIED: ${{ vars.AES_REQUIRE_VERIFIED || '0' }}   # 2.1: merging is the approval (06 §8)
 
 jobs:
   aes:
@@ -109,7 +109,7 @@ jobs:
           # An approval holds for the commits its giver saw. Exception: aes:deps-approved is
           # kept if the new commits do not change manifests or lockfiles (the approval covers the
           # same dependencies). If it cannot be checked (force push, old script), it is removed.
-          for l in aes:verified aes:deps-approved aes:markers-approved; do
+          for l in aes:verified aes:deps-approved aes:markers-approved aes:budget-approved; do
             if [[ ",$LABELS," == *",$l,"* ]]; then
               if [[ "$l" == aes:deps-approved ]] && grep -q -- '--deps-changed' "$AES_CI/aes-guard.sh" \
                  && git cat-file -e "$BEFORE^{commit}" 2>/dev/null && git merge-base --is-ancestor "$BEFORE" "$AFTER" \
@@ -133,6 +133,7 @@ jobs:
           echo "deps=$(bash "$AES_CI/label-approver.sh" aes:deps-approved)" >> "$GITHUB_OUTPUT"
           echo "markers=$(bash "$AES_CI/label-approver.sh" aes:markers-approved)" >> "$GITHUB_OUTPUT"
           echo "verified=$(bash "$AES_CI/label-approver.sh" aes:verified)" >> "$GITHUB_OUTPUT"
+          echo "budget=$(bash "$AES_CI/label-approver.sh" aes:budget-approved)" >> "$GITHUB_OUTPUT"
 
       # ---------- Stabilization gate (02 §9) ----------
       - name: Stabilization gate
@@ -156,6 +157,7 @@ jobs:
           TASK_SCOPE_FILE: specs/${{ steps.ctx.outputs.item }}/${{ steps.ctx.outputs.task }}.scope
           AES_ALLOW_MARKERS: ${{ steps.approvals.outputs.markers }}
           AES_ALLOW_DEPS: ${{ steps.approvals.outputs.deps }}
+          AES_ALLOW_BUDGET: ${{ steps.approvals.outputs.budget }}
         run: bash "$AES_CI/aes-guard.sh"
 
       # ---------- Static security analysis (05 §7) ----------
@@ -296,6 +298,7 @@ jobs:
           WANTED: ${{ steps.ctx.outputs.wanted }}
           ACTIVE: ${{ steps.ctx.outputs.active }}
           VERIFY: ${{ steps.ctx.outputs.verify_green }}
+          ITEM: ${{ steps.ctx.outputs.item }}
         run: |
           # Each tag of the item in progress must have tests, except a defect that is
           # checked only by a verification command. That way a misspelled tag does not pass green.
@@ -303,7 +306,8 @@ jobs:
           for tag in $(tr '|' ' ' <<< "$WANTED"); do
             n=$(count "$tag"); n=${n:-0}
             if [[ "$n" == "0" ]]; then
-              if [[ " $VERIFY " == *"/$tag.verify "* ]]; then
+              # <ID>-AC-NN.verify, AC-NN.verify or BUG-NNN.verify (05 §12).
+              if [[ " $VERIFY " == *"/$tag.verify "* || " $VERIFY " == *"/${tag#"$ITEM"-}.verify "* ]]; then
                 echo "@$tag is checked by verification command (no Playwright tests)."
               else
                 echo "::error::There are no acceptance tests for @$tag. Check the tags or the .criteria file."
@@ -315,7 +319,7 @@ jobs:
           done
           tags=$(printf '%s|%s' "$WANTED" "$ACTIVE" | tr '|' '\n' | { grep -v '^$' || true; } | sort -u | sed 's/.*/@&(?![\\w-])/' | paste -sd'|')
           if [[ -z "$tags" ]]; then
-            echo "No items in progress or in regression: acceptance is not run."
+            echo "No items in progress or in regression: acceptance is not run (a task with \"none\" in its .criteria only runs the technical tests)."
             exit 0
           fi
           echo "Running acceptance for: $tags"

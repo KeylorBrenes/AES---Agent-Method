@@ -83,9 +83,12 @@ Agents must not invent product behaviour. They must:
 
 **QA assumptions** deserve their own rule. When writing the tests, QA has to fix details the contract does not state (the type of control for a field, a format, what happens in an edge case). If those assumptions reach the suite without a decision, QA defines the product and nobody signed it. Therefore:
 
-- QA MUST list in the test plan everything it had to assume;
+- QA MUST list in the test plan everything it had to assume, and mark each one as **visible** (it changes what the user sees or does: behaviour, data, text, accessibility) or **internal** (how a check is carried out: a selector, a timing, how a result is observed);
+- the human decides the visible ones; the orchestrator decides the internal ones with the simplest option consistent with the contract and lists them in the PR, where the human can veto any of them before merging;
 - each assumption becomes contract (a recorded decision, §8) or is rejected **before** the story becomes `Ready`;
 - no open assumption passes the DoR.
+
+In aes-todo, US-001's eight QA assumptions were asked one by one; six of them changed nothing the user could notice.
 
 The user must not be interrupted for trivial internal decisions that the standard already delegates to the technical team.
 
@@ -117,7 +120,7 @@ Each story has a "Decisions" section. Each resolved ambiguity and each assumptio
 
 Rules:
 
-- The decision enters the story **in the same PR** that uses it (refinement or tests). Approving that PR is the human owner's signature.
+- The decision enters the story **in the same PR** that uses it. In T2/T3 the story, its decisions, the acceptance tests and the tasks go in **a single PR** (2.1): the questions are asked and answered in conversation before QA writes, and approving that PR is the human owner's signature on all of it. If a criterion changes in the review, QA redoes the affected tests in the same PR.
 - "Impact" states what changed: a new or modified criterion, the interface contract, an ADR, or "none".
 - A decision that applies to more than one story moves up to an ADR (01 §4).
 - A decision that turns out to rest on a false fact is corrected **in its row**, with a date and a reason; it is not deleted.

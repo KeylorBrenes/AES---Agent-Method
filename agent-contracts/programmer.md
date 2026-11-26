@@ -38,7 +38,7 @@ A new session per task. Its own worktree or container, without access to the hol
 2. Inspect the relevant code.
 3. A brief plan if the change is not trivial.
 4. RED → GREEN → REFACTOR cycles until the task is done.
-5. Separate commits: `struct:` (no behaviour change) or `feat:`/`fix:`/`test:` (behavioural). Never mixed.
+5. Commits as the task's commit plan says, one per criterion or piece with its tests, so each can be reviewed on its own: `struct:` (no behaviour change) or `feat:`/`fix:`/`test:` (behavioural), never mixed. The production budget is a limit: if the task needs more, `BLOCKED` with the figure.
 6. Run the task's exact validation commands.
 7. Review its own diff against the change surface.
 8. Report, in the project's language (`AES_LANG`).

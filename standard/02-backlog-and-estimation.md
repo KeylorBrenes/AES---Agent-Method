@@ -102,7 +102,7 @@ No universal limit in hours is set. If a task looks large, it is split by verifi
 Heuristics specific to tasks run by agents (the profile adjusts them):
 
 - the task SHOULD be completable in **a single session with fresh context**, without compaction;
-- the resulting diff SHOULD be reviewable in one go; the profile sets an **indicative diff budget** (for example, 300–400 changed lines). Exceeding it is not an automatic failure, but it requires justifying why the task was not split;
+- the resulting diff MUST be reviewable in one go. The task's **production budget** is a limit, not an estimate (04 §3): the profile sets it (for example, 300 lines), CI fails the task when it is exceeded by more than the profile's tolerance, and going over it requires the human's approval. In aes-todo, an "indicative" budget of 300 ended in a 2075-line PR the owner could not review (FL-007);
 - the budget is estimated **separately for production code and for tests**. The deviation that requires justification is the production one: a single number punishes testing well (in the AES sandbox, 60% of a 474-line task were unit tests);
 - the task SHOULD touch a single coherent change surface (04 §2).
 
