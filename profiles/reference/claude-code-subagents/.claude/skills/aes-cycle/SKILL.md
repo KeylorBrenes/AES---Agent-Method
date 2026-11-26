@@ -37,7 +37,7 @@ This file is the normal path of a story or enabler. Read the others **only when 
 4. Identity: with `AES_IDENTITY=app`, `bash .claude/scripts/gh-app-token.sh | cut -c1-4` prints `ghs_`; with `personal`, `gh auth status`.
 5. Read `docs/project-profile.md`, `docs/backlog.md`, `specs/<ID>/<ID>.md` if it exists, `docs/aes/08-definition-of-ready-and-done.md` and the latest retrospective.
 6. **Model:** you run on the most capable model available (06 §11). If not, tell the human (`/model opus`).
-7. **Environment:** `bash .claude/scripts/aes-doctor.sh`. If something fails, give the human the **complete** list in one message.
+7. **Environment:** `bash .claude/scripts/aes-doctor.sh`. If something fails, give the human the **complete** list in one message. If the profile has no "Feedback speed" section (05 §13; projects started before 2.1), propose its rules for this stack as a `CH-NNN` before the next story.
 8. Start note: `bash .claude/scripts/aes-note.sh finding "<ID> start / orchestrator" "Start; model <model>" "Confirmation"`.
 9. **Gate:** `BASE=origin/dev bash ci/defect-gate.sh start <ID>`. A story or enabler does not start with it closed: propose an `ST-NNN` batch instead.
 10. **Track:** T2/T3 (US, EN) → sections 1 to 4. T1 or T0 → `references/short-path.md`.
@@ -85,7 +85,7 @@ One PR with everything the human signs (03 §8).
    - **FAIL** → **R2** (a cycle).
    - **PASS with findings** → the profile's rule or 02 §9.3: task defect Medium or higher → R2; task defect Minor → backlog `BUG-NNN`; specification gap → note and catalogue at close; pre-existing → backlog defect. Note each classification as a decision.
    - **PASS** → publish the report on the PR (`agent-gh.sh pr comment <n> --body-file <report>`: result, evidence, findings and their classification) and send **G1**.
-8. The human merges it (**squash**). Nothing else is merged between the last task and the close.
+8. The human merges it with a **merge commit**, so the commit plan reaches `dev` as reviewed (07 §4). Nothing else is merged between the last task and the close.
 
 ## 4. Close
 1. With every task merged: `git pull` on `dev`, `bash ci/validate.sh` and the acceptance tests of `<ID>`.
@@ -96,7 +96,7 @@ One PR with everything the human signs (03 §8).
    - the D-NN in `.aes/decisions-pending.md` into the story's "Decisions";
    - `docs/design-catalog.md` with what the notes introduced; an ADR proposal for conventions that apply to other stories;
    - **delete the technical plan** (`git rm specs/<ID>/plan.md specs/<ID>/TASK-* specs/<ID>/acceptance-test-plan.md`); the story and the `*.verify` files stay; note in the story's "Close" what you consolidated;
-   - `docs/retrospectives/<ID>.md`: **only** patterns (one control each, its origin: code, specification or harness), the metrics row the script printed and open decisions;
+   - `docs/retrospectives/<ID>.md`: **only** patterns (one control each, its origin: code, specification or harness), the metrics row the script printed, whether the feedback budget held (05 §13; if commands dominated the time, propose a feedback rule for the project) and open decisions;
    - deferred defects as `BUG-NNN` rows (Severity, Status `Draft`) with their note (AES's `templates/defect.md`); the item's status; `<ID>` in `specs/active-stories.txt`.
    One commit (`docs(<ID>): close`), push, `aes-wt.sh close spec/<ID>-close`.
 4. PR into `dev`. Confirm `kind=close`, `item=<ID>`, and that the item's tests and verification commands ran and passed. **GATE.**
@@ -131,7 +131,7 @@ Copy them as they are and fill in only what is between `<>`; write them in the p
 > Project language: `<AES_LANG>`. Task `<ID>/<TASK>`, FAIL cycle `<n>` of 3. Failure: `<verbatim check output or verifier finding: criterion, reproduction>`. Fix it following your contract, without leaving the surface. If the fix requires leaving it, report BLOCKED.
 
 **G1 — To the human, after a PASS**
-> `<ID>/<TASK>`: verifier PASS, report published on PR #`<n>`. Findings and their classification (02 §9.3): `<F-n — origin, type, severity → cycle / backlog / note>` or "none". If you agree, merge it with **squash**; do not merge with CI red.
+> `<ID>/<TASK>`: verifier PASS, report published on PR #`<n>`. Findings and their classification (02 §9.3): `<F-n — origin, type, severity → cycle / backlog / note>` or "none". If you agree, merge it with a **merge commit** (it keeps the reviewed commits); do not merge with CI red.
 
 ## If something does not fit
 If the harness does not allow doing something as written, do it in the closest possible way, note it as a finding and tell the human. Never a silent shortcut.

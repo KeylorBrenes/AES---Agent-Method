@@ -230,3 +230,20 @@ Rules:
 - A **verification command** is a criterion that is not checked with an acceptance test (configuration, tools, scripts, build). It is a versioned script in the item's protected path that exits with code 0 if the criterion is met. It is treated as a protected test: whoever writes the tests writes it, the human approves it and CI runs it from the protected branch. Its name says which criterion it checks: `<ID>.verify` (the whole item), `<ID>-AC-NN.verify` or `AC-NN.verify` (one criterion, which can then be listed in a task's criteria file) and `BUG-NNN.verify` (one defect).
 - Between merging an item's last task and merging its close, nothing else is merged into that branch (`dev`, or `main` in a hotfix): during that interval the regression suite does not include the item yet.
 - The list of items in regression is a versioned file. It travels with releases and back-merges, so `main`'s regression covers what was released and `dev`'s, everything integrated.
+
+## 13. Feedback speed
+
+Agents run the same commands many times: a slow suite is paid on every run, by every role, and it keeps the human waiting between gates. In aes-todo, US-001 spent 28 of the 41 minutes of OpenCode work running commands, against 13 of the model generating, and each task's CI took 7 to 9 minutes. Speed is designed, like quality.
+
+**General principles** (any stack):
+
+- **Build once, reuse it.** CI builds once and every later step uses that build; the acceptance fixture starts the server already built, never compiles it per test.
+- **Cache dependencies and builds** in CI, keyed by the lockfile.
+- **Run what you touch.** While working, only the tests of the criterion or the module being changed; the full suite once, at the end (§2.2).
+- **Start servers once per run**, not once per test, when data isolation (§2.5) allows it: each test creates its own data, so they can share a server.
+- **Parallelize only what is isolated.** Parallel workers with shared data produce flaky tests (§6).
+- **Measure it.** The metrics separate the model's time from the commands' time (09 §6); a retrospective that sees commands dominate proposes a feedback rule, not a different model.
+
+**Feedback budget.** The profile sets it, for example: a focused test under 30 seconds, the item's acceptance suite under 2 minutes, a task's CI under 5 minutes. It is a target, not a gate: when a retrospective finds it exceeded, the fix is a feedback rule in the project (a cache, a reused build, a fixture change), tracked like any other control (09 §3).
+
+**The project's feedback rules.** At inception, once the stack is chosen, the orchestrator translates the principles into concrete rules for that stack and writes them in the profile (for example, for Rust: a build cache in CI, `cargo build` once and the binary reused by the acceptance fixture; for .NET: `dotnet build` once and `--no-build` afterwards). EN-001 builds the CI and the fixture by them. They are the project's rules, not AES's.

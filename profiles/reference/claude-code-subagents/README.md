@@ -287,7 +287,7 @@ PR qa/<ID>: story + decisions + acceptance tests (RED) + tasks   ← you sign al
 for each task (3 at most, each within its production budget):
   programmer → PR task/<ID>/<TASK>, one commit per criterion or piece
   CI green → verifier → PASS → the orchestrator publishes the report on the PR
-  you: read the report → merge (squash)       ← merging is the approval
+  you: read the report → merge (merge commit)  ← merging is the approval; the commits stay
 PR spec/<ID>-close: notes and metrics by script, retrospective, catalogue
 ```
 

@@ -17,6 +17,8 @@ The process, cut with the five-step algorithm (question, delete, simplify, accel
 - `aes-cycle` is a short core plus `references/` (OpenCode, T1/T0, release/hotfix); the orchestrator drafts design notes while QA works.
 - QA and the programmer run only the criterion they are touching while working (05 §2.2).
 - The mechanic no longer consolidates notes at close.
+- **Task PRs are merged with a merge commit** (07 §4), so the commit plan reaches `dev` as it was reviewed; specification and close PRs can be squashed.
+- **Feedback speed** (05 §13): general principles (build once and reuse, cache, run what you touch, one server per run, parallelize only what is isolated, measure), a feedback budget in the profile, and the project's feedback rules for its stack, written at inception (01 §2.3) and built by EN-001. `aes-cycle` proposes them as a chore in projects started before 2.1.
 
 ### Added
 - `aes-metrics.mjs`: an item's metrics row from the records (`--ci`, `--write`).

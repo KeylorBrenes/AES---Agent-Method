@@ -95,13 +95,21 @@ Control gaps of the roles in another harness (06 §12, point 3):
 - Justified thresholds:
 - Test map generation (tool or method):
 - Proportion of holdout tests:
-- Production budget per task (a limit, 02 §6) and CI tolerance (`AES_BUDGET_TOLERANCE`, 25 % by default):
+- Production budget per task (a limit, 02 §6; e.g. 300 lines, tests apart) and CI tolerance (`AES_BUDGET_TOLERANCE`, 25 % by default):
 - Human approval of verified tasks: merging the PR with the verifier's report published on it (06 §8) / also the `aes:verified` label (`AES_REQUIRE_VERIFIED=1`):
 - Agentic manual testing tool (Playwright, curl, etc.):
 - Tool that starts and stops servers (06 §10) and the project's ports:
 - Tool that checks RED (05 §2.2):
 - Verification commands per item (05 §12): location and convention:
 - Environment check (01 §2.3, item 10): command and what it checks:
+
+## Feedback speed (05 §13)
+- Feedback budget: focused test < [30 s] · item's acceptance suite < [2 min] · a task's CI < [5 min]
+- The project's feedback rules (the principles of 05 §13 for this stack):
+  - Build: [built once in CI and reused by every step; e.g. `cargo build --locked` + `Swatinem/rust-cache`]
+  - Acceptance fixture: [starts the already built server once per run / per worker]
+  - Focused runs: [command to run one criterion or module]
+  - Parallelism: [workers and how their data is isolated]
 - Dependency audit policy (e.g. `npm audit`, `dotnet list package --vulnerable`):
 
 ## Layered controls (06 §9)

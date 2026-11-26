@@ -179,6 +179,7 @@ Questions do not continue in order to complete the detail of distant stories. Th
 8. **EN-001, the walking skeleton** (02 §3.2), first in the backlog: the application running end to end, with CI green, on which the stories grow.
 9. **A local copy of the rules the agents consult:** at least the DoR and DoD checklists (08) inside the repository (for example, `docs/aes/`), with the AES version they come from. An agent that only has the reference "AES 08" reviews the DoR from memory.
 10. **The environment check** for the chosen stack (`AES_DOCTOR_CHECKS`), run before EN-001, so everything missing on the machine is requested in one round.
+11. **The project's feedback rules** (05 §13): the general principles translated to the chosen stack, with the feedback budget, in the profile. EN-001 builds the CI and the acceptance fixture by them.
 
 ### 2.4 Approval and review
 
@@ -1016,6 +1017,23 @@ Rules:
 - Between merging an item's last task and merging its close, nothing else is merged into that branch (`dev`, or `main` in a hotfix): during that interval the regression suite does not include the item yet.
 - The list of items in regression is a versioned file. It travels with releases and back-merges, so `main`'s regression covers what was released and `dev`'s, everything integrated.
 
+## 13. Feedback speed
+
+Agents run the same commands many times: a slow suite is paid on every run, by every role, and it keeps the human waiting between gates. In aes-todo, US-001 spent 28 of the 41 minutes of OpenCode work running commands, against 13 of the model generating, and each task's CI took 7 to 9 minutes. Speed is designed, like quality.
+
+**General principles** (any stack):
+
+- **Build once, reuse it.** CI builds once and every later step uses that build; the acceptance fixture starts the server already built, never compiles it per test.
+- **Cache dependencies and builds** in CI, keyed by the lockfile.
+- **Run what you touch.** While working, only the tests of the criterion or the module being changed; the full suite once, at the end (§2.2).
+- **Start servers once per run**, not once per test, when data isolation (§2.5) allows it: each test creates its own data, so they can share a server.
+- **Parallelize only what is isolated.** Parallel workers with shared data produce flaky tests (§6).
+- **Measure it.** The metrics separate the model's time from the commands' time (09 §6); a retrospective that sees commands dominate proposes a feedback rule, not a different model.
+
+**Feedback budget.** The profile sets it, for example: a focused test under 30 seconds, the item's acceptance suite under 2 minutes, a task's CI under 5 minutes. It is a target, not a gate: when a retrospective finds it exceeded, the fix is a feedback rule in the project (a cache, a reused build, a fixture change), tracked like any other control (09 §3).
+
+**The project's feedback rules.** At inception, once the stack is chosen, the orchestrator translates the principles into concrete rules for that stack and writes them in the profile (for example, for Rust: a build cache in CI, `cargo build` once and the binary reused by the acceptance fixture; for .NET: `dotnet build` once and `--no-build` afterwards). EN-001 builds the CI and the fixture by them. They are the project's rules, not AES's.
+
 ---
 
 # 06 — Agent governance and permissions
@@ -1350,7 +1368,7 @@ Every change must be integrated through the project's mechanism (pull request, m
 
 Changes must not be merged just because an agent finished its task.
 
-A task is not merged without the verifier's `PASS`, even if CI is green (06 §8). Before adding commits to a PR's branch, check that the PR is still open: pushing to a branch that was already merged and deleted recreates it with work nobody will review.
+A task is not merged without the verifier's `PASS`, even if CI is green (06 §8). A task's PR is merged with a **merge commit**, so its commit plan (04 §2) reaches `dev` as it was reviewed: one commit per criterion or piece, which `git log` and `git bisect` can still tell apart. Specification and close PRs, which are documentation, can be squashed. Before adding commits to a PR's branch, check that the PR is still open: pushing to a branch that was already merged and deleted recreates it with work nobody will review.
 
 ## 5. Release
 

@@ -58,6 +58,14 @@ The five steps attributed to SpaceX, applied in order: question every requiremen
 - The guard's budget check, in CI and in the end-of-role gate.
 - `aes-ctx.sh` and the workflow agree on verification command names for one criterion (`<ID>-AC-NN.verify` or `AC-NN.verify`), aes-todo P4.
 
+## 6. Two follow-up decisions (owner, 2026-11-26)
+
+**Where the line limit goes.** Small commits help comprehension; a bounded PR bounds the cost of being wrong, because CI, the verifier, the merge and a revert all act per PR. A 2000-line PR in fifteen tidy commits is still 2000 lines to review before merging. The limit stays **per PR, production only** (about 300 lines; tests apart): US-001's first task had 2075 lines, but only ~720 of production, so under 2.1 the story is three tasks of ~250, not ten. A story that does not fit in three such tasks is split by rule or path, which is still vertical.
+
+**How a task is merged.** With commits as the unit of reading, squashing them contradicted the commit plan. Task PRs are merged with a **merge commit** (07 §4).
+
+**Feedback rules per stack** (05 §13): the slow part of US-001 was the commands, not the models. AES states the general principles and a feedback budget; at inception the orchestrator writes the concrete rules for the chosen stack in the profile, and EN-001 builds the CI and the acceptance fixture by them.
+
 ## Expected result
 
 For a story like US-001: about **1 h to 1 h 30 min** of wall-clock, 4 PRs instead of 8, one round of questions, and tasks the owner can review commit by commit. To be measured on US-002.
