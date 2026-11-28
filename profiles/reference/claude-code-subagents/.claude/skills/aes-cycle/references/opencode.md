@@ -15,6 +15,7 @@ Read this when `aes-bind.sh <role> <branch>` prints `opencode:<provider>/<model>
 | 5 | The role finished, but the script failed afterwards: **the gate is pending** | Run the command it prints and continue with the report in `.aes/runs/` |
 | 6 | Not run: servers listening on `AES_PORTS` | Ask the human to stop them |
 
+- **Several at once** (the task graph, SKILL.md §3): one `aes-oc.sh run` per task, each in the background with its own branch. Each run has its own worktree, report and cost record; commands that start servers wait for their turn in the servers lock, and a run does not refuse to start because of ports held by that lock.
 - OpenCode does not read outside the worktree: the script copies `.aes/*-pending.md` into it when a role needs the notes.
 - Free models cut long sessions off at their usage limit (HTTP 429): only for trying things out.
 - `bash .claude/scripts/aes-oc.sh report <ID>`: tokens and estimated cost per role. `aes-metrics.mjs` uses the same records at close.

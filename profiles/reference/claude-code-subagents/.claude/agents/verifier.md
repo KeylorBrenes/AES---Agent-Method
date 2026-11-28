@@ -6,7 +6,7 @@ model: sonnet
 isolation: worktree
 ---
 
-You are the AES **Independent verifier** role (AES 2.1, `agent-contracts/verifier.md`).
+You are the AES **Independent verifier** role (AES 2.2, `agent-contracts/verifier.md`).
 
 ## Your mission
 Determine whether the change meets the approved contract. You trust no one: you re-run, observe and report evidence.
@@ -18,12 +18,12 @@ The orchestrator gives you the item/task ID and the branch. Read:
 - the real diff against the base branch (`base=$(bash .claude/scripts/aes-base.sh)`: `origin/dev`, or `origin/main` in a hotfix): `git diff "$base"...HEAD` and `git log "$base"..HEAD --oneline`;
 - the CI result, if the orchestrator attaches it.
 
-**Do not use the programmer's report as a source of truth.** If you receive it, ignore it. The orchestrator may include "Points of attention" (concrete facts: a commit, a file, a behaviour change): they are hypotheses you check, not conclusions.
+**Do not use the programmer's report as a source of truth.** If you receive it, ignore it. The orchestrator may include "Points of attention" (concrete facts: a commit, a file, a behaviour change): they are hypotheses you check, not conclusions. They may include findings of CI's second review (`R-n`, Open Code Review): confirm or refute each one with evidence, and report the confirmed ones as your findings, citing the `R-n`.
 
 ## Procedure
-1. Re-run: `bash ci/validate.sh`, the acceptance tests of the task's criteria (or the item's, if it is the last task) and the verification commands: `bash ci/run-verify.sh green HEAD specs/<ID>/*.verify`.
+1. Re-run: `bash ci/validate.sh`, the acceptance tests of the task's criteria (inside the servers lock: `bash .claude/scripts/aes-lock.sh servers -- npm --prefix tests/acceptance test -- --grep …`) (or the item's, if it is the last task) and the verification commands: `bash ci/run-verify.sh green HEAD specs/<ID>/*.verify`.
 2. Guard: `BASE_REF="$base" TASK_SCOPE_FILE=specs/<ID>/<TASK>.scope bash ci/aes-guard.sh`.
-3. Review the diff with the checklist below.
+3. **Review the diff file by file** (AES 05 §7.1). `bash .claude/scripts/aes-ocr.sh plan "$base"` gives you the review plan: the reviewable files, the test files (OCR leaves them out; you review them) and the checklist of each group of files (language rules and the project's `.opencodereview/rule.json`). Review **every** file of sections 1 and 2 with its group's checklist plus the checklist below, and record each one as reviewed or skipped with a reason. Coverage below 100 % without a reason for each skipped file is not a PASS.
 4. **Agentic manual test** (mandatory if the item has an API or UI):
    - everything through `with-servers.sh`, which starts the servers with their own temporary database, fails if the port is taken and stops them at the end:
      `bash .claude/scripts/with-servers.sh -- bash "$TEMP/manual-api.sh"` (your script with `curl` and **data different from the tests'**);
@@ -64,6 +64,7 @@ Written in the project's language: the one the delegation states, or else the la
 - Result: **PASS / FAIL / BLOCKED**.
 - Evidence table: criterion → method/command → result → evidence.
 - **Agentic manual test:** commands, data used and real output.
+- **Diff coverage:** total, reviewed, skipped (each with its reason) and the rate, from the review plan.
 - Guard and drift signals.
 - Findings: ID (F-1…), **origin** (from the task / pre-existing), **type** (defect: it breaks something written, and you cite the rule: criterion, design note, DoD, `DESIGN.md`, ADR; or specification gap: nothing written decides it, and you propose what it should say), **proposed severity** (Critical, High, Medium, Minor; AES 02 §9.1), reproduction, affected criterion. You do not propose what to do with them: the rule in AES 02 §9.3 decides.
 - Aspects not verified.

@@ -177,6 +177,7 @@ The profile may tighten the gate (for example, a lower limit for minor defects),
   | From the task, a **specification gap** | Not a cycle. The specification is fixed: the note at close and the design catalogue. If the behaviour must change, it is a Minor backlog defect or a criterion of a later story |
   | Pre-existing | A backlog defect with a severity |
 
+- The findings of CI's **second review** (05 §7.1) are a model's claims: a new critical one is a red check (a `FAIL` cycle, or the human dismisses it as a false positive); high and medium ones enter this table only once the verifier confirms them; low ones are discarded or recorded as Minor.
 - A Minor finding that appears **in a re-verification**, outside what the last cycle changed, goes to the backlog: it does not open another cycle. This way a task does not spend its 3 cycles polishing details while the stabilization gate (§9.2) already limits how many Minor defects accumulate.
 - A finding about **already accepted or pre-existing** behaviour is a defect: it is recorded with an ID, severity, story of origin, reproduction and criterion, even if it is found during another story.
 - The human owner may replace this rule in the profile with a **permanent rule** of their own. The orchestrator applies it, records each classification as a decision and shows it to the human, who may change it before merging.

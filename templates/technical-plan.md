@@ -16,12 +16,12 @@
 [Which minimal part of each layer this story needs: migration, server, interface. Nothing from other stories.]
 
 ## Tasks (3 at most, 04 §3)
-| ID | Result | Criteria it turns green | Production budget | Surface | Agent |
-|---|---|---|---|---|---|
-| TASK-001 | [e.g. server side of AC-01 and AC-02] | `none` (technical tests of the note) | 250 | `TASK-001.scope` | programmer |
-| TASK-002 | [e.g. the form] | AC-01, AC-02 | 200 | `TASK-002.scope` | programmer |
+| ID | Result | Criteria it turns green | Depends on (04 §5) | Production budget | Surface | Agent |
+|---|---|---|---|---|---|---|
+| TASK-001 | [e.g. server side of AC-01 and AC-02] | `none` (technical tests of the note) | none | 250 | `TASK-001.scope` | programmer |
+| TASK-002 | [e.g. the form] | AC-01, AC-02 | TASK-001 (contract) | 200 | `TASK-002.scope` | programmer |
 
-[Each task has its `TASK-NNN.md` file with the design note (`design-note.md`), its `.scope` and, except the last one, its `.criteria`.]
+[Each task has its `TASK-NNN.md` file with the design note (`design-note.md`), its `.scope` and, except the last one, its `.criteria`. Surfaces that do not overlap let tasks run in parallel; a `(contract)` dependency lets the later task start at once against the note's contract (04 §5).]
 
 **Criteria that verify the harness** (CI, `validate.sh`, `aes.env`, a workflow): their changes do not go in the `qa/<ID>` PR, because they would make their own verification command pass and CI would reject the RED. They go in a `spec/<ID>-ci` PR **between** `qa/<ID>` and the first task, prepared by the orchestrator (protected paths). Indicate it here:
 

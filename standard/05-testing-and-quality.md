@@ -149,6 +149,24 @@ Checking dependencies for known vulnerabilities follows the profile's policy.
 
 If the project has an interface, a **deterministic UI detector** (contrast, legibility, overflow, basic accessibility, deviations from the project's visual system) SHOULD run in each task's CI over the interface files it changes. While the project has not decided which rules block, its findings are noted in the PR and the orchestrator records them as defects; afterwards, the rules the profile declares blocking fail the task, like SAST. An agent's design reviews (critiques, style scores) are findings, not evidence (00 §7).
 
+### 7.1 Code review: deterministic scaffolding and a second review
+
+An agent's review of a diff depends on its attention: nothing forces it to read every file, and its checklist is the same whatever the language. The deterministic part of the review is given to a tool (in the reference implementation, Open Code Review at a fixed version), as with every control that can be code (00 §7):
+
+- **Which files are reviewed:** every file of the diff is either reviewable or excluded with a reason (binary, generated, dependencies, an unsupported type). The verifier records each reviewable file as reviewed or skipped with a reason, and its report gives the **coverage** (total, reviewed, skipped, rate). Test files are reviewed too, with the verifier's own checklist, even if the tool leaves them out: weakened, disabled or tautological tests are what an agent's diff hides best.
+- **The checklist of each file:** the rules of its language plus the **project's rules** (level-1 principles, 10 §3, and the conventions the linter does not catch), versioned in a protected path. The orchestrator writes the project's rules at inception (01 §2.3).
+- **The same checklist, before and after.** The programmer reads the checklist of the files of its surface before writing code; the verifier reviews the diff with it. That way the checklist prevents defects instead of only finding them, and it costs a read, not another pass of a model.
+
+This mode calls no model: the reviewer is the role that already reviews (the verifier), with its model. It adds no cost and sends no code anywhere.
+
+A project MAY add a **second review** in each task's CI, in which the tool reviews the diff with a model of its own and the story and the task as context. Its value is independence, so its model SHOULD be from a family that is neither the programmer's nor the verifier's; the profile records which one it uses, and it may change it according to the budget. Each run costs tokens and sends the diff to that provider (06 §6.2). Its findings are treated like any reviewer's, with one difference, because the severity a model gives is a claim and not a fact:
+
+- a new **critical** finding fails the task's CI. If it is real it is a `FAIL` cycle; if it is a false positive, the human dismisses it with an approval label, validated like the others (06 §8), and a new commit removes it;
+- **high** and **medium** ones go to the verifier as points of attention, which it confirms with evidence or refutes. A confirmed one is a verifier finding and 02 §9.3 decides: a task defect of Medium or higher is a `FAIL` cycle before merging;
+- **low** ones are discarded or recorded as Minor defects.
+
+Without its credentials the step is skipped with a visible warning, and the verifier's review still runs: the second review complements the verifier, it never replaces it.
+
 A CI step that is skipped is not a control. Reading the log of a passing run (§9) is how a step that silently never runs is detected: in aes-todo, the SAST step had been skipped on every run since it was added, because an unset CI variable made its condition false.
 
 ## 8. Coverage and mutation testing

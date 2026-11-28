@@ -6,6 +6,7 @@
 - **Assigned agent:** programmer / mechanic
 - **Model level:** standard / high — [reason] / [a concrete binding, e.g. `opencode:deepseek/deepseek-flash` or `claude:opus`] (06 §12.1)
 - **Data the role sees:** code only / [real data: which, and whether the provider of the chosen level may receive it] (06 §12)
+- **Depends on:** none / TASK-[NNN] (it needs its code: it starts after its merge) / TASK-[NNN] (contract) (it only needs the note's interface contract: it starts at once) (04 §5)
 - **Risk:** Low / Medium / High / Critical
 - **Accumulated FAIL cycles:** 0 / 3 (circuit breaker on reaching 3)
 
@@ -46,7 +47,7 @@ tests/unit/[module]/**
 ## Exact validation commands
 ```
 [the module's unit test command]
-[acceptance test command filtered by US-NNN]
+[acceptance test command filtered by US-NNN, inside the servers lock when roles run in parallel]
 [lint] && [typecheck]
 ```
 

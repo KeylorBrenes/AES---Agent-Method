@@ -12,8 +12,18 @@
 - Does the diff follow the design note (pieces, responsibilities, pattern, what is not done)?
 - Level-1 symptoms (AES 10 §3)? List the ones found with file and line.
 
+## Diff coverage (AES 05 §7.1)
+- Review plan: [tool and version, base...head]
+- Files: total [N] · reviewed [N] · skipped [N] · coverage [N %]
+
+| File | Checklist (group) | Reviewed / skipped | Reason if skipped |
+|---|---|---|---|
+
 ## Points of attention received
-[Facts the orchestrator pointed out. They are checked as hypotheses, not accepted as conclusions.]
+[Facts the orchestrator pointed out, and the High/Medium findings of CI's second review (`R-n`). They are checked as hypotheses, not accepted as conclusions: confirmed or refuted, with evidence.]
+
+| Point | Confirmed / refuted | Evidence |
+|---|---|---|
 
 ## Scope verified
 [Story, tasks, criteria, interface contract and paths reviewed.]

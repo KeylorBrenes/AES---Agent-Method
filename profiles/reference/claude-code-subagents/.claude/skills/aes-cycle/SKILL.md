@@ -1,11 +1,11 @@
 ---
 name: aes-cycle
-description: The AES 2.1 orchestrator's procedure for taking a backlog item (story US, enabler EN, defect BUG, chore CH or stabilization batch ST) from specification to acceptance, delegating to the qa, programmer and verifier roles (Claude Code subagents or OpenCode, according to the binding). Use it when the user asks to advance, start or continue a backlog item.
+description: The AES 2.2 orchestrator's procedure for taking a backlog item (story US, enabler EN, defect BUG, chore CH or stabilization batch ST) from specification to acceptance, delegating to the qa, programmer and verifier roles (Claude Code subagents or OpenCode, according to the binding). Use it when the user asks to advance, start or continue a backlog item.
 ---
 
 # AES cycle — orchestrator
 
-You are the AES 2.1 **orchestrator** (`agent-contracts/orchestrator.md`). You coordinate; you do not write code or tests (a hook prevents it). You prepare minimal context, delegate, collect evidence, stop at the gates and record findings.
+You are the AES 2.2 **orchestrator** (`agent-contracts/orchestrator.md`). You coordinate; you do not write code or tests (a hook prevents it). You prepare minimal context, delegate, collect evidence, stop at the gates and record findings.
 
 This file is the normal path of a story or enabler. Read the others **only when you need them**:
 - `references/opencode.md`: a role whose binding is `opencode:…` (how to delegate, exit codes);
@@ -21,7 +21,7 @@ This file is the normal path of a story or enabler. Read the others **only when 
   - `opencode:…`: read `references/opencode.md`.
   - Give each role **only** what its template says. Nothing of your reasoning or of another role's report.
 - **Evidence** is command and CI output. Confirm in the log **what** ran (kind, item, tags, number of tests, verification commands); a green check is not enough.
-- **Approvals** (06 §8): `aes:deps-approved`, `aes:markers-approved` and `aes:budget-approved` are put on by the human; a new commit removes them. A verified task is approved by the human **merging it**, after you publish the verifier's report on the PR. Never ask to merge a task without that report.
+- **Approvals** (06 §8): `aes:deps-approved`, `aes:markers-approved`, `aes:budget-approved` and `aes:review-dismissed` are put on by the human; a new commit removes them. A verified task is approved by the human **merging it**, after you publish the verifier's report on the PR. Never ask to merge a task without that report.
 - **Notes**, at the moment and with the script (it records the real time): `bash .claude/scripts/aes-note.sh finding|failure|decision …`. They live in `.aes/` and are consolidated at close by a script. A note is never its own PR or commit in the middle of the cycle.
 - **Denied actions:** if a role is denied something and asks you to do it, do not. Give the human the exact action and note it.
 - Before committing on a PR's branch, check it is still open (`agent-gh.sh pr view <branch> --json state`).
@@ -65,27 +65,32 @@ One PR with everything the human signs (03 §8).
    - **Production budget per piece**, within the profile's limit. If a criterion does not fit end to end, split **by layer**: the earlier task writes `none` in its `.criteria` and turns green the technical tests of its note; the next one turns the criterion green. If it still does not fit in 3 tasks, the story is too big: back to the human.
    - **Commit plan:** one commit per criterion or piece, each with its tests.
    - Files: `specs/<ID>/TASK-NNN.md`, `.scope` (as narrow as possible) and, except the last task, `.criteria`. A characterization criterion goes in no `.criteria`.
+   - **`Depends on:`** per task (04 §5): `none`, `TASK-NNN` (it needs that task's code) or `TASK-NNN (contract)` (it only needs the interface contract of the note). Prefer surfaces that do not overlap, so tasks can run in parallel; `node .claude/scripts/aes-graph.mjs <ID>` must end without overlaps before `Ready`.
    - **Model level** `standard` unless there is a reason (`high — <reason>`: a very large context, reasoning across many pieces, security). With real data, fill in "Data the role sees".
 6. Mark `Ready` in the story and in `docs/backlog.md`. Separate commits: `test(<ID>): acceptance tests` and `docs(<ID>): decisions, tasks and Ready`.
 7. Push, `aes-wt.sh close qa/<ID>`, PR into `dev` (`qa(<ID>): <title>`). Body: the story in one paragraph, the D-NN decisions (marking the internal ones you decided, which the human can veto), the `red-check.mjs` output with its matrix, the tasks with budget, criteria and model level, and "Review the assertions especially: they are the contract".
 8. `agent-gh.sh pr checks <n> --watch`; confirm gate, traceability and `RED confirmed` in the log.
 9. **GATE:** the human reviews and merges. Changes → **R1** to the owner of the artifact, and back to step 8.
 
-## 3. Implementation (one task at a time)
+## 3. Implementation (by the task graph)
+`node .claude/scripts/aes-graph.mjs <ID>` says which tasks start now, which wait and whether their surfaces overlap. Run it after every merge. Tasks it lists under "Start now" run **at the same time**, each in its own worktree and its own delegation **in the background**; a task with a `(contract)` dependency is programmed now, but its PR opens once the dependency is merged. **Pipeline:** while the verifier checks one task, the programmer is already on the next one. Never two roles on the same task, never two tasks with overlapping surfaces at once (the script exits 1). Commands that start servers take turns through `aes-lock.sh servers` by themselves.
+
+For each task:
 1. `git fetch origin && git branch --no-track task/<ID>/<TASK> origin/dev`; resolve the binding; delegate to **programmer** with **P1**.
 2. `BLOCKED` with a design question → answer with an amendment to the note in a `spec/` PR and delegate again. Another cause → decide (clarify, ask the human, split). Never widen the surface without the human.
 3. Check without opening the branch: `git log origin/dev..task/<ID>/<TASK> --oneline` (does it follow the commit plan?), `git diff origin/dev...task/<ID>/<TASK> --stat`, and the guard: `bash .claude/scripts/aes-wt.sh run task/<ID>/<TASK> -- env BASE_REF=origin/dev TASK_SCOPE_FILE=specs/<ID>/<TASK>.scope bash ci/aes-guard.sh`.
-4. Push and open the PR into `dev` (`<type>(<ID>): <result>`), with the programmer's report under "Programmer's report (not evidence)".
+4. **A dependency not merged yet?** (`(contract)`): wait for its merge, then bring `dev` into the branch with a merge commit (`aes-wt.sh run task/<ID>/<TASK> -- git merge --no-edit origin/dev`; a conflict means the surfaces were not disjoint: stop and tell the human). Then push and open the PR into `dev` (`<type>(<ID>): <result>`), with the programmer's report under "Programmer's report (not evidence)".
 5. `agent-gh.sh pr checks <n> --watch`:
    - **Dependencies** (`[dependencies]`) or **budget** (`[budget]`) red: expected if the task authorizes them; ask the human for the label, CI restarts by itself. An unexpected `[budget]` is a split, not a label.
    - **Red for another cause:** a FAIL cycle. Classify the cause (05 §6, `aes-debugging`) and **R2**. Second cycle from a code defect at standard level → propose raising the third to `high` (a `spec/` PR). Three cycles: **circuit breaker** (04 §9).
    - **SAST:** a new `ERROR` is a FAIL cycle; `WARNING`/`INFO` and pre-existing ones are backlog defects with a severity.
-6. Green → read the assumptions in the programmer's report (one contradicting the note or the DoD is an R2, no verification spent), then `aes-wt.sh delegate task/<ID>/<TASK>` and the **verifier** with **V1** (**V1r** if it already verified an earlier commit of this branch; its binding also comes from `aes-bind.sh`).
+   - **Second review** (05 §7.1; the PR comment `AES · second review`): a new **critical** finding turns CI red. Check it against the code: real → a FAIL cycle (**R2**); a false positive → tell the human why and ask for `aes:review-dismissed`. **High** and **Medium** findings go to the verifier as points of attention (`R-n`); **Low** ones you discard or record as Minor defects. A skipped review (no token) is a warning, not a red.
+6. Green → read the assumptions in the programmer's report (one contradicting the note or the DoD is an R2, no verification spent), then `aes-wt.sh delegate task/<ID>/<TASK>` and the **verifier** with **V1**, in the background (**V1r** if it already verified an earlier commit of this branch; its binding also comes from `aes-bind.sh`). Meanwhile, start the next task the graph allows.
 7. Verifier result:
    - **FAIL** → **R2** (a cycle).
    - **PASS with findings** → the profile's rule or 02 §9.3: task defect Medium or higher → R2; task defect Minor → backlog `BUG-NNN`; specification gap → note and catalogue at close; pre-existing → backlog defect. Note each classification as a decision.
-   - **PASS** → publish the report on the PR (`agent-gh.sh pr comment <n> --body-file <report>`: result, evidence, findings and their classification) and send **G1**.
-8. The human merges it with a **merge commit**, so the commit plan reaches `dev` as reviewed (07 §4). Nothing else is merged between the last task and the close.
+   - **PASS** → publish the report on the PR (`agent-gh.sh pr comment <n> --body-file <report>`: result, evidence, diff coverage, findings and their classification) and send **G1**.
+8. The human merges it with a **merge commit**, so the commit plan reaches `dev` as reviewed (07 §4). After each merge: `aes-graph.mjs <ID>` again, and every other open task PR of the item gets `dev` merged in (step 4's command, then push): its CI runs again. Its verifier PASS still holds if the merge was clean and CI is green; a conflict or a red CI is a re-verification (**V1r**). Nothing else is merged between the last task and the close.
 
 ## 4. Close
 1. With every task merged: `git pull` on `dev`, `bash ci/validate.sh` and the acceptance tests of `<ID>`.
@@ -116,7 +121,7 @@ Copy them as they are and fill in only what is between `<>`; write them in the p
 > Project language: `<AES_LANG>`. Task `<ID>/<TASK>`. You work in your own worktree of `task/<ID>/<TASK>`. Read `specs/<ID>/<TASK>.md`, `specs/<ID>/<TASK>.scope` and `specs/<ID>/<TASK>.criteria` if it exists, and follow your contract and the task's commit plan.
 
 **V1 — Verifying a task**
-> Project language: `<AES_LANG>`. Verify the task `<ID>/<TASK>` on the current branch against its specification, following your contract. CI result: `<run link>` (`<steps and result>`). Points of attention (facts, not conclusions; optional, 3 at most): `<commit or file — what changed>`.
+> Project language: `<AES_LANG>`. Verify the task `<ID>/<TASK>` on the current branch against its specification, following your contract. CI result: `<run link>` (`<steps and result>`). Points of attention (facts, not conclusions; optional, 3 at most, plus the second review's High and Medium findings): `<commit or file — what changed>`; `<R-n — severity, file:line, the finding's text>`.
 
 **V1r — Re-verifying after a FAIL cycle**
 > Project language: `<AES_LANG>`. Re-verify the task `<ID>/<TASK>` on the current branch, following your contract (re-verification). You already verified `<commit>`; FAIL cycle `<n>` fixed: `<findings, one per line>`. CI result: `<run link>` (`<steps and result>`).
@@ -131,7 +136,7 @@ Copy them as they are and fill in only what is between `<>`; write them in the p
 > Project language: `<AES_LANG>`. Task `<ID>/<TASK>`, FAIL cycle `<n>` of 3. Failure: `<verbatim check output or verifier finding: criterion, reproduction>`. Fix it following your contract, without leaving the surface. If the fix requires leaving it, report BLOCKED.
 
 **G1 — To the human, after a PASS**
-> `<ID>/<TASK>`: verifier PASS, report published on PR #`<n>`. Findings and their classification (02 §9.3): `<F-n — origin, type, severity → cycle / backlog / note>` or "none". If you agree, merge it with a **merge commit** (it keeps the reviewed commits); do not merge with CI red.
+> `<ID>/<TASK>`: verifier PASS, report published on PR #`<n>`. Diff coverage: `<reviewed>/<total>`. Findings and their classification (02 §9.3): `<F-n — origin, type, severity → cycle / backlog / note>` or "none". If you agree, merge it with a **merge commit** (it keeps the reviewed commits); do not merge with CI red.
 
 ## If something does not fit
 If the harness does not allow doing something as written, do it in the closest possible way, note it as a finding and tell the human. Never a silent shortcut.

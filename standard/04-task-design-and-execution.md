@@ -88,6 +88,22 @@ Tasks may run in parallel only if their files, contracts and dependencies allow 
 
 Separate branches or worktrees SHOULD be used for concurrent agents. Two agents writing to the same files at the same time without explicit coordination is not allowed.
 
+**The task graph.** Each task declares what it depends on, with three possible values:
+
+- `none`: it can start at once;
+- a task: it needs that task's code, so it starts after that task is merged;
+- a task's **contract**: it only needs the interface the design note fixes (an API's shape, a type's signature). It starts at once, against the contract, and its PR opens once the dependency is merged and the branch is updated with the integration branch, because its CI needs both.
+
+The orchestrator runs at the same time every task whose dependencies are met and whose change surfaces are disjoint, each in its own branch and checkout. Whether two surfaces can touch the same file is checked by a script, conservatively, not by judgement: if it cannot rule out an overlap, they do not run together. While the verifier checks one task, the programmer is already on the next one (**pipeline**): the waits of the cycle overlap instead of adding up. In aes-todo, US-001 spent most of its 3 h 50 min in serial waits (RFC-005).
+
+Rules:
+
+- **One task, one programmer.** A task is the smallest unit, with one surface: if its work can be shared out, it was two tasks, and the orchestrator splits it.
+- **After each merge**, every other open task branch of the item is updated with the integration branch (a merge, not a rebase) and its CI runs again. Its verification still holds if the update was clean and CI is green; a conflict or a red CI calls for a re-verification. A conflict also means the surfaces were not disjoint: it is a harness finding.
+- **Shared machine resources** (ports, a database file, a build directory) are not isolated by worktrees. The commands that use them run under a lock that every checkout shares, so roles take turns for them instead of failing with a false `FAIL`; the end-of-role check does not blame a role for resources held under that lock.
+- The parallelism is bounded by the human too: merging is the approval, so more parallel PRs are a longer queue for the owner. The orchestrator presents them in the order the graph needs.
+- One item per orchestrator session (§11) still holds: the parallelism is inside the item, not across items.
+
 ## 6. Blockers
 
 If the agent discovers a dependency, a contradiction or a necessary change outside the scope, it must stop that part, explain the blocker and propose options. It must not resolve it by unilaterally widening the task.

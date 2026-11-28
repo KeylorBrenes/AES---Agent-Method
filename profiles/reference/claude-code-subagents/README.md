@@ -1,6 +1,6 @@
 # Reference implementation — Claude Code with subagents
 
-An implementation of AES 2.1.0 with **Claude Code** as the orchestrator's harness: the main session is the orchestrator (on the most capable model available, because it also decides each task's design) and the `qa`, `programmer`, `mechanic` and `verifier` roles are subagents with their own context, model and permissions, or, according to the binding, they run in **OpenCode** with another provider (section "Roles in OpenCode"). GitHub hosts the repository, the CI and the branch protection.
+An implementation of AES 2.2.0 with **Claude Code** as the orchestrator's harness: the main session is the orchestrator (on the most capable model available, because it also decides each task's design) and the `qa`, `programmer`, `mechanic` and `verifier` roles are subagents with their own context, model and permissions, or, according to the binding, they run in **OpenCode** with another provider (section "Roles in OpenCode"). GitHub hosts the repository, the CI and the branch protection.
 
 It comes out of the [aes-sandbox-gastos](https://github.com/KeylorBrenes/aes-sandbox-gastos) experiment, an expense-tracking app in .NET 10 + React where AES was applied with real agents on four items (EN-001, US-001, CH-001, US-002), and was hardened in [aes-todo](https://github.com/KeylorBrenes/aes-todo) (Rust + React). What says "tested" was used there; what says "simulation" was tested with test repositories and data when publishing a version, but not yet in a real cycle.
 
@@ -26,6 +26,9 @@ It is a starting point, not a prescriptive profile. The stack-specific parts (.N
 | `.claude/scripts/aes-metrics.mjs` | — | The item's metrics row from the records (OpenCode runs, costs, CI runs) with what only the human knows passed in; `--write` appends it to `docs/harness-findings.md` | Simulation |
 | `.claude/scripts/gh-app-token.sh`, `git-credential-aes-app.sh`, `agent-gh.sh` | L3 | The agents' identity: a GitHub App without the workflows permission | Tested |
 | `.claude/scripts/aes-workflow.sh` | L3 | The human runs it: applies on a branch the workflow the orchestrator prepared in `docs/ci/`, with the human's identity | Tested |
+| `.claude/scripts/aes-ocr.sh`, `.opencodereview/rule.json` | — | Open Code Review at a fixed version in delegation mode (2.2): `rules` gives the programmer the checklist of its surface before coding; `plan` gives the verifier the file-by-file review plan of the diff, with coverage. The project's rules (level 1 and conventions) are a seed the orchestrator completes at inception | Delegation mode: tested with OCR 1.14.4 on aes-todo |
+| `.claude/scripts/aes-graph.mjs` | — | The task graph (2.2): which tasks start now, which wait for a merge, whether the surfaces of the ones that would run together overlap | Simulation |
+| `.claude/scripts/aes-lock.sh` | — | A lock shared by every worktree (2.2): commands that start servers take turns for the ports; `with-servers.sh` uses it by itself | Tested on Linux |
 | `.claude/scripts/aes-bind.sh` | — | A role's effective binding for a task: the "Model level" of its specification (`standard`, `high`, or a concrete binding) resolved with `AES_BIND_<ROLE>_<LEVEL>` from `aes.env` | Simulation |
 | `.claude/scripts/aes-doctor.sh` | — | Environment check before delegating: tools, the app's permissions, OpenCode (version, options, that the model answers) and the stack (`AES_DOCTOR_CHECKS`, with minimal builds) | Tested |
 | `.claude/skills/aes-cycle/` | — | The orchestrator's procedure: a short core with the templates, and `references/` for OpenCode, T1/T0 and release/hotfix, read only when needed | Tested (T1 and batch paths: simulation) |
@@ -38,6 +41,7 @@ It is a starting point, not a prescriptive profile. The stack-specific parts (.N
 | `ci/run-verify.sh` | L3 | Verification commands: RED in the specification, green in tasks, close and regression | Simulation |
 | `ci/label-approver.sh` | L3 | Who put on each approval label (not the agents' identity) | Simulation |
 | The workflow's SAST step | L3 | Semgrep with OWASP rules on what each task adds: `ERROR` fails the task; the rest is recorded as defects | `--baseline-commit` (only new findings) and `--error` by severity: tested with Semgrep 1.184 locally; the workflow step, in simulation |
+| `ci/ocr-review.sh`, `ci/ocr-report.mjs` | L3 | The second review of each task (Open Code Review in native mode, optional): annotates the PR, keeps one summary comment, fails only on a new critical finding unless you dismiss it with `aes:review-dismissed`; without a token it is skipped with a warning | Report: tested with a sample; the workflow step, in simulation |
 | `ci/validate.sh` | — | The stack's validations (.NET + React example) | Tested |
 | `.github/workflows/aes.yml` | L3 | A single `aes` check on `dev` and `main` with all of the above, plus "main contained in dev"; scripts always from the target branch | Used in aes-todo; release and back-merge paths: simulation |
 | `.github/CODEOWNERS` | L3 | Your approval for protected paths | Tested |
@@ -164,11 +168,12 @@ It is also the manual for doing it by hand.
    - Repositories set up before 2.0.0 have the same rulesets under their Spanish names (`ramas-ci`, `aprobacion-dev`, `aprobacion-main`); the script recognizes them and does not duplicate them.
 
    A single ruleset with a bypass allows merging with CI red: the bypass skips all its rules. It happened in the sandbox (FL-003).
-8. **Labels** `aes:deps-approved`, `aes:markers-approved`, `aes:budget-approved` and `aes:verified` (only you put them on) and the **variable** `AES_APPROVERS`. The other variables are optional (*Settings → Secrets and variables → Actions → Variables*):
+8. **Labels** `aes:deps-approved`, `aes:markers-approved`, `aes:budget-approved`, `aes:review-dismissed` and `aes:verified` (only you put them on) and the **variable** `AES_APPROVERS`. The other variables are optional (*Settings → Secrets and variables → Actions → Variables*):
    - `AES_APPROVERS`: the authorized logins, comma-separated. CI accepts a label only if the last time it was put on by one of these people, never by a `[bot]`.
    - `AES_MINOR_LIMIT` (5 by default): open Minor defects allowed.
    - `AES_REQUIRE_VERIFIED` (`0` by default since 2.1): `1` requires `aes:verified` on tasks besides your merge.
    - `AES_SAST` (`0` turns it off) and `AES_SAST_CONFIG` (`p/owasp-top-ten` by default): the SAST step.
+   - The second review (Open Code Review, section "Code review"): the **secret** `AES_OCR_TOKEN` and the variables `AES_OCR_URL`, `AES_OCR_MODEL`, `AES_OCR_PROTOCOL` (`openai` by default, `anthropic` for Claude) and `AES_OCR_EFFORT` (`medium`); `AES_OCR_REVIEW=0` turns it off. Without the secret the step is skipped with a warning.
    - `AES_UI_DETECT`: the interface detector, if impeccable is installed. By default it only annotates the PR; `block` makes findings fail the task; `0` turns it off.
 9. **The app's access** to the repository (`PUT /user/installations/<id>/repositories/<repo>`; by hand: *Settings → Applications → your app → Configure → Repository access*) and a check of its token.
 
@@ -204,7 +209,8 @@ orchestrator: publishes the branch; for the verifier, another delegate → a cle
 ```
 
 - A branch can only be in one worktree at a time (a git rule): the orchestrator closes its own (`aes-wt.sh close`) before delegating on the same branch.
-- The roles run one at a time. In parallel, two worktrees would start servers on the same ports.
+- Since 2.2 roles can run **in parallel**, one worktree per task (the task graph, `aes-graph.mjs`). The machine has one set of ports, so the commands that start servers (acceptance, `with-servers.sh`) run inside the `servers` lock (`aes-lock.sh`) and take turns; the model's work does not wait. The end-of-role gate does not blame a role for ports held by that lock.
+- Each worktree builds on its own: with Rust or .NET, parallel tasks multiply build time and disk. A shared build directory (for Rust, `CARGO_TARGET_DIR`) is a feedback rule the project can adopt (AES 05 §13).
 - Each worktree needs its dependencies (`npm ci`, `dotnet restore`): each role's first run is slower.
 - If you want more local files in each worktree (for example, an `.env`), add them to `AES_WT_LOCAL_FILES` in `aes-wt.sh`.
 
@@ -284,14 +290,33 @@ graphify hook install               # rebuilds it in the background after each c
 ```
 orchestrator ⇄ you: the story and its questions, in one round, in the conversation
 PR qa/<ID>: story + decisions + acceptance tests (RED) + tasks   ← you sign all of it at once
-for each task (3 at most, each within its production budget):
-  programmer → PR task/<ID>/<TASK>, one commit per criterion or piece
-  CI green → verifier → PASS → the orchestrator publishes the report on the PR
+by the task graph (3 tasks at most, each within its production budget; independent ones in parallel):
+  programmer (reads its surface's review checklist first) → PR task/<ID>/<TASK>, one commit per criterion or piece
+  CI green (+ second review, if configured) → verifier (file-by-file review with coverage) → PASS
+  → the orchestrator publishes the report on the PR; meanwhile the next task is already being programmed
   you: read the report → merge (merge commit)  ← merging is the approval; the commits stay
 PR spec/<ID>-close: notes and metrics by script, retrospective, catalogue
 ```
 
 With `AES_REQUIRE_VERIFIED=1`, CI also requires the `aes:verified` label on tasks (the 2.0 behaviour): you put it on after reading the report, and a new commit removes it.
+
+## Code review (Open Code Review, 2.2)
+
+[Open Code Review](https://github.com/alibaba/open-code-review) (OCR, Apache-2.0) does the deterministic part of a review: which files of the diff are reviewed and why the others are not, and which checklist applies to each one (its rules per language plus `.opencodereview/rule.json`). AES uses it in two ways:
+
+- **Delegation mode, always** (`AES_OCR=1`, no key, no network, no extra cost): OCR calls no model. The programmer reads the checklist of its surface before coding (`aes-ocr.sh rules`) and the verifier reviews the diff file by file with it and reports coverage (`aes-ocr.sh plan`). The fixed version (`AES_OCR_VERSION`) is installed once in `.aes/tools/` by `aes-doctor.sh`, with `OCR_NO_UPDATE=1` (the npm launcher updates itself by default) and without telemetry.
+- **The second review in CI, optional** (native mode): OCR reviews the task's diff with a model of its own, with the story and the task as context. Choose, if the budget allows, a model from a family that is neither the programmer's nor the verifier's; any works, Claude included, and you can change it from month to month. Each run costs tokens of that model. Examples of variables (the URL is the base; OCR adds `/chat/completions`):
+
+  | Provider | `AES_OCR_URL` | `AES_OCR_MODEL` | `AES_OCR_PROTOCOL` |
+  |---|---|---|---|
+  | Qwen (DashScope) | `https://dashscope.aliyuncs.com/compatible-mode/v1` | a Qwen coder model | `openai` |
+  | OpenRouter | `https://openrouter.ai/api/v1` | any model it offers | `openai` |
+  | DeepSeek | `https://api.deepseek.com` | the model's API name | `openai` |
+  | Anthropic | `https://api.anthropic.com` | a Claude model | `anthropic` |
+
+  Write the family in `AES_OCR_CI_FAMILY` (`aes.env`): `aes-doctor.sh` warns if it is the programmer's. What it finds: a new critical finding fails CI (a FAIL cycle, or you dismiss it with `aes:review-dismissed` if it is a false positive); High and Medium go to the verifier, who confirms or refutes each one; Low ones are discarded or recorded as Minor (AES 05 §7.1, 02 §9.3). The code leaves for that provider: check its data terms before turning it on (06 §6.2).
+
+`.opencodereview/` is a protected path: the programmer cannot weaken the rules it is reviewed with.
 
 ## Verification commands
 

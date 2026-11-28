@@ -1,6 +1,6 @@
 # [Project] — project instructions
 
-Project managed with **AES 2.1.0** (https://github.com/KeylorBrenes/AES---Agent-Method).
+Project managed with **AES 2.2.0** (https://github.com/KeylorBrenes/AES---Agent-Method).
 
 ## At the start of each session
 - **If `docs/backlog.md` does not exist, the project has no planning yet:** before anything else, use the `aes-inception` skill and ask the human for the idea (in blocks of concrete questions). Do not write code or create stories without it.
@@ -26,13 +26,14 @@ Project managed with **AES 2.1.0** (https://github.com/KeylorBrenes/AES---Agent-
 
 ## Commands
 - Validations: `bash ci/validate.sh`
-- Acceptance of an item: `npm --prefix tests/acceptance test -- --grep "@US-001(?![\w-])"`
+- Acceptance of an item: `bash .claude/scripts/aes-lock.sh servers -- npm --prefix tests/acceptance test -- --grep "@US-001(?![\w-])"` (the lock: roles may run in parallel and the ports are shared)
+- Task graph: `node .claude/scripts/aes-graph.mjs <ID>` · review checklist: `bash .claude/scripts/aes-ocr.sh rules|plan …`
 - Guard: `BASE_REF=origin/dev TASK_SCOPE_FILE=specs/<ID>/<TASK>.scope bash ci/aes-guard.sh`
 - Stabilization gate: `BASE=origin/dev bash ci/defect-gate.sh start <ID>`
 - Servers for manual tests: `bash .claude/scripts/with-servers.sh [--web] -- <command>`
 
 ## Protected paths
-`tests/acceptance/`, `specs/`, `ci/`, `.github/`, `.claude/`, `.opencode/`, `docs/ci/`, `opencode.json`, `CLAUDE.md`.
+`tests/acceptance/`, `specs/`, `ci/`, `.github/`, `.claude/`, `.opencode/`, `.opencodereview/`, `docs/ci/`, `opencode.json`, `CLAUDE.md`.
 
 ## Conventions the linter does not catch
 - [One line per real project convention: date and amount formats in the API, errors, forbidden patterns.]

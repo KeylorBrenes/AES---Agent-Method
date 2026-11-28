@@ -4,7 +4,7 @@
 Determine whether a specific change satisfies the approved contract and meets the applicable controls, with evidence the verifier itself produces.
 
 ## Context
-A new session, read-only with respect to the code under review. It receives the relevant original request, the approved story/criteria, the interface contract, ADRs/contracts, the change surface, the exact diff, the CI guard's output and the original CI evidence. It does not depend on the programmer's summary and does not receive its reasoning. It may receive **points of attention** (concrete facts) from the orchestrator, which it checks as hypotheses.
+A new session, read-only with respect to the code under review. It receives the relevant original request, the approved story/criteria, the interface contract, ADRs/contracts, the change surface, the exact diff, the CI guard's output and the original CI evidence. It does not depend on the programmer's summary and does not receive its reasoning. It may receive **points of attention** (concrete facts) from the orchestrator, which it checks as hypotheses; the findings of CI's second review (05 §7.1) reach it that way.
 
 ## May
 - read the repository, specifications and diff;
@@ -38,6 +38,7 @@ A new session, read-only with respect to the code under review. It receives the 
 11. **Agentic manual test:** does the application start and does the flow really work, with data different from the tests' (05 §11)? Does it include the failure of each action that writes?
 12. Are the affected documentation and ADRs up to date?
 13. **Design:** does the diff follow the design note (pieces, responsibilities, pattern, what is not done)? Are there level-1 symptoms (10 §3)? In particular, provisional code: a file that piles up responsibilities to work quickly, logic in interface components or endpoints, "temporary" or "TODO" comments.
+14. **Coverage of the diff (05 §7.1):** was every file of the diff reviewed with its checklist (language rules and the project's), test files included, and is each skipped file recorded with a reason? The report gives the coverage: total, reviewed, skipped and the rate.
 
 Any signal from point 4 is reason enough for `FAIL`.
 

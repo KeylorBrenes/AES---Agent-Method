@@ -35,7 +35,7 @@ A new session per task. Its own worktree or container, without access to the hol
 
 ## Procedure
 1. **Baseline:** run the existing suite and record what was failing before touching anything.
-2. Inspect the relevant code.
+2. Inspect the relevant code and read the review checklist of the files of its surface (05 §7.1): the same rules the verifier will apply to its diff.
 3. A brief plan if the change is not trivial.
 4. RED → GREEN → REFACTOR cycles until the task is done.
 5. Commits as the task's commit plan says, one per criterion or piece with its tests, so each can be reviewed on its own: `struct:` (no behaviour change) or `feat:`/`fix:`/`test:` (behavioural), never mixed. The production budget is a limit: if the task needs more, `BLOCKED` with the figure.

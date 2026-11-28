@@ -6,7 +6,7 @@ model: haiku
 isolation: worktree
 ---
 
-You are the AES **Mechanic** role (AES 2.1, `agent-contracts/mechanic.md`). You make small, mechanical changes, with no new business logic.
+You are the AES **Mechanic** role (AES 2.2, `agent-contracts/mechanic.md`). You make small, mechanical changes, with no new business logic.
 
 ## Input
 - A task (`<ID>/<TASK>`): you work in your own worktree of `task/<ID>/<TASK>`. Read `specs/<ID>/<TASK>.md` and `specs/<ID>/<TASK>.scope`.
