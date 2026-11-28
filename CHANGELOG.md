@@ -2,6 +2,26 @@
 
 Entries from 2.0.0 on are in English; earlier ones are kept in Spanish, as published.
 
+## [2.2.0] — 2026-11-27
+
+A code review with deterministic scaffolding, and tasks in parallel. Details and trade-offs in `docs/rfc/RFC-006-aes-2.2.0.md`.
+
+### Added
+- **Code review scaffolding** (05 §7.1) with [Open Code Review](https://github.com/alibaba/open-code-review) in delegation mode (no model, no network): `aes-ocr.sh rules <scope>` gives the programmer the checklist of its surface before coding; `aes-ocr.sh plan` gives the verifier the file-by-file review plan of the diff. The verifier reports **diff coverage** (08 §4), test files included.
+- **The project's review rules** in `.opencodereview/rule.json` (a seed with the level-1 principles; the orchestrator adds the conventions at inception, 01 §2.3 item 12). `.opencodereview/` is a protected path.
+- **A second review in CI, optional** (`ci/ocr-review.sh`, `ci/ocr-report.mjs`): Open Code Review in native mode with a model of the project's choice (secret `AES_OCR_TOKEN`, variables `AES_OCR_URL`, `AES_OCR_MODEL`, `AES_OCR_PROTOCOL`, `AES_OCR_EFFORT`). A new critical finding fails CI unless the human dismisses it with `aes:review-dismissed`; High and Medium go to the verifier (02 §9.3). Without the secret it is skipped with a warning.
+- **The task graph** (04 §5): `Depends on:` per task (`none`, `TASK-NNN`, `TASK-NNN (contract)`); `aes-graph.mjs` says which tasks start now and checks that the surfaces of parallel tasks are disjoint. `aes-cycle` §3 runs tasks by the graph, with a pipeline (the next task is programmed while the previous one is verified) and an update with `dev` after each merge.
+- `aes-lock.sh`: a lock shared by every worktree; `with-servers.sh` and acceptance runs take turns for the ports.
+- `aes-doctor.sh` installs and checks Open Code Review, warns without project rules, and warns if the second review's model family (`AES_OCR_CI_FAMILY`) is the programmer's.
+
+### Changed
+- 06 §6.2: third-party tools run with **self-updating off** and telemetry off, and the profile states what leaves the machine (Open Code Review's npm launcher updates itself by default).
+- The end-of-role gate and `aes-oc.sh` do not blame a role for ports held by the servers lock.
+- Templates: task (`Depends on:`), technical plan (dependencies column), verification report (diff coverage, points of attention confirmed or refuted), project profile ("Code review" section, parallel roles).
+
+### Upgrading
+`install-aes.sh <project> --upgrade`, then `bash .claude/scripts/aes-doctor.sh` (it installs Open Code Review in `.aes/tools/`). New seeds: `.opencodereview/rule.json` (complete its conventions line). The workflow seed changes (`.github/workflows/aes.yml.aes-new`, applied by the human with `aes-workflow.sh`): the second review step and the `aes:review-dismissed` label. Run `setup-repo.sh` again, or create that label by hand. The second review stays off until you set the secret.
+
 ## [2.1.0] — 2026-11-26
 
 The process, cut with the five-step algorithm (question, delete, simplify, accelerate, automate) using US-001's records from aes-todo: 3 h 50 min for a story with 0 FAIL cycles, most of it serial waits, and a 2075-line PR. Details and trade-offs in `docs/rfc/RFC-005-aes-2.1.0.md`.

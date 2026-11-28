@@ -56,6 +56,7 @@ Questions do not continue in order to complete the detail of distant stories. Th
 9. **A local copy of the rules the agents consult:** at least the DoR and DoD checklists (08) inside the repository (for example, `docs/aes/`), with the AES version they come from. An agent that only has the reference "AES 08" reviews the DoR from memory.
 10. **The environment check** for the chosen stack (`AES_DOCTOR_CHECKS`), run before EN-001, so everything missing on the machine is requested in one round.
 11. **The project's feedback rules** (05 §13): the general principles translated to the chosen stack, with the feedback budget, in the profile. EN-001 builds the CI and the acceptance fixture by them.
+12. **The project's review rules** (05 §7.1): the level-1 principles (10 §3) and the conventions the linter does not catch, as the checklist that the programmer reads before coding and the verifier reviews against. If the project wants the second review in CI, the profile records its model and family.
 
 ### 2.4 Approval and review
 

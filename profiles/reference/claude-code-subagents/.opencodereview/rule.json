@@ -1,0 +1,9 @@
+{
+  "rules": [
+    {
+      "path": "**/*",
+      "merge_system_rule": true,
+      "rule": "## AES level-1 principles (AES 10 §3): each violation in the changed code is a finding of the task\n- One responsibility per function and per module; a name with \"and\" or a vague one (process, handle, utils) is a symptom.\n- Business rules receive data and return data: no file, network, database or clock access inside them.\n- Dependencies are received (parameter or constructor), not created inside or read from a global.\n- A feature's data access lives in one place; the same query spread over several files is a finding.\n- What is exposed (API, CLI, events) has its own types, distinct from the internal ones.\n- Explicit errors: no empty catch, no null, -1 or empty string to signal an error, no silenced error.\n- Composition before inheritance; a subclass that throws \"not supported\" breaks substitution.\n- Minimal visibility; configuration (addresses, paths, credentials) outside the code.\n- Input is validated once at the boundary and converted to a type that cannot be invalid.\n- No provisional code: no file piling up pieces of different responsibilities, no logic in interface components or endpoints, no \"temporary\", \"for now\" or \"TODO\" comments.\n- Hard-coded values that only serve to pass the tests, and functionality nobody asked for, are findings.\n\n## Project conventions\n[The orchestrator replaces this line at inception (AES 01 §2.3) with the project's conventions the linter does not catch, one per line, grouped by layer when they apply to one (for example \"API (src/server/**): errors as ProblemDetails\"). Keep them in this single entry: in OCR the first matching entry wins, so a narrower entry would drop these lines for its files.]"
+    }
+  ]
+}

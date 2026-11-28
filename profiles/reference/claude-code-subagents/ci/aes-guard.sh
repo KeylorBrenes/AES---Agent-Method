@@ -25,7 +25,7 @@ ALLOW_BUDGET="${AES_ALLOW_BUDGET:-0}"
 TOLERANCE="${AES_BUDGET_TOLERANCE:-25}"
 
 # Paths the programmer can never touch. Adjust in the project profile.
-PROTECTED_RE='^(tests/acceptance/|specs/|ci/|\.github/|\.claude/|\.opencode/|docs/ci/|opencode\.json$|AGENTS\.md$|CLAUDE\.md$)'
+PROTECTED_RE='^(tests/acceptance/|specs/|ci/|\.github/|\.claude/|\.opencode/|\.opencodereview/|docs/ci/|opencode\.json$|AGENTS\.md$|CLAUDE\.md$)'
 # Manifests, lockfiles, package sources and local tools. Changing the source or a
 # tool is as sensitive as changing a package (FL of nuget.config and dotnet-tools.json).
 DEPS_RE='(^|/)(package\.json|package-lock\.json|pnpm-lock\.yaml|yarn\.lock|requirements[^/]*\.txt|poetry\.lock|pyproject\.toml|uv\.lock|Cargo\.toml|Cargo\.lock|go\.mod|go\.sum|[^/]*\.csproj|packages\.lock\.json|Directory\.Packages\.props|composer\.(json|lock)|Gemfile(\.lock)?|nuget\.config|NuGet\.Config|\.npmrc|\.yarnrc(\.yml)?|pip\.conf|global\.json|\.config/dotnet-tools\.json)$'

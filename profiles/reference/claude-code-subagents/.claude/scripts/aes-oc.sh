@@ -126,7 +126,9 @@ done
 # shellcheck source=/dev/null
 source .claude/hooks/lib.sh
 busy=""; for port in ${AES_PORTS:-}; do port_listening "$port" && busy+=" $port"; done
-if [[ -n "$busy" ]]; then
+if [[ -n "$busy" ]] && holder=$(servers_lock_holder); then
+  echo "aes-oc: the ports$busy belong to a run in the servers lock ($holder): the role will wait for its turn." >&2
+elif [[ -n "$busy" ]]; then
   echo "aes-oc: there are servers listening on:$busy (the demo?). The end-of-role gate would fail. Stop them and run again." >&2
   exit 6
 fi

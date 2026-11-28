@@ -1,12 +1,12 @@
 # Project profile — [Project name]
 
-- **AES version:** 2.1.0
+- **AES version:** 2.2.0
 - **Project language (`AES_LANG`):** en / es — language of the project's artifacts (stories, plans, reports, backlog, board)
 - **Product owner / human approver:** [role/person]
 - **Repository:** [URL]
 - **Branches (07 §7):** `main` (released) and `dev` (integrated), both protected; short work branches from `dev`, hotfixes from `main`
 - **Release:** who approves, how the version is marked (e.g. tag `vX.Y.Z`), where the notes are published (`docs/releases/`)
-- **Local copy of the DoR/DoD:** [e.g. `docs/aes/08-definition-of-ready-and-done.md`, from AES 2.1.0]
+- **Local copy of the DoR/DoD:** [e.g. `docs/aes/08-definition-of-ready-and-done.md`, from AES 2.2.0]
 
 ## Roles: harness and model
 The actual model of each run is recorded in the metrics (09 §6); if it differs from this table, it is noted.
@@ -67,10 +67,17 @@ Control gaps of the roles in another harness (06 §12, point 3):
 | aes-inception | Technique | AES vX.Y.Z | | | Orchestrator |
 | impeccable (optional) | Technique + tool | vX.Y.Z (`docs/aes/skills.lock`) | Apache-2.0 | | Orchestrator, programmer, verifier |
 | archify (optional) | Tool | vX.Y.Z (`docs/aes/skills.lock`) | MIT | | Orchestrator |
+| Open Code Review | Tool | vX.Y.Z (`AES_OCR_VERSION`, npm, self-update off) | Apache-2.0 | | Programmer, verifier, CI |
 
 - Static security analysis in CI (05 §7): tool, rules and which severity blocks:
 - Interface detector in CI (05 §7): tool, and which rules block (at first, none: it only notes):
 - Network calls a skill does not allow turning off (06 §6.2): which, what it sends, when it is used:
+
+## Code review (05 §7.1)
+- Review scaffolding (files, checklist per file, coverage): [tool and version; e.g. Open Code Review in delegation mode]
+- The project's review rules: [path, e.g. `.opencodereview/rule.json`; protected]
+- Second review in CI: no / yes — provider, model and **family** [ideally neither the programmer's nor the verifier's], effort, what it costs per task, data terms reviewed by [who, when]
+- What blocks: a new critical finding (dismissed only by the human with an approval label); the rest is confirmed by the verifier (02 §9.3)
 
 ## Design (10)
 - Design catalogue: `docs/design-catalog.md`
@@ -110,6 +117,7 @@ Control gaps of the roles in another harness (06 §12, point 3):
   - Acceptance fixture: [starts the already built server once per run / per worker]
   - Focused runs: [command to run one criterion or module]
   - Parallelism: [workers and how their data is isolated]
+  - Parallel roles (04 §5): [which machine resources they share (ports, build directory) and how they take turns; e.g. the servers lock; a shared `CARGO_TARGET_DIR`]
 - Dependency audit policy (e.g. `npm audit`, `dotnet list package --vulnerable`):
 
 ## Layered controls (06 §9)

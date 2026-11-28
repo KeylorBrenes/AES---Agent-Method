@@ -72,7 +72,7 @@ for d in "$ref"/.claude/skills/*/; do
   n=$(basename "$d"); add_tree owned "$d" ".claude/skills/$n"
 done
 owned+=("$ref/.claude/settings.local.example.json|.claude/settings.local.example.json")
-for f in aes-ctx.sh aes-guard.sh defect-gate.sh label-approver.sh red-check.mjs run-verify.sh; do
+for f in aes-ctx.sh aes-guard.sh defect-gate.sh label-approver.sh ocr-report.mjs ocr-review.sh red-check.mjs run-verify.sh; do
   owned+=("$ref/ci/$f|ci/$f")
 done
 owned+=("$aes_root/standard/08-definition-of-ready-and-done.md|docs/aes/08-definition-of-ready-and-done.md")
@@ -82,7 +82,7 @@ for f in LICENSE LICENSE-MIT.txt LICENSE-CC-BY-4.0.txt; do owned+=("$aes_root/$f
 add_tree owned "$aes_root/templates" docs/aes/templates
 
 add_tree seeds "$ref/.claude/agents" .claude/agents
-for f in .claude/settings.json .claude/aes.env .github/workflows/aes.yml .github/CODEOWNERS ci/validate.sh CLAUDE.md opencode.json; do
+for f in .claude/settings.json .claude/aes.env .github/workflows/aes.yml .github/CODEOWNERS ci/validate.sh CLAUDE.md opencode.json .opencodereview/rule.json; do
   seeds+=("$ref/$f|$f")
 done
 

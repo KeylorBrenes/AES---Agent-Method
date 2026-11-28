@@ -14,8 +14,8 @@ cmd=$(aes_get '.tool_input.command')
 # Paths this role cannot write (unanchored; combined below).
 case "$AES_ROLE" in
   "")                    paths='(src|web|tests)(/|[[:space:]"'\'']|$)' ;;
-  qa)                    paths='((src|web|specs|ci|\.github|\.claude|\.opencode)(/|[[:space:]"'\'']|$)|opencode\.json|AGENTS\.md|CLAUDE\.md)' ;;
-  programmer|mechanic)   paths='((tests/acceptance|specs|ci|\.github|\.claude|\.opencode|docs/ci)(/|[[:space:]"'\'']|$)|opencode\.json|AGENTS\.md|CLAUDE\.md)' ;;
+  qa)                    paths='((src|web|specs|ci|\.github|\.claude|\.opencode|\.opencodereview)(/|[[:space:]"'\'']|$)|opencode\.json|AGENTS\.md|CLAUDE\.md)' ;;
+  programmer|mechanic)   paths='((tests/acceptance|specs|ci|\.github|\.claude|\.opencode|\.opencodereview|docs/ci)(/|[[:space:]"'\'']|$)|opencode\.json|AGENTS\.md|CLAUDE\.md)' ;;
   *)                     paths='' ;;
 esac
 

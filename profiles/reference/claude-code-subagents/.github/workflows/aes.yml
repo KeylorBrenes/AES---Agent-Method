@@ -7,7 +7,8 @@
 #   qa/<ID>           stabilization gate + build/test + RED of the tests of <ID> (with traceability)
 #                     and of its new verification commands
 #   task/<ID>/<TASK>  invalidate old approvals + gate (Critical only) + guard (from the base)
-#                     + build/test + SAST of what is new + the task's criteria (.criteria; without it, the whole item)
+#                     + build/test + SAST of what is new + second review (OCR, if configured)
+#                     + the task's criteria (.criteria; without it, the whole item)
 #                     + regression (+ the aes:verified label, only if AES_REQUIRE_VERIFIED=1)
 #   spec/<ID>-close   build/test + the whole item (it must run and pass) + regression
 #   dev → main        release: gate (no exemptions) + main contained in dev + full regression
@@ -53,7 +54,7 @@ jobs:
           BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || 'HEAD' }}
         run: |
           mkdir -p "$RUNNER_TEMP/aes"
-          for f in aes-ctx.sh aes-guard.sh defect-gate.sh run-verify.sh label-approver.sh red-check.mjs; do
+          for f in aes-ctx.sh aes-guard.sh defect-gate.sh run-verify.sh label-approver.sh red-check.mjs ocr-review.sh ocr-report.mjs; do
             if git cat-file -e "$BASE:ci/$f" 2>/dev/null; then
               git show "$BASE:ci/$f" > "$RUNNER_TEMP/aes/$f"
             elif [[ -f "ci/$f" ]]; then
@@ -109,7 +110,7 @@ jobs:
           # An approval holds for the commits its giver saw. Exception: aes:deps-approved is
           # kept if the new commits do not change manifests or lockfiles (the approval covers the
           # same dependencies). If it cannot be checked (force push, old script), it is removed.
-          for l in aes:verified aes:deps-approved aes:markers-approved aes:budget-approved; do
+          for l in aes:verified aes:deps-approved aes:markers-approved aes:budget-approved aes:review-dismissed; do
             if [[ ",$LABELS," == *",$l,"* ]]; then
               if [[ "$l" == aes:deps-approved ]] && grep -q -- '--deps-changed' "$AES_CI/aes-guard.sh" \
                  && git cat-file -e "$BEFORE^{commit}" 2>/dev/null && git merge-base --is-ancestor "$BEFORE" "$AFTER" \
@@ -134,6 +135,7 @@ jobs:
           echo "markers=$(bash "$AES_CI/label-approver.sh" aes:markers-approved)" >> "$GITHUB_OUTPUT"
           echo "verified=$(bash "$AES_CI/label-approver.sh" aes:verified)" >> "$GITHUB_OUTPUT"
           echo "budget=$(bash "$AES_CI/label-approver.sh" aes:budget-approved)" >> "$GITHUB_OUTPUT"
+          echo "dismissed=$(bash "$AES_CI/label-approver.sh" aes:review-dismissed)" >> "$GITHUB_OUTPUT"
 
       # ---------- Stabilization gate (02 §9) ----------
       - name: Stabilization gate
@@ -177,6 +179,27 @@ jobs:
           base=$(git merge-base "$AES_BASE" HEAD)
           semgrep scan --config "$SEMGREP_RULES" --baseline-commit "$base" --metrics=off --severity WARNING --severity INFO || true
           semgrep scan --config "$SEMGREP_RULES" --baseline-commit "$base" --metrics=off --severity ERROR --error
+
+      # ---------- Second review (05 §7.1; Open Code Review in native mode, optional) ----------
+      # A model of its own (ideally of a family other than the programmer's and the verifier's) reviews
+      # the task's diff with the story and the task as context. It annotates the PR and keeps one comment;
+      # only a new critical finding fails, unless the human dismisses it with aes:review-dismissed.
+      # Without the AES_OCR_TOKEN secret it is skipped with a warning. Before restoring the suite, like SAST.
+      - name: Second review of the task (Open Code Review)
+        if: ${{ steps.ctx.outputs.kind == 'task' && (vars.AES_OCR_REVIEW || '1') != '0' }}
+        env:
+          ITEM: ${{ steps.ctx.outputs.item }}
+          TASK: ${{ steps.ctx.outputs.task }}
+          OCR_LLM_TOKEN: ${{ secrets.AES_OCR_TOKEN }}
+          OCR_LLM_URL: ${{ vars.AES_OCR_URL }}
+          OCR_LLM_MODEL: ${{ vars.AES_OCR_MODEL }}
+          OCR_LLM_PROTOCOL: ${{ vars.AES_OCR_PROTOCOL || 'openai' }}
+          AES_OCR_EFFORT: ${{ vars.AES_OCR_EFFORT || 'medium' }}
+          DISMISSED: ${{ steps.approvals.outputs.dismissed }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: bash "$AES_CI/ocr-review.sh"
 
       # ---------- Interface detector (05 §7; impeccable, if installed) ----------
       - name: Interface detector on what the task changes (impeccable)

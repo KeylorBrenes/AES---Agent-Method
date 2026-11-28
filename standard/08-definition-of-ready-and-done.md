@@ -76,6 +76,7 @@ A task is technically done when:
 - [ ] no secrets, temporary artifacts or unapproved dependencies were introduced;
 - [ ] no servers, processes or data of the role remain in the environment (06 §10);
 - [ ] the report was delivered with executed evidence and known blockers;
+- [ ] the verifier reviewed every file of the diff with its checklist and reported the coverage, each skipped file with a reason (05 §7.1);
 - [ ] the verifier issued `PASS` **before merging**, the findings were classified by origin, type and severity (02 §9.3), and the findings outside the task are recorded as defects with a severity.
 
 The task moves to review; the programmer does not mark it as accepted.

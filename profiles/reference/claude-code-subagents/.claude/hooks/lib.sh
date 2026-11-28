@@ -3,7 +3,7 @@
 
 # Paths no implementation role can touch (used in role-guard.sh).
 # shellcheck disable=SC2034
-AES_PROTECTED_RE='^(tests/acceptance/|specs/|ci/|\.github/|\.claude/|\.opencode/|docs/ci/|opencode\.json$|AGENTS\.md$|CLAUDE\.md$)'
+AES_PROTECTED_RE='^(tests/acceptance/|specs/|ci/|\.github/|\.claude/|\.opencode/|\.opencodereview/|docs/ci/|opencode\.json$|AGENTS\.md$|CLAUDE\.md$)'
 
 # Reads the hook's JSON input once.
 aes_read_input() { AES_INPUT=$(cat); }
@@ -59,6 +59,17 @@ aes_in_scope() {
 }
 
 aes_block() { printf 'AES [%s]: %s\n' "${AES_ROLE:-orchestrator}" "$*" >&2; exit 2; }
+
+# Does another live process hold the "servers" lock (aes-lock.sh)? Then the ports it uses are its own:
+# a role working in parallel did not leave them taken (04 §5). Prints the owner.
+servers_lock_holder() {
+  local root owner pid
+  root=$(dirname "$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)" 2>/dev/null) || return 1
+  owner=$(cat "$root/.aes/locks/servers/owner" 2>/dev/null) || return 1
+  pid=$(sed -nE 's/^pid=([0-9]+).*/\1/p' <<< "$owner")
+  [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null || return 1
+  printf '%s\n' "$owner"
+}
 
 # Is a process listening on the port? Linux: /proc/net/tcp(6) (does not depend on ss/netstat).
 # Windows/macOS: netstat (whose output may be localized: ESCUCHANDO). Used by subagent-gate.sh and .claude/scripts/aes-oc.sh.

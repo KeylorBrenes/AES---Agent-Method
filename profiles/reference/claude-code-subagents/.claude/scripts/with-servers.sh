@@ -18,8 +18,14 @@
 #   AES_WAIT_SECONDS            (120 by default)
 #
 # It is not for acceptance with Playwright: its configuration starts its own servers on
-# the same ports. It is the tool of the verifier's manual test.
+# the same ports. It is the tool of the verifier's manual test. It runs inside the "servers" lock
+# (aes-lock.sh), like acceptance runs: roles working in parallel take turns for the ports.
 set -uo pipefail
+
+# One run with servers at a time on this machine, whatever the worktree (aes-lock.sh, 04 §5).
+if [[ "${AES_LOCK_HELD_servers:-}" != 1 ]]; then
+  exec bash "$(dirname "$0")/aes-lock.sh" servers -- bash "$0" "$@"
+fi
 
 with_web=0
 while [[ $# -gt 0 ]]; do

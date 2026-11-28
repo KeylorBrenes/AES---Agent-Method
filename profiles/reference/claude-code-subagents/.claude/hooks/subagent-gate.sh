@@ -40,7 +40,9 @@ listening=""
 for port in $AES_PORTS; do
   port_listening "$port" && listening+=" $port"
 done
-if [[ -n "$listening" ]]; then
+if [[ -n "$listening" ]] && holder=$(servers_lock_holder); then
+  echo "AES: the ports$listening belong to a run in the servers lock ($holder); not a leftover of this role." >&2
+elif [[ -n "$listening" ]]; then
   failures+=("servers are still listening on the ports:$listening. Use .claude/scripts/with-servers.sh, which stops them by itself; if you cannot stop them, report BLOCKED for the human (do not ask another agent to do it)")
 fi
 

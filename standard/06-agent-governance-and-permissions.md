@@ -142,6 +142,8 @@ Skills:
 - SHOULD be built **after** evaluating the agent on representative tasks and seeing where it fails, not in advance (09).
 - MUST be installed only from trusted sources. Third-party ones are audited before use: included files, scripts, dependencies and any instruction that connects to untrusted external networks.
 
+Third-party tools (a CLI the roles or CI run) follow the same rules: a fixed version recorded in the profile, **self-updating turned off** (a tool that updates itself is no longer the version that was audited), telemetry off, and the profile states what leaves the machine. A tool that sends code to a model provider (for example, a review in CI with its own model) is only turned on after the human reviews that provider's data terms. In the AES sandbox, Open Code Review's npm launcher updates itself by default; the reference implementation runs it with that turned off.
+
 ### 6.1 Denied actions and workarounds by delegation
 
 When a permission, a hook or a harness classifier denies an action to an agent, the agent may try to get it another way: another command, or asking another agent to do it. The latter is a **workaround by delegation**, and no technical control detects it: in the AES sandbox, two subagents asked the orchestrator to stop processes they had been denied permission to stop.
